@@ -263,8 +263,8 @@ export default function App(){
           {/* CTA */}
           <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
             <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:3}}>Quieres optimizar tu cartera?</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:10}}>Proximamente: analisis IA, comparador de brokers.</div>
-            <button style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>Avisarme</button>
+            <div style={{fontSize:11,color:"#888",marginBottom:10}}>Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.</div>
+            <button onClick={()=>window.open("https://forms.gle/JMZg1w5eAUHnYVHw8","_blank")} style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>Avisarme</button>
           </div>
         </div>}
 
