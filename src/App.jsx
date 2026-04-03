@@ -150,7 +150,7 @@ export default function App(){
         <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>Ejemplo: Cartera equilibrada global - personaliza a tu gusto</div>
 
         {/* Params */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:14}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))",gap:10,marginBottom:14}}>
           {[{l:"Inversion inicial",v:ini,fn:setIni,mx:5000000,st:500,u:"EUR"},{l:"Aportacion mensual",v:mo,fn:setMo,mx:50000,st:25,u:"EUR/mes"},{l:"Horizonte",v:yr,fn:setYr,mx:50,st:1,u:"anos"}].map(p=>(
             <div key={p.l} style={cd}>
               <div style={{fontSize:11,color:"#aaa",marginBottom:4}}>{p.l}</div>
@@ -185,7 +185,10 @@ export default function App(){
             <div key={id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
               <span style={{width:100,fontSize:12,fontWeight:600}}>{a.name}</span>
               <input type="range" min={0} max={100} value={wt[id]||0} onChange={e=>setWt({...wt,[id]:Number(e.target.value)})} style={{flex:1}}/>
-              <span style={{width:40,textAlign:"right",fontSize:13,fontFamily:"monospace",fontWeight:700}}>{wt[id]||0}%</span>
+              <div style={{display:"flex",alignItems:"center",background:"#f9fafb",border:"1.5px solid #eee",borderRadius:8,width:56,flexShrink:0}}>
+                <input type="number" min={0} max={100} value={wt[id]||0} onChange={e=>setWt({...wt,[id]:Math.max(0,Math.min(100,Number(e.target.value)||0))})} style={{width:34,border:"none",background:"transparent",textAlign:"right",fontSize:12,fontWeight:700,outline:"none",padding:"4px 0 4px 3px",fontFamily:"monospace",color:"#333"}}/>
+                <span style={{fontSize:10,color:"#bbb",paddingRight:5}}>%</span>
+              </div>
               <button onClick={()=>tog(id)} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16}}>x</button>
             </div>
           );})}
@@ -196,7 +199,7 @@ export default function App(){
           {pS.ld.length>0&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>Datos limitados: {pS.ld.join(", ")}</div>}
 
           {/* Scenario cards */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))",gap:10,marginBottom:12}}>
             {scs.map((s,i)=>{const fin=s.d[s.d.length-1].v;const pr=fin-tI;const mu=tI>0?fin/tI:0;return(
               <div key={i} style={{...cd,marginBottom:0,border:i===1?"2px solid #10b98133":"1px solid #eee",background:i===1?"#f0fdf8":"#fff",position:"relative"}}>
                 {i===1&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#10b981",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 8px",borderRadius:"0 0 6px 6px"}}>{s.l}</div>}
@@ -215,7 +218,7 @@ export default function App(){
           </div>
 
           {/* Portfolio + Risk row */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
             <div style={cd}>
               <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Tu cartera</div>
               {cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
