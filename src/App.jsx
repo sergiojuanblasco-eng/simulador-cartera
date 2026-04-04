@@ -23,11 +23,38 @@ const R = {
   meta:{2013:105.00,2014:42.83,2015:34.15,2016:9.93,2017:53.38,2018:-25.71,2019:56.57,2020:33.09,2021:23.13,2022:-64.22,2023:194.13,2024:65.17,2025:-1.20},
 };
 
-const ASSETS=[{id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false},{id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false},{id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false},{id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false},{id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false},{id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false},{id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true},{id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true},{id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true},{id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true},{id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true},{id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true},{id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true},{id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true},{id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false},{id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false},{id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true},{id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true},{id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false},{id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false}];
-const CATS=[{id:"idx",name:"Indices"},{id:"stk",name:"Acciones"},{id:"fi",name:"Renta Fija"},{id:"cry",name:"Cripto"},{id:"alt",name:"Otros"}];
+const ASSETS=[
+  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,d:{es:"Las 500 mayores empresas de EE.UU. Nucleo de cualquier cartera.",en:"Top 500 US companies. Core of any portfolio."}},
+  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,d:{es:"100 mayores tecnologicas. Mayor crecimiento, mayor volatilidad.",en:"Top 100 tech. Higher growth, higher volatility."}},
+  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,d:{es:"1.500 empresas de 23 paises desarrollados. Maxima diversificacion.",en:"1,500 companies from 23 developed countries. Max diversification."}},
+  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,d:{es:"Mercados emergentes (China, India, Brasil). Alto potencial y riesgo.",en:"Emerging markets (China, India, Brazil). High potential and risk."}},
+  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,d:{es:"600 empresas europeas. Diversificacion fuera de EE.UU.",en:"600 European companies. Diversification away from US."}},
+  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,d:{es:"Todo el mundo en un indice: desarrollados + emergentes.",en:"Whole world in one index: developed + emerging."}},
+  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,d:{es:"Ecosistema tech con margenes altisimos. Valor refugio tecnologico.",en:"Tech ecosystem with very high margins. Tech safe haven."}},
+  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,d:{es:"Lider en chips para IA. Alto crecimiento, muy volatil.",en:"AI chip leader. High growth, very volatile."}},
+  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,d:{es:"Cloud + IA + software empresarial. Crecimiento estable.",en:"Cloud + AI + enterprise software. Stable growth."}},
+  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,d:{es:"Vehiculos electricos + energia. Muy volatil, apuesta a futuro.",en:"Electric vehicles + energy. Very volatile, future bet."}},
+  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,d:{es:"E-commerce + AWS cloud. Diversificado y dominante.",en:"E-commerce + AWS cloud. Diversified and dominant."}},
+  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,d:{es:"Publicidad digital + cloud + IA. Generador de caja enorme.",en:"Digital ads + cloud + AI. Enormous cash generator."}},
+  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,d:{es:"Valor defensivo clasico. Dividendo estable, baja volatilidad.",en:"Classic defensive stock. Stable dividend, low volatility."}},
+  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,d:{es:"Facebook, Instagram, WhatsApp. Publicidad + apuesta por IA.",en:"Facebook, Instagram, WhatsApp. Ads + AI bet."}},
+  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,d:{es:"Deuda del gobierno de EE.UU. Refugio en crisis, estabiliza cartera.",en:"US government debt. Crisis safe haven, stabilizes portfolio."}},
+  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,d:{es:"Liquidez con rendimiento minimo. Reduce volatilidad al maximo.",en:"Liquidity with minimal return. Minimizes volatility."}},
+  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,d:{es:"Oro digital. Alta volatilidad, potencial alto a largo plazo.",en:"Digital gold. High volatility, high long-term potential."}},
+  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,d:{es:"Contratos inteligentes y DeFi. Mas riesgo que Bitcoin.",en:"Smart contracts and DeFi. Higher risk than Bitcoin."}},
+  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,d:{es:"Proteccion contra inflacion y crisis. Descorrelacionado de bolsa.",en:"Inflation and crisis protection. Uncorrelated with stocks."}},
+  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,d:{es:"Inmobiliario cotizado. Rentas + revalorizacion, sensible a tipos.",en:"Listed real estate. Income + appreciation, rate sensitive."}},
+];
+
+const CATS=[{id:"idx",n:{es:"Indices",en:"Indices"}},{id:"stk",n:{es:"Acciones",en:"Stocks"}},{id:"fi",n:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",n:{es:"Cripto",en:"Crypto"}},{id:"alt",n:{es:"Otros",en:"Others"}}];
 const CEIL={cry:{s:150,l:15},stk:{s:100,l:15}};
 const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e"};
 const COL=["#f87171","#10b981","#60a5fa"];
+
+const T={
+  es:{ci:"Interes Compuesto",sim:"Simulador de Cartera",ciSub:"Calcula cuanto crecera tu dinero con el interes compuesto",simSub:"Proyeccion con rolling returns historicos + estimaciones de analistas",capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"anos",capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",evo:"Evolucion",capital:"Capital",noSabes:"No sabes que interes poner?",prueba:"Prueba el Simulador de Cartera con datos historicos reales de 20 activos",pe:"Pesimista",es:"Esperado",op:"Optimista",ano:"/ano",preset:"Ejemplo: Cartera equilibrada - personaliza a tu gusto",pesos:"Pesos",equi:"Equiponderar",tuCa:"Tu cartera",ri:"Riesgo",riL:["Bajo","Moderado","Alto","Muy alto"],mkG:"Mercado genera",desg:"Desglose por activo",act:"Activo",peso:"Peso",rEsp:"Rend.",cont:"Contrib.",como:"Como se calcula?",met:"Indices y RF usan mediana de rolling returns historicos. Acciones y cripto combinan historico con estimaciones forward (JP Morgan, Vanguard). Spread se reduce con el horizonte (raiz cuadrada del tiempo).",warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",optim:"Quieres optimizar tu cartera?",prox:"Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.",avisa:"Avisarme",datLim:"Datos limitados",eM:"EUR/mes",eA:"EUR/ano",apo:"Aportado"},
+  en:{ci:"Compound Interest",sim:"Portfolio Simulator",ciSub:"Calculate how your money will grow with compound interest",simSub:"Projection with historical rolling returns + analyst estimates",capIni:"Initial capital",aport:"Contribution",intAnual:"Annual interest",horiz:"Horizon",anos:"years",capFin:"Final capital",tuAp:"You contribute",intGen:"Interest earned",sobreAp:"on contributed",evo:"Evolution",capital:"Capital",noSabes:"Don't know what interest to use?",prueba:"Try our Portfolio Simulator with real historical data from 20 assets",pe:"Pessimistic",es:"Expected",op:"Optimistic",ano:"/year",preset:"Example: Balanced portfolio - customize to your liking",pesos:"Weights",equi:"Equal weight",tuCa:"Your portfolio",ri:"Risk",riL:["Low","Moderate","High","Very high"],mkG:"Market generates",desg:"Breakdown by asset",act:"Asset",peso:"Weight",rEsp:"Return",cont:"Contrib.",como:"How is this calculated?",met:"Indices and bonds use historical rolling return medians. Stocks and crypto blend with forward analyst estimates (JP Morgan, Vanguard). Spread shrinks with horizon (square root of time).",warn:"Past performance does not guarantee future results. Educational simulation.",optim:"Want to optimize your portfolio?",prox:"Coming soon: AI optimization, stress scenario, broker comparison.",avisa:"Notify me",datLim:"Limited data",eM:"EUR/mo",eA:"EUR/yr",apo:"Contributed"}
+};
 
 function gY(id){const d=R[id];return d?Object.keys(d).map(Number).sort((a,b)=>a-b):[];}
 function dL(id){return gY(id).length;}
@@ -52,11 +79,10 @@ function SvgChart({lines,years,labels,colors,fill}){
       <path d={ml(lines[0].map(p=>({y:p.y,v:p.inv})))} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="5,4"/>
       {fill&&lines.length>2&&<path d={ml(lines[2])+lines[0].slice().reverse().map(p=>"L"+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join("")+"Z"} fill="#10b981" opacity="0.05"/>}
       {fill&&lines.length===1&&<path d={ml(lines[0])+"L"+sx(years).toFixed(1)+","+sy(0).toFixed(1)+"L"+sx(0).toFixed(1)+","+sy(0).toFixed(1)+"Z"} fill={colors[0]} opacity="0.08"/>}
-      {lines.map((d,i)=><path key={i} d={ml(d)} fill="none" stroke={colors[i]} strokeWidth={lines.length>1&&i===1?2.5:2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
+      {lines.map((dd,i)=><path key={i} d={ml(dd)} fill="none" stroke={colors[i]} strokeWidth={2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
     </svg>
     <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
       {labels.map((n,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:12,height:2,background:colors[i],display:"inline-block",borderRadius:1}}/>{n}</span>)}
-      <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:12,borderTop:"1.5px dashed #d1d5db",display:"inline-block"}}/>Aportado</span>
     </div>
   </div>);
 }
@@ -67,98 +93,119 @@ function Inputs({params}){return(
       <div style={{fontSize:11,color:"#aaa",marginBottom:4}}>{p.l}</div>
       <div style={{display:"flex",alignItems:"baseline",gap:4}}>
         <input type="number" value={p.v} min={p.mi||0} max={p.mx} step={p.st} onChange={e=>p.fn(Math.max(p.mi||0,Math.min(p.mx,Number(e.target.value)||0)))} style={{width:"100%",border:"none",fontSize:18,fontWeight:800,outline:"none",fontFamily:"monospace",color:"#111"}}/>
-        <span style={{fontSize:11,color:"#bbb",whiteSpace:"nowrap"}}>{p.u}</span>
+        {p.tog?<select value={p.freq} onChange={e=>p.sF(e.target.value)} style={{border:"1.5px solid #eee",borderRadius:6,padding:"3px 4px",fontSize:11,color:"#888",background:"#f9fafb",cursor:"pointer",fontWeight:600,outline:"none"}}><option value="mes">{p.lM}</option><option value="ano">{p.lA}</option></select>
+        :<span style={{fontSize:11,color:"#bbb",whiteSpace:"nowrap"}}>{p.u}</span>}
       </div>
       <input type="range" min={p.mi||0} max={p.mx} step={p.st} value={p.v} onChange={e=>p.fn(Number(e.target.value))} style={{width:"100%",marginTop:6}}/>
     </div>)}
   </div>
 );}
 
-function CompoundCalc({onSwitch}){
-  const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[rate,sR]=useState(7);
-  const data=useMemo(()=>cP(ini,mo,yr,rate),[ini,mo,yr,rate]);
-  const fin=data[data.length-1].v;const tI=ini+mo*12*yr;const prof=fin-tI;
+function CompoundCalc({onSwitch,t}){
+  const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[rate,sR]=useState(7);const[freq,sF]=useState("mes");
+  const moM=freq==="ano"?mo/12:mo;
+  const data=useMemo(()=>cP(ini,moM,yr,rate),[ini,moM,yr,rate]);
+  const fin=data[data.length-1].v;const tI=ini+moM*12*yr;const prof=fin-tI;
   const cd={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
   return(<div>
-    <p style={{fontSize:12,color:"#999",marginBottom:14}}>Calcula cuanto crecera tu dinero con el poder del interes compuesto</p>
-    <Inputs params={[{l:"Capital inicial",v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:"Aportacion mensual",v:mo,fn:sM,mx:50000,st:25,u:"EUR/mes"},{l:"Interes anual",v:rate,fn:sR,mx:50,st:0.5,mi:0,u:"%"},{l:"Horizonte",v:yr,fn:sY,mx:50,st:1,u:"anos"}]}/>
+    <p style={{fontSize:12,color:"#999",marginBottom:14}}>{t.ciSub}</p>
+    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lM:t.eM,lA:t.eA},{l:t.intAnual,v:rate,fn:sR,mx:50,st:0.5,mi:0,u:"%"},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",gap:10,marginBottom:12}}>
       <div style={{...cd,marginBottom:0,background:"#f0fdf8",border:"2px solid #10b98133"}}>
-        <div style={{fontSize:10,color:"#10b981",fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Capital final</div>
+        <div style={{fontSize:10,color:"#10b981",fontWeight:700,textTransform:"uppercase",marginBottom:4}}>{t.capFin}</div>
         <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:"#111"}}>{fm(fin)} EUR</div>
-        <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(rate)} /ano durante {yr} anos</div>
+        <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(rate)} {t.ano} | {yr} {t.anos}</div>
       </div>
-      <div style={cd}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>Tu aportas</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)} EUR</div></div>
-      <div style={cd}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>Intereses generados</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(prof)} EUR</div><div style={{fontSize:10,color:"#aaa",marginTop:2}}>{tI>0?Math.round(prof/tI*100):0}% sobre lo aportado</div></div>
+      <div style={cd}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.tuAp}</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)} EUR</div></div>
+      <div style={cd}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.intGen}</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(prof)} EUR</div><div style={{fontSize:10,color:"#aaa",marginTop:2}}>{tI>0?Math.round(prof/tI*100):0}% {t.sobreAp}</div></div>
     </div>
-    <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Evolucion</div><SvgChart lines={[data]} years={yr} labels={["Capital"]} colors={["#10b981"]} fill={true}/></div>
+    <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[data]} years={yr} labels={[t.capital]} colors={["#10b981"]} fill={true}/></div>
     <div onClick={onSwitch} style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#eef2ff,#e0e7ff)",border:"1px solid #c7d2fe",textAlign:"center",cursor:"pointer"}}>
-      <div style={{fontSize:14,fontWeight:800,color:"#3730a3",marginBottom:3}}>No sabes que interes poner?</div>
-      <div style={{fontSize:12,color:"#6366f1"}}>Prueba el Simulador de Cartera con datos historicos reales de 20 activos</div>
+      <div style={{fontSize:14,fontWeight:800,color:"#3730a3",marginBottom:3}}>{t.noSabes}</div>
+      <div style={{fontSize:12,color:"#6366f1"}}>{t.prueba}</div>
     </div>
   </div>);
 }
 
-function PortfolioSim(){
-  const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);
+function PortfolioSim({t,lang}){
+  const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[freq,sF]=useState("mes");
+  const moM=freq==="ano"?mo/12:mo;
   const[sel,sS]=useState(["msci_world","sp500","us_bond","gold"]);
   const[wt,sW]=useState({msci_world:50,sp500:25,us_bond:20,gold:5});
-  const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);
+  const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[sBk,setSBk]=useState(false);
   const tW=sel.reduce((s,id)=>s+(wt[id]||0),0);
   const nW=useMemo(()=>{if(tW===0)return{};const n={};sel.forEach(id=>{n[id]=((wt[id]||0)/tW)*100;});return n;},[sel,wt,tW]);
   const tog=id=>{if(sel.includes(id)){sS(sel.filter(a=>a!==id));const w={...wt};delete w[id];sW(w);}else{sS([...sel,id]);sW({...wt,[id]:0});}};
   const pS=useMemo(()=>{if(sel.length===0||tW===0)return null;let wP=0,wE=0,wO=0;const ld=[];sel.forEach(id=>{const nw=(nW[id]||0)/100;if(nw===0)return;const sc=gS(id,yr);wP+=nw*sc.p;wE+=nw*sc.e;wO+=nw*sc.o;if(dL(id)>0&&yr>dL(id)*0.5){const a=ASSETS.find(x=>x.id===id);if(a)ld.push(a.name);}});return{p:wP,e:wE,o:wO,ld};},[sel,nW,yr,tW]);
-  const scs=useMemo(()=>{if(!pS)return null;return[{l:"Pesimista",r:pS.p,d:cP(ini,mo,yr,pS.p)},{l:"Esperado",r:pS.e,d:cP(ini,mo,yr,pS.e)},{l:"Optimista",r:pS.o,d:cP(ini,mo,yr,pS.o)}];},[pS,ini,mo,yr]);
-  const tI=ini+mo*12*yr;
+  const scs=useMemo(()=>{if(!pS)return null;return[{l:t.pe,r:pS.p,d:cP(ini,moM,yr,pS.p)},{l:t.es,r:pS.e,d:cP(ini,moM,yr,pS.e)},{l:t.op,r:pS.o,d:cP(ini,moM,yr,pS.o)}];},[pS,ini,moM,yr,t]);
+  const tI=ini+moM*12*yr;
   const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
-  const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.name,w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW]);
+  const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.n[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
+  const aB=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,desc:a.d[lang],weight:nW[id]||0,er:sc.e,co:w*sc.e};}).sort((a,b)=>b.co-a.co);},[sel,nW,yr,pS,lang]);
   const cd={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
   return(<div>
-    <p style={{fontSize:12,color:"#999",marginBottom:6}}>Proyeccion con rolling returns historicos + estimaciones de analistas</p>
-    <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>Ejemplo: Cartera equilibrada global - personaliza a tu gusto</div>
-    <Inputs params={[{l:"Inversion inicial",v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:"Aportacion mensual",v:mo,fn:sM,mx:50000,st:25,u:"EUR/mes"},{l:"Horizonte",v:yr,fn:sY,mx:50,st:1,u:"anos"}]}/>
-    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name}{n>0?" ("+n+")":""}</button>;})}</div>
+    <p style={{fontSize:12,color:"#999",marginBottom:6}}>{t.simSub}</p>
+    <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
+    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lM:t.eM,lA:t.eA},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
+    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.n[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
     <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name}{on?" \u2713":""}</button>;})}</div>
     {sel.length>0&&<div style={cd}>
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:13,fontWeight:700}}>Pesos: <span style={{color:Math.abs(tW-100)<1?"#10b981":"#f59e0b",fontFamily:"monospace"}}>{tW}%</span> / 100%</span><button onClick={()=>{const w=Math.floor(100/sel.length);const rem=100-w*sel.length;const n={};sel.forEach((id,i)=>{n[id]=w+(i<rem?1:0);});sW(n);}} style={{fontSize:11,background:"#f3f4f6",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontWeight:600}}>Equiponderar</button></div>
-      {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<div key={id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-        <span style={{width:90,fontSize:12,fontWeight:600,flexShrink:0}}>{a.name}</span>
-        <input type="range" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Number(e.target.value)})} style={{flex:1}}/>
-        <div style={{display:"flex",alignItems:"center",background:"#f9fafb",border:"1.5px solid #eee",borderRadius:8,width:54,flexShrink:0}}><input type="number" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Math.max(0,Math.min(100,Number(e.target.value)||0))})} style={{width:32,border:"none",background:"transparent",textAlign:"right",fontSize:12,fontWeight:700,outline:"none",padding:"4px 0 4px 3px",fontFamily:"monospace",color:"#333"}}/><span style={{fontSize:10,color:"#bbb",paddingRight:4}}>%</span></div>
-        <button onClick={()=>tog(id)} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16}}>x</button>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:13,fontWeight:700}}>{t.pesos}: <span style={{color:Math.abs(tW-100)<1?"#10b981":"#f59e0b",fontFamily:"monospace"}}>{tW}%</span> / 100%</span><button onClick={()=>{const w=Math.floor(100/sel.length);const rem=100-w*sel.length;const n={};sel.forEach((id,i)=>{n[id]=w+(i<rem?1:0);});sW(n);}} style={{fontSize:11,background:"#f3f4f6",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontWeight:600}}>{t.equi}</button></div>
+      {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<div key={id} style={{marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+          <span style={{width:90,fontSize:12,fontWeight:600,flexShrink:0}}>{a.name}</span>
+          <input type="range" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Number(e.target.value)})} style={{flex:1}}/>
+          <div style={{display:"flex",alignItems:"center",background:"#f9fafb",border:"1.5px solid #eee",borderRadius:8,width:54,flexShrink:0}}><input type="number" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Math.max(0,Math.min(100,Number(e.target.value)||0))})} style={{width:32,border:"none",background:"transparent",textAlign:"right",fontSize:12,fontWeight:700,outline:"none",padding:"4px 0 4px 3px",fontFamily:"monospace",color:"#333"}}/><span style={{fontSize:10,color:"#bbb",paddingRight:4}}>%</span></div>
+          <button onClick={()=>tog(id)} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16}}>x</button>
+        </div>
+        <div style={{fontSize:10,color:"#aaa",fontStyle:"italic"}}>{a.d[lang]}</div>
       </div>;})}
     </div>}
     {scs&&<div>
-      {pS.ld.length>0&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>Datos limitados: {pS.ld.join(", ")}</div>}
+      {pS.ld.length>0&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>{t.datLim}: {pS.ld.join(", ")}</div>}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))",gap:10,marginBottom:12}}>
         {scs.map((s,i)=>{const fin=s.d[s.d.length-1].v;const pr=fin-tI;const mu=tI>0?fin/tI:0;return<div key={i} style={{...cd,marginBottom:0,border:i===1?"2px solid #10b98133":"1px solid #eee",background:i===1?"#f0fdf8":"#fff",position:"relative"}}>
           {i===1&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#10b981",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 8px",borderRadius:"0 0 6px 6px"}}>{s.l}</div>}
           <div style={{fontSize:10,fontWeight:700,color:COL[i],textTransform:"uppercase",marginBottom:5,marginTop:i===1?6:0}}>{s.l}</div>
           <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:"#111"}}>{fm(fin)} EUR</div>
-          <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(s.r)} /ano</div>
+          <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(s.r)} {t.ano}</div>
           <div style={{fontSize:11,color:pr>=0?"#10b981":"#ef4444",fontWeight:600,marginTop:6,paddingTop:6,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{mu.toFixed(1)}</div>
         </div>;})}
       </div>
-      <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Evolucion</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={["Pesimista","Esperado","Optimista"]} colors={COL} fill={true}/></div>
+      <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pe,t.es,t.op]} colors={COL} fill={true}/></div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
-        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Tu cartera</div>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div>
+        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCa}</div>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div>
         <div style={cd}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Riesgo</div>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.ri}</div>
           <div style={{display:"flex",gap:2,marginBottom:5}}>{rlC.map((c,i)=><div key={i} style={{flex:1,height:5,borderRadius:3,background:i<=rL?c:"#eee"}}/>)}</div>
-          <div style={{fontSize:13,fontWeight:700,color:rlC[rL]}}>{["Bajo","Moderado","Alto","Muy alto"][rL]}</div>
+          <div style={{fontSize:13,fontWeight:700,color:rlC[rL]}}>{t.riL[rL]}</div>
           <div style={{marginTop:12,display:"flex",gap:6}}>
-            <div style={{flex:1,background:"#f9fafb",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>Tu aportas</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)}</div></div>
-            <div style={{flex:1,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>Mercado genera</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
+            <div style={{flex:1,background:"#f9fafb",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.tuAp}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)}</div></div>
+            <div style={{flex:1,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.mkG}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
           </div>
         </div>
       </div>
-      <div style={{...cd,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>Como se calcula?</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#aaa",lineHeight:1.7}}>Indices y RF usan mediana de rolling returns historicos. Acciones y cripto combinan historico con estimaciones forward (JP Morgan, Vanguard). Spread se reduce con el horizonte (raiz cuadrada del tiempo).</div>}</div>
-      <div style={{fontSize:11,color:"#92400e",background:"#fffbeb",padding:12,borderRadius:10,textAlign:"center",border:"1px solid #fef3c7",marginBottom:12}}>Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.</div>
+      <div style={{...cd,padding:0}}>
+        <button onClick={()=>setSBk(!sBk)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:700,color:"#555"}}><span>{t.desg}</span><span>{sBk?"▲":"▼"}</span></button>
+        {sBk&&<div style={{padding:"0 16px 14px"}}>
+          <div style={{display:"flex",gap:4,padding:"6px 0",borderBottom:"1px solid #f0f0f0",fontSize:10,color:"#aaa",fontWeight:600}}>
+            <span style={{flex:2}}>{t.act}</span><span style={{width:40,textAlign:"right"}}>{t.peso}</span><span style={{width:50,textAlign:"right"}}>{t.rEsp}</span><span style={{width:50,textAlign:"right"}}>{t.cont}</span>
+          </div>
+          {aB.map(ab=><div key={ab.name} style={{display:"flex",gap:4,padding:"6px 0",borderBottom:"1px solid #f8f8f8",fontSize:11,alignItems:"center"}}>
+            <span style={{flex:2,fontWeight:600,color:"#333"}}>{ab.name}</span>
+            <span style={{width:40,textAlign:"right",fontFamily:"monospace",color:"#888"}}>{Math.round(ab.weight)}%</span>
+            <span style={{width:50,textAlign:"right",fontFamily:"monospace",color:ab.er>=0?"#10b981":"#ef4444"}}>{fp(ab.er)}</span>
+            <span style={{width:50,textAlign:"right",fontFamily:"monospace",fontWeight:700,color:ab.co>=0?"#10b981":"#ef4444"}}>{fp(ab.co)}</span>
+          </div>)}
+        </div>}
+      </div>
+      <div style={{...cd,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#aaa",lineHeight:1.7}}>{t.met}</div>}</div>
+      <div style={{fontSize:11,color:"#92400e",background:"#fffbeb",padding:12,borderRadius:10,textAlign:"center",border:"1px solid #fef3c7",marginBottom:12}}>{t.warn}</div>
       <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
-        <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:3}}>Quieres optimizar tu cartera?</div>
-        <div style={{fontSize:11,color:"#888",marginBottom:10}}>Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.</div>
-        <button onClick={()=>window.open("https://forms.gle/JMZg1w5eAUHnYVHw8","_blank")} style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>Avisarme</button>
+        <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:3}}>{t.optim}</div>
+        <div style={{fontSize:11,color:"#888",marginBottom:10}}>{t.prox}</div>
+        <button onClick={()=>window.open("https://forms.gle/JMZg1w5eAUHnYVHw8","_blank")} style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>{t.avisa}</button>
       </div>
     </div>}
   </div>);
@@ -166,15 +213,20 @@ function PortfolioSim(){
 
 export default function App(){
   const[mode,setMode]=useState("compound");
+  const[lang,setLang]=useState("es");
+  const t=T[lang];
   return(
     <div style={{fontFamily:"system-ui,sans-serif",background:"#f5f7fa",minHeight:"100vh",color:"#1f2937"}}>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
-        <h1 style={{fontSize:24,fontWeight:800,marginBottom:12}}>Kartera</h1>
-        <div style={{display:"flex",background:"#e5e7eb",borderRadius:10,padding:3,marginBottom:18}}>
-          <button onClick={()=>setMode("compound")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:mode==="compound"?"#fff":"transparent",color:mode==="compound"?"#111":"#999",boxShadow:mode==="compound"?"0 1px 3px rgba(0,0,0,0.06)":"none",transition:"all 0.2s"}}>Interes Compuesto</button>
-          <button onClick={()=>setMode("portfolio")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:mode==="portfolio"?"#fff":"transparent",color:mode==="portfolio"?"#111":"#999",boxShadow:mode==="portfolio"?"0 1px 3px rgba(0,0,0,0.06)":"none",transition:"all 0.2s"}}>Simulador de Cartera</button>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <h1 style={{fontSize:24,fontWeight:800}}>Kartera</h1>
+          <button onClick={()=>setLang(lang==="es"?"en":"es")} style={{background:"#f3f4f6",border:"none",borderRadius:7,padding:"5px 10px",fontSize:11,color:"#888",cursor:"pointer",fontWeight:700}}>{lang==="es"?"EN":"ES"}</button>
         </div>
-        {mode==="compound"?<CompoundCalc onSwitch={()=>setMode("portfolio")}/>:<PortfolioSim/>}
+        <div style={{display:"flex",background:"#e5e7eb",borderRadius:10,padding:3,marginBottom:18}}>
+          <button onClick={()=>setMode("compound")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:mode==="compound"?"#fff":"transparent",color:mode==="compound"?"#111":"#999",boxShadow:mode==="compound"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.ci}</button>
+          <button onClick={()=>setMode("portfolio")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:mode==="portfolio"?"#fff":"transparent",color:mode==="portfolio"?"#111":"#999",boxShadow:mode==="portfolio"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.sim}</button>
+        </div>
+        {mode==="compound"?<CompoundCalc onSwitch={()=>setMode("portfolio")} t={t}/>:<PortfolioSim t={t} lang={lang}/>}
         <div style={{textAlign:"center",marginTop:24,fontSize:10,color:"#ddd"}}>kartera.pro 2026</div>
       </div>
     </div>
