@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 
 const R = {
   sp500:{1990:-3.10,1991:30.47,1992:7.62,1993:10.08,1994:1.32,1995:37.58,1996:22.96,1997:33.36,1998:28.58,1999:21.04,2000:-9.10,2001:-11.89,2002:-22.10,2003:28.68,2004:10.88,2005:4.91,2006:15.79,2007:5.49,2008:-37.00,2009:26.46,2010:15.06,2011:2.11,2012:16.00,2013:32.39,2014:13.69,2015:1.38,2016:11.96,2017:21.83,2018:-4.38,2019:31.49,2020:18.40,2021:28.71,2022:-18.11,2023:26.29,2024:25.02,2025:17.88},
@@ -52,7 +52,7 @@ const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e
 const COL=["#f87171","#10b981","#60a5fa"];
 
 const T={
-  es:{ci:"Interes Compuesto",sim:"Simulador de Cartera",ciSub:"Calcula cuanto crecera tu dinero con el interes compuesto",simSub:"Proyeccion con rolling returns historicos + estimaciones de analistas",capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"anos",capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",evo:"Evolucion",capital:"Capital",noSabes:"No sabes que interes poner?",prueba:"Prueba el Simulador de Cartera con datos historicos reales de 20 activos",pe:"Pesimista",es:"Esperado",op:"Optimista",ano:"/ano",preset:"Ejemplo: Cartera equilibrada - personaliza a tu gusto",pesos:"Pesos",equi:"Equiponderar",tuCa:"Tu cartera",ri:"Riesgo",riL:["Bajo","Moderado","Alto","Muy alto"],mkG:"Mercado genera",desg:"Desglose por activo",act:"Activo",peso:"Peso",rEsp:"Rend.",cont:"Contrib.",como:"Como se calcula?",met:"Indices y RF usan mediana de rolling returns historicos. Acciones y cripto combinan historico con estimaciones forward (JP Morgan, Vanguard). Spread se reduce con el horizonte (raiz cuadrada del tiempo).",warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",optim:"Quieres optimizar tu cartera?",prox:"Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.",avisa:"Avisarme",datLim:"Datos limitados",eM:"EUR/mes",eA:"EUR/ano",apo:"Aportado"},
+  es:{ci:"Interes Compuesto",sim:"Simulador de Cartera",ciSub:"Calcula cuanto crecera tu dinero con el interes compuesto",simSub:"Proyeccion con rolling returns historicos + estimaciones de analistas",capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"años",capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",evo:"Evolucion",capital:"Capital",noSabes:"No sabes que interes poner?",prueba:"Prueba el Simulador de Cartera con datos historicos reales de 20 activos",pe:"Pesimista",es:"Esperado",op:"Optimista",ano:"/año",preset:"Ejemplo: Cartera equilibrada - personaliza a tu gusto",pesos:"Pesos",equi:"Equiponderar",tuCa:"Tu cartera",ri:"Riesgo",riL:["Bajo","Moderado","Alto","Muy alto"],mkG:"Mercado genera",desg:"Desglose por activo",act:"Activo",peso:"Peso",rEsp:"Rend.",cont:"Contrib.",como:"Como se calcula?",met:"Indices y RF usan mediana de rolling returns historicos. Acciones y cripto combinan historico con estimaciones forward (JP Morgan, Vanguard). Spread se reduce con el horizonte (raiz cuadrada del tiempo).",warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",optim:"Quieres optimizar tu cartera?",prox:"Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.",avisa:"Avisarme",datLim:"Datos limitados",eM:"EUR/mes",eA:"EUR/año",apo:"Aportado"},
   en:{ci:"Compound Interest",sim:"Portfolio Simulator",ciSub:"Calculate how your money will grow with compound interest",simSub:"Projection with historical rolling returns + analyst estimates",capIni:"Initial capital",aport:"Contribution",intAnual:"Annual interest",horiz:"Horizon",anos:"years",capFin:"Final capital",tuAp:"You contribute",intGen:"Interest earned",sobreAp:"on contributed",evo:"Evolution",capital:"Capital",noSabes:"Don't know what interest to use?",prueba:"Try our Portfolio Simulator with real historical data from 20 assets",pe:"Pessimistic",es:"Expected",op:"Optimistic",ano:"/year",preset:"Example: Balanced portfolio - customize to your liking",pesos:"Weights",equi:"Equal weight",tuCa:"Your portfolio",ri:"Risk",riL:["Low","Moderate","High","Very high"],mkG:"Market generates",desg:"Breakdown by asset",act:"Asset",peso:"Weight",rEsp:"Return",cont:"Contrib.",como:"How is this calculated?",met:"Indices and bonds use historical rolling return medians. Stocks and crypto blend with forward analyst estimates (JP Morgan, Vanguard). Spread shrinks with horizon (square root of time).",warn:"Past performance does not guarantee future results. Educational simulation.",optim:"Want to optimize your portfolio?",prox:"Coming soon: AI optimization, stress scenario, broker comparison.",avisa:"Notify me",datLim:"Limited data",eM:"EUR/mo",eA:"EUR/yr",apo:"Contributed"}
 };
 
@@ -67,24 +67,40 @@ const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFract
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
 
 function SvgChart({lines,years,labels,colors,fill}){
+  const ref=useRef(null);const[tip,setTip]=useState(null);
   const W=580,H=200,pad={l:50,r:10,t:10,b:24},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
   const allV=lines.flatMap(d=>d.map(p=>p.v));const mx=Math.max(...allV)*1.05;
   const sx=yr=>pad.l+(yr/years)*w,sy=val=>pad.t+h-(val/mx)*h;
   const ml=pts=>pts.map((p,i)=>(i===0?"M":"L")+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join(" ");
   const ft=v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v.toFixed(0);
-  return(<div>
-    <svg viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block"}}>
+  const onM=useCallback(e=>{if(!ref.current)return;const r=ref.current.getBoundingClientRect();const px=(e.clientX-r.left)*(W/r.width);const yr=Math.round(((px-pad.l)/w)*years);if(yr<0||yr>years){setTip(null);return;}setTip({y:yr,x:sx(yr),vs:lines.map(l=>l[yr]?.v||0),iv:lines[0][yr]?.inv||0});},[lines,years,w]);
+  return(<div style={{position:"relative"}}>
+    <svg ref={ref} viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block",cursor:"crosshair"}} onMouseMove={onM} onTouchMove={e=>{e.preventDefault();onM(e.touches[0]);}} onMouseLeave={()=>setTip(null)} onTouchEnd={()=>setTip(null)}>
       {[0,.25,.5,.75,1].map((f,i)=>{const val=mx*f;return<g key={i}><line x1={pad.l} y1={sy(val)} x2={W-pad.r} y2={sy(val)} stroke="#f0f0f0" strokeWidth="0.7"/><text x={pad.l-4} y={sy(val)+3} textAnchor="end" fontSize="9" fill="#bbb" fontFamily="monospace">{ft(val)}</text></g>;})}
       {Array.from({length:Math.min(years+1,8)},(_,i)=>{const yr=Math.round((i/Math.min(years,7))*years);return<text key={yr} x={sx(yr)} y={H-4} textAnchor="middle" fontSize="9" fill="#bbb">{yr}a</text>;})}
       <path d={ml(lines[0].map(p=>({y:p.y,v:p.inv})))} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="5,4"/>
       {fill&&lines.length>2&&<path d={ml(lines[2])+lines[0].slice().reverse().map(p=>"L"+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join("")+"Z"} fill="#10b981" opacity="0.05"/>}
       {fill&&lines.length===1&&<path d={ml(lines[0])+"L"+sx(years).toFixed(1)+","+sy(0).toFixed(1)+"L"+sx(0).toFixed(1)+","+sy(0).toFixed(1)+"Z"} fill={colors[0]} opacity="0.08"/>}
       {lines.map((dd,i)=><path key={i} d={ml(dd)} fill="none" stroke={colors[i]} strokeWidth={2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
+      {tip&&<g><line x1={tip.x} y1={pad.t} x2={tip.x} y2={H-pad.b} stroke="#ccc" strokeWidth="0.7" strokeDasharray="3,3"/>{tip.vs.map((v,i)=><circle key={i} cx={tip.x} cy={sy(v)} r={3.5} fill={colors[i]} stroke="#fff" strokeWidth="1.5"/>)}</g>}
     </svg>
     <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
       {labels.map((n,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:12,height:2,background:colors[i],display:"inline-block",borderRadius:1}}/>{n}</span>)}
     </div>
+    {tip&&<div style={{position:"absolute",top:4,left:tip.x>W*0.55?undefined:((tip.x/W)*100)+"%",right:tip.x>W*0.55?((1-tip.x/W)*100)+"%":undefined,background:"#fff",border:"1px solid #eee",borderRadius:10,padding:"8px 12px",fontSize:11,pointerEvents:"none",zIndex:10,boxShadow:"0 4px 12px rgba(0,0,0,0.06)",marginLeft:tip.x>W*0.55?0:6,marginRight:tip.x>W*0.55?6:0}}>
+      <div style={{fontWeight:600,marginBottom:3,color:"#555"}}>Yr {tip.y}</div>
+      {tip.vs.map((v,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",gap:12,color:colors[i],fontWeight:500}}><span>{labels[i]}</span><span style={{fontFamily:"monospace"}}>{fm(v)}</span></div>)}
+    </div>}
   </div>);
+}
+
+function Donut({items}){
+  const sz=70,tot=items.reduce((a,b)=>a+b.w,0)||1;
+  let cum=-Math.PI/2;const r=sz/2-3,cx=sz/2,cy=sz/2,ir=r*0.6;
+  return(<svg viewBox={"0 0 "+sz+" "+sz} width={sz} height={sz}>{items.map((it,i)=>{
+    const ang=(it.w/tot)*2*Math.PI,s=cum;cum+=ang;const la=ang>Math.PI?1:0;
+    return<path key={i} d={"M"+(cx+r*Math.cos(s))+","+(cy+r*Math.sin(s))+" A"+r+","+r+" 0 "+la+" 1 "+(cx+r*Math.cos(cum))+","+(cy+r*Math.sin(cum))+" L"+(cx+ir*Math.cos(cum))+","+(cy+ir*Math.sin(cum))+" A"+ir+","+ir+" 0 "+la+" 0 "+(cx+ir*Math.cos(s))+","+(cy+ir*Math.sin(s))+" Z"} fill={it.co} opacity="0.8" stroke="#fff" strokeWidth="1.5"/>;
+  })}</svg>);
 }
 
 function Inputs({params}){return(
@@ -175,7 +191,7 @@ function PortfolioSim({t,lang}){
       </div>
       <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pe,t.es,t.op]} colors={COL} fill={true}/></div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
-        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCa}</div>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div>
+        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCa}</div><div style={{display:"flex",alignItems:"center",gap:12}}><Donut items={cC.map(c=>({w:c.w,co:CATCO[c.id]}))}/><div style={{flex:1}}>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div></div></div>
         <div style={cd}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.ri}</div>
           <div style={{display:"flex",gap:2,marginBottom:5}}>{rlC.map((c,i)=><div key={i} style={{flex:1,height:5,borderRadius:3,background:i<=rL?c:"#eee"}}/>)}</div>
