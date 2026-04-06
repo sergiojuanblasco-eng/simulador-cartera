@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 
 const R = {
   sp500:{1990:-3.10,1991:30.47,1992:7.62,1993:10.08,1994:1.32,1995:37.58,1996:22.96,1997:33.36,1998:28.58,1999:21.04,2000:-9.10,2001:-11.89,2002:-22.10,2003:28.68,2004:10.88,2005:4.91,2006:15.79,2007:5.49,2008:-37.00,2009:26.46,2010:15.06,2011:2.11,2012:16.00,2013:32.39,2014:13.69,2015:1.38,2016:11.96,2017:21.83,2018:-4.38,2019:31.49,2020:18.40,2021:28.71,2022:-18.11,2023:26.29,2024:25.02,2025:17.88},
@@ -24,83 +24,239 @@ const R = {
 };
 
 const ASSETS=[
-  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,d:{es:"Las 500 mayores empresas de EE.UU. Nucleo de cualquier cartera.",en:"Top 500 US companies. Core of any portfolio."}},
-  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,d:{es:"100 mayores tecnologicas. Mayor crecimiento, mayor volatilidad.",en:"Top 100 tech. Higher growth, higher volatility."}},
-  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,d:{es:"1.500 empresas de 23 paises desarrollados. Maxima diversificacion.",en:"1,500 companies from 23 developed countries. Max diversification."}},
-  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,d:{es:"Mercados emergentes (China, India, Brasil). Alto potencial y riesgo.",en:"Emerging markets (China, India, Brazil). High potential and risk."}},
-  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,d:{es:"600 empresas europeas. Diversificacion fuera de EE.UU.",en:"600 European companies. Diversification away from US."}},
-  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,d:{es:"Todo el mundo en un indice: desarrollados + emergentes.",en:"Whole world in one index: developed + emerging."}},
-  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,d:{es:"Ecosistema tech con margenes altisimos. Valor refugio tecnologico.",en:"Tech ecosystem with very high margins. Tech safe haven."}},
-  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,d:{es:"Lider en chips para IA. Alto crecimiento, muy volatil.",en:"AI chip leader. High growth, very volatile."}},
-  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,d:{es:"Cloud + IA + software empresarial. Crecimiento estable.",en:"Cloud + AI + enterprise software. Stable growth."}},
-  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,d:{es:"Vehiculos electricos + energia. Muy volatil, apuesta a futuro.",en:"Electric vehicles + energy. Very volatile, future bet."}},
-  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,d:{es:"E-commerce + AWS cloud. Diversificado y dominante.",en:"E-commerce + AWS cloud. Diversified and dominant."}},
-  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,d:{es:"Publicidad digital + cloud + IA. Generador de caja enorme.",en:"Digital ads + cloud + AI. Enormous cash generator."}},
-  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,d:{es:"Valor defensivo clasico. Dividendo estable, baja volatilidad.",en:"Classic defensive stock. Stable dividend, low volatility."}},
-  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,d:{es:"Facebook, Instagram, WhatsApp. Publicidad + apuesta por IA.",en:"Facebook, Instagram, WhatsApp. Ads + AI bet."}},
-  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,d:{es:"Deuda del gobierno de EE.UU. Refugio en crisis, estabiliza cartera.",en:"US government debt. Crisis safe haven, stabilizes portfolio."}},
-  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,d:{es:"Liquidez con rendimiento minimo. Reduce volatilidad al maximo.",en:"Liquidity with minimal return. Minimizes volatility."}},
-  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,d:{es:"Oro digital. Alta volatilidad, potencial alto a largo plazo.",en:"Digital gold. High volatility, high long-term potential."}},
-  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,d:{es:"Contratos inteligentes y DeFi. Mas riesgo que Bitcoin.",en:"Smart contracts and DeFi. Higher risk than Bitcoin."}},
-  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,d:{es:"Proteccion contra inflacion y crisis. Descorrelacionado de bolsa.",en:"Inflation and crisis protection. Uncorrelated with stocks."}},
-  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,d:{es:"Inmobiliario cotizado. Rentas + revalorizacion, sensible a tipos.",en:"Listed real estate. Income + appreciation, rate sensitive."}},
+  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,desc:{es:"Las 500 mayores empresas de EE.UU. Nucleo de cualquier cartera global.",en:"Top 500 US companies. Core holding for any global portfolio."}},
+  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,desc:{es:"100 mayores tecnologicas. Mayor crecimiento, mayor volatilidad.",en:"Top 100 tech companies. Higher growth, higher volatility."}},
+  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,desc:{es:"1.500 empresas de 23 paises desarrollados. Maxima diversificacion.",en:"1,500 companies from 23 developed countries. Maximum diversification."}},
+  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,desc:{es:"Mercados emergentes (China, India, Brasil). Alto potencial, alto riesgo.",en:"Emerging markets (China, India, Brazil). High potential, high risk."}},
+  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,desc:{es:"600 empresas europeas. Diversificacion fuera de EE.UU.",en:"600 European companies. Diversification away from US."}},
+  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,desc:{es:"Todo el mundo en un indice: desarrollados + emergentes.",en:"The whole world in one index: developed + emerging."}},
+  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,desc:{es:"Ecosistema tech con margenes altisimos. Valor refugio tecnologico.",en:"Tech ecosystem with very high margins. Tech safe haven."}},
+  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,desc:{es:"Lider en chips para IA. Alto crecimiento pero muy volatil.",en:"AI chip leader. High growth but very volatile."}},
+  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,desc:{es:"Cloud + IA + software empresarial. Crecimiento estable.",en:"Cloud + AI + enterprise software. Stable growth."}},
+  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,desc:{es:"Vehiculos electricos + energia. Muy volatil, apuesta a futuro.",en:"Electric vehicles + energy. Very volatile, future bet."}},
+  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,desc:{es:"E-commerce + AWS cloud. Diversificado y dominante.",en:"E-commerce + AWS cloud. Diversified and dominant."}},
+  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,desc:{es:"Publicidad digital + cloud + IA. Generador de caja enorme.",en:"Digital ads + cloud + AI. Enormous cash generator."}},
+  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,desc:{es:"Valor defensivo clasico. Dividendo estable, baja volatilidad.",en:"Classic defensive stock. Stable dividend, low volatility."}},
+  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,desc:{es:"Facebook, Instagram, WhatsApp. Publicidad + apuesta por IA.",en:"Facebook, Instagram, WhatsApp. Advertising + AI bet."}},
+  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,desc:{es:"Deuda del gobierno de EE.UU. Refugio en crisis, estabiliza la cartera.",en:"US government debt. Safe haven in crises, stabilizes portfolio."}},
+  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,desc:{es:"Liquidez con rendimiento minimo. Reduce volatilidad al maximo.",en:"Liquidity with minimal return. Minimizes volatility."}},
+  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,desc:{es:"Oro digital. Alta volatilidad, potencial alto a largo plazo.",en:"Digital gold. High volatility, high long-term potential."}},
+  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,desc:{es:"Plataforma de contratos inteligentes. Mas riesgo que Bitcoin.",en:"Smart contract platform. Higher risk than Bitcoin."}},
+  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,desc:{es:"Proteccion contra inflacion y crisis. Descorrelacionado de bolsa.",en:"Inflation and crisis protection. Uncorrelated with stocks."}},
+  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,desc:{es:"Inmobiliario cotizado. Rentas + revalorizacion, sensible a tipos.",en:"Listed real estate. Income + appreciation, rate sensitive."}},
 ];
 
-const CATS=[{id:"idx",n:{es:"Indices",en:"Indices"}},{id:"stk",n:{es:"Acciones",en:"Stocks"}},{id:"fi",n:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",n:{es:"Cripto",en:"Crypto"}},{id:"alt",n:{es:"Otros",en:"Others"}}];
-const CEIL={cry:{s:150,l:15},stk:{s:100,l:15}};
+const CATS=[{id:"idx",name:{es:"Indices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}}];
 const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e"};
 const COL=["#f87171","#10b981","#60a5fa"];
 
 const T={
-  es:{ci:"Interes Compuesto",sim:"Simulador de Cartera",ciSub:"Calcula cuanto crecera tu dinero con el interes compuesto",simSub:"Proyeccion con rolling returns historicos + estimaciones de analistas",capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"años",capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",evo:"Evolucion",capital:"Capital",noSabes:"No sabes que interes poner?",prueba:"Prueba el Simulador de Cartera con datos historicos reales de 20 activos",pe:"Pesimista",es:"Esperado",op:"Optimista",ano:"/año",preset:"Ejemplo: Cartera equilibrada - personaliza a tu gusto",pesos:"Pesos",equi:"Equiponderar",tuCa:"Tu cartera",ri:"Riesgo",riL:["Bajo","Moderado","Alto","Muy alto"],mkG:"Mercado genera",desg:"Desglose por activo",act:"Activo",peso:"Peso",rEsp:"Rend.",cont:"Contrib.",como:"Como se calcula?",met:"Indices y RF usan mediana de rolling returns historicos. Acciones y cripto combinan historico con estimaciones forward (JP Morgan, Vanguard). Spread se reduce con el horizonte (raiz cuadrada del tiempo).",warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",optim:"Quieres optimizar tu cartera?",prox:"Proximamente: optimizacion con IA, escenario de crisis, comparador de brokers.",avisa:"Avisarme",datLim:"Datos limitados",eM:"EUR/mes",eA:"EUR/año",apo:"Aportado"},
-  en:{ci:"Compound Interest",sim:"Portfolio Simulator",ciSub:"Calculate how your money will grow with compound interest",simSub:"Projection with historical rolling returns + analyst estimates",capIni:"Initial capital",aport:"Contribution",intAnual:"Annual interest",horiz:"Horizon",anos:"years",capFin:"Final capital",tuAp:"You contribute",intGen:"Interest earned",sobreAp:"on contributed",evo:"Evolution",capital:"Capital",noSabes:"Don't know what interest to use?",prueba:"Try our Portfolio Simulator with real historical data from 20 assets",pe:"Pessimistic",es:"Expected",op:"Optimistic",ano:"/year",preset:"Example: Balanced portfolio - customize to your liking",pesos:"Weights",equi:"Equal weight",tuCa:"Your portfolio",ri:"Risk",riL:["Low","Moderate","High","Very high"],mkG:"Market generates",desg:"Breakdown by asset",act:"Asset",peso:"Weight",rEsp:"Return",cont:"Contrib.",como:"How is this calculated?",met:"Indices and bonds use historical rolling return medians. Stocks and crypto blend with forward analyst estimates (JP Morgan, Vanguard). Spread shrinks with horizon (square root of time).",warn:"Past performance does not guarantee future results. Educational simulation.",optim:"Want to optimize your portfolio?",prox:"Coming soon: AI optimization, stress scenario, broker comparison.",avisa:"Notify me",datLim:"Limited data",eM:"EUR/mo",eA:"EUR/yr",apo:"Contributed"}
+  es:{ci:"Interes Compuesto",sim:"Simulador de Cartera",ciSub:"Calcula cuanto crecera tu dinero con el poder del interes compuesto",simSub:"Proyeccion con rolling returns historicos de cartera completa",capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"anos",capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",evo:"Evolucion",capital:"Capital",noSabes:"No sabes que interes poner?",pruebaEl:"Prueba el Simulador de Cartera con datos historicos reales de 20 activos",pess:"Pesimista",esp:"Esperado",opt:"Optimista",ano:"/ano",preset:"Ejemplo: Cartera equilibrada global - personaliza a tu gusto",pesos:"Pesos",equi:"Equiponderar",tuCart:"Tu cartera",riesgo:"Riesgo",riskL:["Bajo","Moderado","Alto","Muy alto"],mktGen:"Mercado genera",desglose:"Desglose por activo",activo:"Activo",peso:"Peso",rendEsp:"Rend. esperado",contrib:"Contribucion",como:"Como se calcula?",metodo:"Se calculan rolling returns de la cartera completa (no activo por activo). Percentil 10 = pesimista, mediana = esperado, percentil 75 = optimista. Las probabilidades reflejan la distribucion historica real.",warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",optim:"Acceso anticipado al analisis con IA",prox:"Los primeros usuarios tendran acceso gratuito",avisarme:"Quiero acceso",datosLim:"Datos limitados",mes:"mes",anoF:"ano",eurMes:"EUR/mes",eurAno:"EUR/ano",aportado:"Aportado",probPerd:"Probabilidad de perder dinero",insight:"En {yr} anos, esta cartera ha tenido perdidas en {pct}% de los casos",peorCaso:"Peor escenario historico",alerta:"Alta probabilidad de perdidas a corto plazo",datosLimWarn:"Datos historicos limitados: los resultados pueden estar sesgados por periodos recientes"},
+  en:{ci:"Compound Interest",sim:"Portfolio Simulator",ciSub:"Calculate how your money will grow with the power of compound interest",simSub:"Projection with full portfolio historical rolling returns",capIni:"Initial capital",aport:"Contribution",intAnual:"Annual interest",horiz:"Horizon",anos:"years",capFin:"Final capital",tuAp:"You contribute",intGen:"Interest earned",sobreAp:"on contributed",evo:"Evolution",capital:"Capital",noSabes:"Don't know what interest rate to use?",pruebaEl:"Try our Portfolio Simulator with real historical data from 20 assets",pess:"Pessimistic",esp:"Expected",opt:"Optimistic",ano:"/year",preset:"Example: Balanced global portfolio - customize to your liking",pesos:"Weights",equi:"Equal weight",tuCart:"Your portfolio",riesgo:"Risk",riskL:["Low","Moderate","High","Very high"],mktGen:"Market generates",desglose:"Breakdown by asset",activo:"Asset",peso:"Weight",rendEsp:"Exp. return",contrib:"Contribution",como:"How is this calculated?",metodo:"Full portfolio rolling returns are computed (not per-asset). 10th percentile = pessimistic, median = expected, 75th percentile = optimistic. Probabilities reflect the real historical distribution.",warn:"Past performance does not guarantee future results. Educational simulation.",optim:"Early access to AI-powered analysis",prox:"First users will get free access",avisarme:"Get access",datosLim:"Limited data",mes:"month",anoF:"year",eurMes:"EUR/mo",eurAno:"EUR/yr",aportado:"Contributed",probPerd:"Probability of losing money",insight:"Over {yr} years, this portfolio lost money in {pct}% of cases",peorCaso:"Worst historical scenario",alerta:"High probability of short-term losses",datosLimWarn:"Limited historical data: results may be biased by recent periods"}
 };
 
+/* ── UTILITY FUNCTIONS (unchanged) ── */
 function gY(id){const d=R[id];return d?Object.keys(d).map(Number).sort((a,b)=>a-b):[];}
 function dL(id){return gY(id).length;}
-function gC(c,h){const x=CEIL[c];return x?x.l+(x.s-x.l)/(1+h/3):null;}
-function rC(id,h){const d=R[id];if(!d)return[];const yrs=gY(id);if(h<1||h>yrs.length-1)return[];const a=ASSETS.find(x=>x.id===id);const cap=a?gC(a.cat,h):null;const out=[];for(let i=0;i<=yrs.length-h;i++){let cum=1;for(let j=0;j<h;j++){const r=d[yrs[i+j]];if(r===undefined){cum=-1;break;}cum*=(1+r/100);}if(cum>0){let cg=(Math.pow(cum,1/h)-1)*100;if(cap!==null&&cg>cap)cg=cap;out.push(cg);}}return out.sort((a,b)=>a-b);}
 function pc(a,p){if(!a.length)return null;const i=(p/100)*(a.length-1);const l=Math.floor(i),h=Math.ceil(i);return l===h?a[l]:a[l]+(a[h]-a[l])*(i-l);}
-function gS(id,h){const a=ASSETS.find(x=>x.id===id);if(!a)return{p:0,e:0,o:0};const rr=rC(id,h);const nD=dL(id);const ok=rr.length>=3;let exp;if(a.uf){if(ok){const hm=pc(rr,50);let wH=1/(1+h/5);if(h>nD*0.5)wH=0.15;exp=wH*hm+(1-wH)*a.f;}else{exp=a.f;}}else{exp=ok?pc(rr,50):a.f;}return{p:exp-a.s/Math.sqrt(Math.max(h,1)),e:exp,o:exp+a.s/Math.sqrt(Math.max(h,1))};}
 function cP(ini,mo,yrs,rate){const mr=rate/100/12;const d=[{y:0,v:ini,inv:ini}];let v=ini,inv=ini;for(let y=1;y<=yrs;y++){for(let m=0;m<12;m++){v=v*(1+mr)+mo;inv+=mo;}d.push({y,v,inv});}return d;}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
 
+/* ── PARTE 4: Cap for extreme assets ── */
+function capExtremeReturn(ret, asset) {
+  if (!asset.uf) return ret;
+  let r = ret;
+  if (r > 100) r = 65 + (r - 100) * 0.1;
+  else if (r > 50) r = 50 + (r - 50) * 0.3;
+  return r;
+}
+
+/* ── PARTE 1: Portfolio-level annual returns (intersection of years) ── */
+function getPortfolioAnnualReturns(selectedIds, normalizedWeights) {
+  // Find intersection of years where ALL selected assets have data
+  const yearSets = selectedIds.map(id => new Set(gY(id)));
+  if (yearSets.length === 0) return [];
+  let commonYears = [...yearSets[0]];
+  for (let i = 1; i < yearSets.length; i++) {
+    commonYears = commonYears.filter(y => yearSets[i].has(y));
+  }
+  commonYears.sort((a, b) => a - b);
+
+  // Calculate portfolio return per year
+  return commonYears.map(year => {
+    let portRet = 0;
+    selectedIds.forEach(id => {
+      const w = (normalizedWeights[id] || 0) / 100;
+      const asset = ASSETS.find(a => a.id === id);
+      let r = R[id][year];
+      // PARTE 4: Cap extreme returns for uf assets
+      if (asset) r = capExtremeReturn(r, asset);
+      portRet += w * r;
+    });
+    return { year, ret: portRet };
+  });
+}
+
+/* ── PARTE 2: Rolling CAGR windows at portfolio level ── */
+function getPortfolioRollingCAGR(annualReturns, horizon) {
+  if (horizon < 1 || annualReturns.length < horizon) return [];
+  const cagrs = [];
+  for (let i = 0; i <= annualReturns.length - horizon; i++) {
+    let cum = 1;
+    for (let j = 0; j < horizon; j++) {
+      cum *= (1 + annualReturns[i + j].ret / 100);
+    }
+    const cagr = (Math.pow(cum, 1 / horizon) - 1) * 100;
+    cagrs.push(cagr);
+  }
+  return cagrs.sort((a, b) => a - b);
+}
+
+/* ── PARTE 1.1: Confidence adjustment for limited data ── */
+function adjustForLimitedData(cagr, availableYears, fallbackReturn) {
+  if (availableYears >= 20) return cagr;
+  const confidence = Math.min(1, availableYears / 20);
+  return cagr * confidence + (1 - confidence) * fallbackReturn;
+}
+
+/* ── PARTE 3: Percentile-based scenarios + probability metrics ── */
+function computePortfolioScenarios(selectedIds, normalizedWeights, horizon) {
+  const activeIds = selectedIds.filter(id => (normalizedWeights[id] || 0) > 0);
+  if (activeIds.length === 0) return null;
+
+  const annualRets = getPortfolioAnnualReturns(activeIds, normalizedWeights);
+  const numYears = annualRets.length;
+
+  // If not enough data for even 1 rolling window, fall back to weighted forward estimates
+  if (numYears < horizon || numYears < 2) {
+    let wF = 0;
+    activeIds.forEach(id => {
+      const a = ASSETS.find(x => x.id === id);
+      wF += ((normalizedWeights[id] || 0) / 100) * (a?.f || 5);
+    });
+    return {
+      p: wF * 0.5, e: wF, o: wF * 1.3,
+      probLoss: horizon <= 3 ? 25 : 10,
+      probPess: 10, probEsp: 65, probOpt: 25,
+      worstCase: wF * 0.3,
+      limitedData: true, dataYears: numYears,
+      rollingCount: 0
+    };
+  }
+
+  const rollingCAGRs = getPortfolioRollingCAGR(annualRets, horizon);
+  if (rollingCAGRs.length < 3) {
+    // Not enough windows — use single-period returns
+    let wF = 0;
+    activeIds.forEach(id => {
+      const a = ASSETS.find(x => x.id === id);
+      wF += ((normalizedWeights[id] || 0) / 100) * (a?.f || 5);
+    });
+    return {
+      p: wF * 0.5, e: wF, o: wF * 1.3,
+      probLoss: horizon <= 3 ? 25 : 10,
+      probPess: 10, probEsp: 65, probOpt: 25,
+      worstCase: wF * 0.3,
+      limitedData: true, dataYears: numYears,
+      rollingCount: rollingCAGRs.length
+    };
+  }
+
+  // PARTE 1.1: Limited data adjustment
+  const limitedData = numYears < 15;
+  let wFallback = 0;
+  activeIds.forEach(id => {
+    const a = ASSETS.find(x => x.id === id);
+    wFallback += ((normalizedWeights[id] || 0) / 100) * (a?.f || 5);
+  });
+
+  // PASO 3: Percentile-based scenarios — p10, p50, p75
+  let rawP = pc(rollingCAGRs, 10);
+  let rawE = pc(rollingCAGRs, 50);
+  let rawO = pc(rollingCAGRs, 75);
+
+  // Apply limited data adjustment
+  if (limitedData) {
+    rawP = adjustForLimitedData(rawP, numYears, wFallback * 0.5);
+    rawE = adjustForLimitedData(rawE, numYears, wFallback);
+    rawO = adjustForLimitedData(rawO, numYears, wFallback * 1.3);
+  }
+
+  // PARTE 5: Short-term — NO smooth volatility for yr ≤ 3
+  // (We're already using raw rolling CAGRs, so short-term risk is naturally preserved)
+
+  // PARTE 2: Probability of loss
+  const negCount = rollingCAGRs.filter(c => c < 0).length;
+  const probLoss = Math.round((negCount / rollingCAGRs.length) * 100);
+
+  // Probability per scenario bucket
+  const p10val = pc(rollingCAGRs, 10);
+  const p75val = pc(rollingCAGRs, 75);
+  const pessCount = rollingCAGRs.filter(c => c <= p10val).length;
+  const optCount = rollingCAGRs.filter(c => c >= p75val).length;
+  const espCount = rollingCAGRs.length - pessCount - optCount;
+
+  const probPess = Math.round((pessCount / rollingCAGRs.length) * 100);
+  const probOpt = Math.round((optCount / rollingCAGRs.length) * 100);
+  const probEsp = 100 - probPess - probOpt;
+
+  // PARTE 3: Worst case
+  const worstCase = rollingCAGRs[0]; // already sorted ascending
+
+  return {
+    p: rawP, e: rawE, o: rawO,
+    probLoss,
+    probPess, probEsp, probOpt,
+    worstCase,
+    limitedData,
+    dataYears: numYears,
+    rollingCount: rollingCAGRs.length
+  };
+}
+
+/* ── Per-asset scenario (kept for breakdown, uses old logic lightly) ── */
+function gS(id,h){
+  const a=ASSETS.find(x=>x.id===id);if(!a)return{p:0,e:0,o:0};
+  const yrs=gY(id);const d=R[id];if(!d)return{p:a.f,e:a.f,o:a.f};
+  // Simple per-asset rolling for display only
+  if(h<1||h>yrs.length-1)return{p:a.f*0.5,e:a.f,o:a.f*1.3};
+  const rr=[];
+  for(let i=0;i<=yrs.length-h;i++){
+    let cum=1;let ok=true;
+    for(let j=0;j<h;j++){
+      let r=d[yrs[i+j]];
+      if(r===undefined){ok=false;break;}
+      r=capExtremeReturn(r,a);
+      cum*=(1+r/100);
+    }
+    if(ok)rr.push((Math.pow(cum,1/h)-1)*100);
+  }
+  rr.sort((a,b)=>a-b);
+  if(rr.length<3)return{p:a.f*0.5,e:a.f,o:a.f*1.3};
+  return{p:pc(rr,10),e:pc(rr,50),o:pc(rr,75)};
+}
+
+
 function SvgChart({lines,years,labels,colors,fill}){
-  const ref=useRef(null);const[tip,setTip]=useState(null);
   const W=580,H=200,pad={l:50,r:10,t:10,b:24},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
   const allV=lines.flatMap(d=>d.map(p=>p.v));const mx=Math.max(...allV)*1.05;
   const sx=yr=>pad.l+(yr/years)*w,sy=val=>pad.t+h-(val/mx)*h;
   const ml=pts=>pts.map((p,i)=>(i===0?"M":"L")+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join(" ");
   const ft=v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v.toFixed(0);
-  const onM=useCallback(e=>{if(!ref.current)return;const r=ref.current.getBoundingClientRect();const px=(e.clientX-r.left)*(W/r.width);const yr=Math.round(((px-pad.l)/w)*years);if(yr<0||yr>years){setTip(null);return;}setTip({y:yr,x:sx(yr),vs:lines.map(l=>l[yr]?.v||0),iv:lines[0][yr]?.inv||0});},[lines,years,w]);
-  return(<div style={{position:"relative"}}>
-    <svg ref={ref} viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block",cursor:"crosshair"}} onMouseMove={onM} onTouchMove={e=>{e.preventDefault();onM(e.touches[0]);}} onMouseLeave={()=>setTip(null)} onTouchEnd={()=>setTip(null)}>
+  return(<div>
+    <svg viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block"}}>
       {[0,.25,.5,.75,1].map((f,i)=>{const val=mx*f;return<g key={i}><line x1={pad.l} y1={sy(val)} x2={W-pad.r} y2={sy(val)} stroke="#f0f0f0" strokeWidth="0.7"/><text x={pad.l-4} y={sy(val)+3} textAnchor="end" fontSize="9" fill="#bbb" fontFamily="monospace">{ft(val)}</text></g>;})}
       {Array.from({length:Math.min(years+1,8)},(_,i)=>{const yr=Math.round((i/Math.min(years,7))*years);return<text key={yr} x={sx(yr)} y={H-4} textAnchor="middle" fontSize="9" fill="#bbb">{yr}a</text>;})}
       <path d={ml(lines[0].map(p=>({y:p.y,v:p.inv})))} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="5,4"/>
       {fill&&lines.length>2&&<path d={ml(lines[2])+lines[0].slice().reverse().map(p=>"L"+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join("")+"Z"} fill="#10b981" opacity="0.05"/>}
       {fill&&lines.length===1&&<path d={ml(lines[0])+"L"+sx(years).toFixed(1)+","+sy(0).toFixed(1)+"L"+sx(0).toFixed(1)+","+sy(0).toFixed(1)+"Z"} fill={colors[0]} opacity="0.08"/>}
-      {lines.map((dd,i)=><path key={i} d={ml(dd)} fill="none" stroke={colors[i]} strokeWidth={2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
-      {tip&&<g><line x1={tip.x} y1={pad.t} x2={tip.x} y2={H-pad.b} stroke="#ccc" strokeWidth="0.7" strokeDasharray="3,3"/>{tip.vs.map((v,i)=><circle key={i} cx={tip.x} cy={sy(v)} r={3.5} fill={colors[i]} stroke="#fff" strokeWidth="1.5"/>)}</g>}
+      {lines.map((d,i)=><path key={i} d={ml(d)} fill="none" stroke={colors[i]} strokeWidth={2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
     </svg>
     <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
       {labels.map((n,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:12,height:2,background:colors[i],display:"inline-block",borderRadius:1}}/>{n}</span>)}
     </div>
-    {tip&&<div style={{position:"absolute",top:4,left:tip.x>W*0.55?undefined:((tip.x/W)*100)+"%",right:tip.x>W*0.55?((1-tip.x/W)*100)+"%":undefined,background:"#fff",border:"1px solid #eee",borderRadius:10,padding:"8px 12px",fontSize:11,pointerEvents:"none",zIndex:10,boxShadow:"0 4px 12px rgba(0,0,0,0.06)",marginLeft:tip.x>W*0.55?0:6,marginRight:tip.x>W*0.55?6:0}}>
-      <div style={{fontWeight:600,marginBottom:3,color:"#555"}}>Yr {tip.y}</div>
-      {tip.vs.map((v,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",gap:12,color:colors[i],fontWeight:500}}><span>{labels[i]}</span><span style={{fontFamily:"monospace"}}>{fm(v)}</span></div>)}
-    </div>}
   </div>);
-}
-
-function Donut({items}){
-  const sz=70,tot=items.reduce((a,b)=>a+b.w,0)||1;
-  let cum=-Math.PI/2;const r=sz/2-3,cx=sz/2,cy=sz/2,ir=r*0.6;
-  return(<svg viewBox={"0 0 "+sz+" "+sz} width={sz} height={sz}>{items.map((it,i)=>{
-    const ang=(it.w/tot)*2*Math.PI,s=cum;cum+=ang;const la=ang>Math.PI?1:0;
-    return<path key={i} d={"M"+(cx+r*Math.cos(s))+","+(cy+r*Math.sin(s))+" A"+r+","+r+" 0 "+la+" 1 "+(cx+r*Math.cos(cum))+","+(cy+r*Math.sin(cum))+" L"+(cx+ir*Math.cos(cum))+","+(cy+ir*Math.sin(cum))+" A"+ir+","+ir+" 0 "+la+" 0 "+(cx+ir*Math.cos(s))+","+(cy+ir*Math.sin(s))+" Z"} fill={it.co} opacity="0.8" stroke="#fff" strokeWidth="1.5"/>;
-  })}</svg>);
 }
 
 function Inputs({params}){return(
@@ -109,7 +265,7 @@ function Inputs({params}){return(
       <div style={{fontSize:11,color:"#aaa",marginBottom:4}}>{p.l}</div>
       <div style={{display:"flex",alignItems:"baseline",gap:4}}>
         <input type="number" value={p.v} min={p.mi||0} max={p.mx} step={p.st} onChange={e=>p.fn(Math.max(p.mi||0,Math.min(p.mx,Number(e.target.value)||0)))} style={{width:"100%",border:"none",fontSize:18,fontWeight:800,outline:"none",fontFamily:"monospace",color:"#111"}}/>
-        {p.tog?<select value={p.freq} onChange={e=>p.sF(e.target.value)} style={{border:"1.5px solid #eee",borderRadius:6,padding:"3px 4px",fontSize:11,color:"#888",background:"#f9fafb",cursor:"pointer",fontWeight:600,outline:"none"}}><option value="mes">{p.lM}</option><option value="ano">{p.lA}</option></select>
+        {p.tog?<select value={p.freq} onChange={e=>p.sF(e.target.value)} style={{border:"1.5px solid #eee",borderRadius:6,padding:"3px 4px",fontSize:11,color:"#888",background:"#f9fafb",cursor:"pointer",fontWeight:600,outline:"none"}}><option value="mes">{p.lMes}</option><option value="ano">{p.lAno}</option></select>
         :<span style={{fontSize:11,color:"#bbb",whiteSpace:"nowrap"}}>{p.u}</span>}
       </div>
       <input type="range" min={p.mi||0} max={p.mx} step={p.st} value={p.v} onChange={e=>p.fn(Number(e.target.value))} style={{width:"100%",marginTop:6}}/>
@@ -125,7 +281,7 @@ function CompoundCalc({onSwitch,t}){
   const cd={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
   return(<div>
     <p style={{fontSize:12,color:"#999",marginBottom:14}}>{t.ciSub}</p>
-    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lM:t.eM,lA:t.eA},{l:t.intAnual,v:rate,fn:sR,mx:50,st:0.5,mi:0,u:"%"},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
+    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.intAnual,v:rate,fn:sR,mx:50,st:0.5,mi:0,u:"%"},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",gap:10,marginBottom:12}}>
       <div style={{...cd,marginBottom:0,background:"#f0fdf8",border:"2px solid #10b98133"}}>
         <div style={{fontSize:10,color:"#10b981",fontWeight:700,textTransform:"uppercase",marginBottom:4}}>{t.capFin}</div>
@@ -138,7 +294,7 @@ function CompoundCalc({onSwitch,t}){
     <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[data]} years={yr} labels={[t.capital]} colors={["#10b981"]} fill={true}/></div>
     <div onClick={onSwitch} style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#eef2ff,#e0e7ff)",border:"1px solid #c7d2fe",textAlign:"center",cursor:"pointer"}}>
       <div style={{fontSize:14,fontWeight:800,color:"#3730a3",marginBottom:3}}>{t.noSabes}</div>
-      <div style={{fontSize:12,color:"#6366f1"}}>{t.prueba}</div>
+      <div style={{fontSize:12,color:"#6366f1"}}>{t.pruebaEl}</div>
     </div>
   </div>);
 }
@@ -148,23 +304,33 @@ function PortfolioSim({t,lang}){
   const moM=freq==="ano"?mo/12:mo;
   const[sel,sS]=useState(["msci_world","sp500","us_bond","gold"]);
   const[wt,sW]=useState({msci_world:50,sp500:25,us_bond:20,gold:5});
-  const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[sBk,setSBk]=useState(false);
+  const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[showBk,sBk]=useState(false);
   const tW=sel.reduce((s,id)=>s+(wt[id]||0),0);
   const nW=useMemo(()=>{if(tW===0)return{};const n={};sel.forEach(id=>{n[id]=((wt[id]||0)/tW)*100;});return n;},[sel,wt,tW]);
   const tog=id=>{if(sel.includes(id)){sS(sel.filter(a=>a!==id));const w={...wt};delete w[id];sW(w);}else{sS([...sel,id]);sW({...wt,[id]:0});}};
-  const pS=useMemo(()=>{if(sel.length===0||tW===0)return null;let wP=0,wE=0,wO=0;const ld=[];sel.forEach(id=>{const nw=(nW[id]||0)/100;if(nw===0)return;const sc=gS(id,yr);wP+=nw*sc.p;wE+=nw*sc.e;wO+=nw*sc.o;if(dL(id)>0&&yr>dL(id)*0.5){const a=ASSETS.find(x=>x.id===id);if(a)ld.push(a.name);}});return{p:wP,e:wE,o:wO,ld};},[sel,nW,yr,tW]);
-  const scs=useMemo(()=>{if(!pS)return null;return[{l:t.pe,r:pS.p,d:cP(ini,moM,yr,pS.p)},{l:t.es,r:pS.e,d:cP(ini,moM,yr,pS.e)},{l:t.op,r:pS.o,d:cP(ini,moM,yr,pS.o)}];},[pS,ini,moM,yr,t]);
+
+  /* ── NEW: Portfolio-level simulation ── */
+  const pS=useMemo(()=>{
+    if(sel.length===0||tW===0)return null;
+    return computePortfolioScenarios(sel, nW, yr);
+  },[sel,nW,yr,tW]);
+
+  const scs=useMemo(()=>{if(!pS)return null;return[{l:t.pess,r:pS.p,d:cP(ini,moM,yr,pS.p),prob:pS.probPess},{l:t.esp,r:pS.e,d:cP(ini,moM,yr,pS.e),prob:pS.probEsp},{l:t.opt,r:pS.o,d:cP(ini,moM,yr,pS.o),prob:pS.probOpt}];},[pS,ini,moM,yr,t]);
   const tI=ini+moM*12*yr;
   const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
-  const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.n[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
-  const aB=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,desc:a.d[lang],weight:nW[id]||0,er:sc.e,co:w*sc.e};}).sort((a,b)=>b.co-a.co);},[sel,nW,yr,pS,lang]);
+  const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.name[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
+  const assetBreakdown=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,desc:a.desc[lang],weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
   const cd={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
+
+  /* ── Dynamic warning conditions ── */
+  const showShortTermWarning = pS && yr < 5 && pS.probLoss > 25;
+
   return(<div>
     <p style={{fontSize:12,color:"#999",marginBottom:6}}>{t.simSub}</p>
     <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
-    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lM:t.eM,lA:t.eA},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
-    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.n[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
+    <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
+    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
     <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name}{on?" \u2713":""}</button>;})}</div>
     {sel.length>0&&<div style={cd}>
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:13,fontWeight:700}}>{t.pesos}: <span style={{color:Math.abs(tW-100)<1?"#10b981":"#f59e0b",fontFamily:"monospace"}}>{tW}%</span> / 100%</span><button onClick={()=>{const w=Math.floor(100/sel.length);const rem=100-w*sel.length;const n={};sel.forEach((id,i)=>{n[id]=w+(i<rem?1:0);});sW(n);}} style={{fontSize:11,background:"#f3f4f6",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontWeight:600}}>{t.equi}</button></div>
@@ -175,53 +341,86 @@ function PortfolioSim({t,lang}){
           <div style={{display:"flex",alignItems:"center",background:"#f9fafb",border:"1.5px solid #eee",borderRadius:8,width:54,flexShrink:0}}><input type="number" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Math.max(0,Math.min(100,Number(e.target.value)||0))})} style={{width:32,border:"none",background:"transparent",textAlign:"right",fontSize:12,fontWeight:700,outline:"none",padding:"4px 0 4px 3px",fontFamily:"monospace",color:"#333"}}/><span style={{fontSize:10,color:"#bbb",paddingRight:4}}>%</span></div>
           <button onClick={()=>tog(id)} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16}}>x</button>
         </div>
-        <div style={{fontSize:10,color:"#aaa",fontStyle:"italic"}}>{a.d[lang]}</div>
+        <div style={{fontSize:10,color:"#aaa",marginLeft:0,fontStyle:"italic"}}>{a.desc[lang]}</div>
       </div>;})}
     </div>}
     {scs&&<div>
-      {pS.ld.length>0&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>{t.datLim}: {pS.ld.join(", ")}</div>}
+      {/* PARTE 1.1: Limited data warning */}
+      {pS.limitedData&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>{t.datosLimWarn} ({pS.dataYears} {t.anos})</div>}
+
+      {/* PARTE 6: Short-term warning */}
+      {showShortTermWarning&&<div style={{padding:"10px 14px",borderRadius:10,background:"#fef2f2",border:"1px solid #fecaca",fontSize:12,color:"#991b1b",marginBottom:10,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:18}}>⚠</span>{t.alerta}
+      </div>}
+
+      {/* Scenario cards — now with probabilities */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))",gap:10,marginBottom:12}}>
         {scs.map((s,i)=>{const fin=s.d[s.d.length-1].v;const pr=fin-tI;const mu=tI>0?fin/tI:0;return<div key={i} style={{...cd,marginBottom:0,border:i===1?"2px solid #10b98133":"1px solid #eee",background:i===1?"#f0fdf8":"#fff",position:"relative"}}>
           {i===1&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#10b981",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 8px",borderRadius:"0 0 6px 6px"}}>{s.l}</div>}
-          <div style={{fontSize:10,fontWeight:700,color:COL[i],textTransform:"uppercase",marginBottom:5,marginTop:i===1?6:0}}>{s.l}</div>
+          <div style={{fontSize:10,fontWeight:700,color:COL[i],textTransform:"uppercase",marginBottom:5,marginTop:i===1?6:0}}>{s.l} <span style={{fontWeight:500,opacity:0.7}}>({s.prob}%)</span></div>
           <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:"#111"}}>{fm(fin)} EUR</div>
           <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(s.r)} {t.ano}</div>
           <div style={{fontSize:11,color:pr>=0?"#10b981":"#ef4444",fontWeight:600,marginTop:6,paddingTop:6,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{mu.toFixed(1)}</div>
         </div>;})}
       </div>
-      <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pe,t.es,t.op]} colors={COL} fill={true}/></div>
+
+      {/* PARTE 6: Probability metrics panel */}
+      <div style={{...cd,background:"#fafafa",padding:"12px 16px"}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:12,alignItems:"stretch"}}>
+          {/* Prob of loss */}
+          <div style={{flex:"1 1 140px",background:"#fff",borderRadius:10,padding:"10px 14px",border:"1px solid #eee",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.probPerd}</div>
+            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:pS.probLoss>25?"#ef4444":pS.probLoss>10?"#f59e0b":"#10b981"}}>{pS.probLoss}%</div>
+          </div>
+          {/* Worst case */}
+          <div style={{flex:"1 1 140px",background:"#fff",borderRadius:10,padding:"10px 14px",border:"1px solid #eee",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.peorCaso}</div>
+            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:"#ef4444"}}>{pS.worstCase!==undefined?fp(pS.worstCase):"—"}</div>
+          </div>
+        </div>
+        {/* Insight */}
+        <div style={{marginTop:10,fontSize:11,color:"#666",textAlign:"center",fontStyle:"italic"}}>
+          {t.insight.replace("{yr}",yr).replace("{pct}",pS.probLoss)}
+        </div>
+      </div>
+
+      <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pess,t.esp,t.opt]} colors={COL} fill={true}/></div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
-        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCa}</div><div style={{display:"flex",alignItems:"center",gap:12}}><Donut items={cC.map(c=>({w:c.w,co:CATCO[c.id]}))}/><div style={{flex:1}}>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div></div></div>
+        <div style={cd}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCart}</div>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div>
         <div style={cd}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.ri}</div>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.riesgo}</div>
           <div style={{display:"flex",gap:2,marginBottom:5}}>{rlC.map((c,i)=><div key={i} style={{flex:1,height:5,borderRadius:3,background:i<=rL?c:"#eee"}}/>)}</div>
-          <div style={{fontSize:13,fontWeight:700,color:rlC[rL]}}>{t.riL[rL]}</div>
+          <div style={{fontSize:13,fontWeight:700,color:rlC[rL]}}>{t.riskL[rL]}</div>
           <div style={{marginTop:12,display:"flex",gap:6}}>
             <div style={{flex:1,background:"#f9fafb",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.tuAp}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)}</div></div>
-            <div style={{flex:1,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.mkG}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
+            <div style={{flex:1,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.mktGen}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
           </div>
         </div>
       </div>
+      {/* Asset breakdown */}
       <div style={{...cd,padding:0}}>
-        <button onClick={()=>setSBk(!sBk)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:700,color:"#555"}}><span>{t.desg}</span><span>{sBk?"▲":"▼"}</span></button>
-        {sBk&&<div style={{padding:"0 16px 14px"}}>
+        <button onClick={()=>sBk(!showBk)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:700,color:"#555"}}><span>{t.desglose}</span><span>{showBk?"▲":"▼"}</span></button>
+        {showBk&&<div style={{padding:"0 16px 14px"}}>
           <div style={{display:"flex",gap:4,padding:"6px 0",borderBottom:"1px solid #f0f0f0",fontSize:10,color:"#aaa",fontWeight:600}}>
-            <span style={{flex:2}}>{t.act}</span><span style={{width:40,textAlign:"right"}}>{t.peso}</span><span style={{width:50,textAlign:"right"}}>{t.rEsp}</span><span style={{width:50,textAlign:"right"}}>{t.cont}</span>
+            <span style={{flex:2}}>{t.activo}</span><span style={{width:45,textAlign:"right"}}>{t.peso}</span><span style={{width:55,textAlign:"right"}}>{t.rendEsp}</span><span style={{width:55,textAlign:"right"}}>{t.contrib}</span>
           </div>
-          {aB.map(ab=><div key={ab.name} style={{display:"flex",gap:4,padding:"6px 0",borderBottom:"1px solid #f8f8f8",fontSize:11,alignItems:"center"}}>
-            <span style={{flex:2,fontWeight:600,color:"#333"}}>{ab.name}</span>
-            <span style={{width:40,textAlign:"right",fontFamily:"monospace",color:"#888"}}>{Math.round(ab.weight)}%</span>
-            <span style={{width:50,textAlign:"right",fontFamily:"monospace",color:ab.er>=0?"#10b981":"#ef4444"}}>{fp(ab.er)}</span>
-            <span style={{width:50,textAlign:"right",fontFamily:"monospace",fontWeight:700,color:ab.co>=0?"#10b981":"#ef4444"}}>{fp(ab.co)}</span>
-          </div>)}
+          {assetBreakdown.map(ab=>(
+            <div key={ab.name} style={{display:"flex",gap:4,padding:"6px 0",borderBottom:"1px solid #f8f8f8",fontSize:11,alignItems:"center"}}>
+              <div style={{flex:2}}><div style={{fontWeight:600,color:"#333"}}>{ab.name}</div></div>
+              <span style={{width:45,textAlign:"right",fontFamily:"monospace",color:"#888"}}>{Math.round(ab.weight)}%</span>
+              <span style={{width:55,textAlign:"right",fontFamily:"monospace",color:ab.expRet>=0?"#10b981":"#ef4444"}}>{fp(ab.expRet)}</span>
+              <span style={{width:55,textAlign:"right",fontFamily:"monospace",fontWeight:700,color:ab.contrib>=0?"#10b981":"#ef4444"}}>{fp(ab.contrib)}</span>
+            </div>
+          ))}
         </div>}
       </div>
-      <div style={{...cd,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#aaa",lineHeight:1.7}}>{t.met}</div>}</div>
+      <div style={{...cd,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#aaa",lineHeight:1.7}}>{t.metodo}</div>}</div>
       <div style={{fontSize:11,color:"#92400e",background:"#fffbeb",padding:12,borderRadius:10,textAlign:"center",border:"1px solid #fef3c7",marginBottom:12}}>{t.warn}</div>
+      {/* PARTE 7: Updated CTA */}
       <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
         <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:3}}>{t.optim}</div>
         <div style={{fontSize:11,color:"#888",marginBottom:10}}>{t.prox}</div>
-        <button onClick={()=>window.open("https://forms.gle/JMZg1w5eAUHnYVHw8","_blank")} style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>{t.avisa}</button>
+        <button onClick={()=>window.open("https://forms.gle/JMZg1w5eAUHnVHw8","_blank")} style={{padding:"8px 20px",fontSize:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>{t.avisarme}</button>
       </div>
     </div>}
   </div>);
