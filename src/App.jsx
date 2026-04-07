@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 
 /* ══════════════════════════════════════════════
-   ROUTING — hash-based, Vercel-friendly
+   ROUTING
    ══════════════════════════════════════════════ */
 function useRouter() {
   const getPath = () => window.location.hash.replace("#", "") || "/";
@@ -42,29 +42,29 @@ const R = {
 };
 
 const ASSETS=[
-  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,desc:{es:"Las 500 mayores empresas de EE.UU. Nucleo de cualquier cartera global.",en:"Top 500 US companies. Core holding for any global portfolio."}},
-  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,desc:{es:"100 mayores tecnologicas. Mayor crecimiento, mayor volatilidad.",en:"Top 100 tech companies. Higher growth, higher volatility."}},
-  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,desc:{es:"1.500 empresas de 23 paises desarrollados. Maxima diversificacion.",en:"1,500 companies from 23 developed countries. Maximum diversification."}},
-  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,desc:{es:"Mercados emergentes (China, India, Brasil). Alto potencial, alto riesgo.",en:"Emerging markets (China, India, Brazil). High potential, high risk."}},
-  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,desc:{es:"600 empresas europeas. Diversificacion fuera de EE.UU.",en:"600 European companies. Diversification away from US."}},
-  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,desc:{es:"Todo el mundo en un indice: desarrollados + emergentes.",en:"The whole world in one index: developed + emerging."}},
-  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,desc:{es:"Ecosistema tech con margenes altisimos. Valor refugio tecnologico.",en:"Tech ecosystem with very high margins. Tech safe haven."}},
-  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,desc:{es:"Lider en chips para IA. Alto crecimiento pero muy volatil.",en:"AI chip leader. High growth but very volatile."}},
-  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,desc:{es:"Cloud + IA + software empresarial. Crecimiento estable.",en:"Cloud + AI + enterprise software. Stable growth."}},
-  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,desc:{es:"Vehiculos electricos + energia. Muy volatil, apuesta a futuro.",en:"Electric vehicles + energy. Very volatile, future bet."}},
-  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,desc:{es:"E-commerce + AWS cloud. Diversificado y dominante.",en:"E-commerce + AWS cloud. Diversified and dominant."}},
-  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,desc:{es:"Publicidad digital + cloud + IA. Generador de caja enorme.",en:"Digital ads + cloud + AI. Enormous cash generator."}},
-  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,desc:{es:"Valor defensivo clasico. Dividendo estable, baja volatilidad.",en:"Classic defensive stock. Stable dividend, low volatility."}},
-  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,desc:{es:"Facebook, Instagram, WhatsApp. Publicidad + apuesta por IA.",en:"Facebook, Instagram, WhatsApp. Advertising + AI bet."}},
-  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,desc:{es:"Deuda del gobierno de EE.UU. Refugio en crisis, estabiliza la cartera.",en:"US government debt. Safe haven in crises, stabilizes portfolio."}},
-  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,desc:{es:"Liquidez con rendimiento minimo. Reduce volatilidad al maximo.",en:"Liquidity with minimal return. Minimizes volatility."}},
-  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,desc:{es:"Oro digital. Alta volatilidad, potencial alto a largo plazo.",en:"Digital gold. High volatility, high long-term potential."}},
-  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,desc:{es:"Plataforma de contratos inteligentes. Mas riesgo que Bitcoin.",en:"Smart contract platform. Higher risk than Bitcoin."}},
-  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,desc:{es:"Proteccion contra inflacion y crisis. Descorrelacionado de bolsa.",en:"Inflation and crisis protection. Uncorrelated with stocks."}},
-  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,desc:{es:"Inmobiliario cotizado. Rentas + revalorizacion, sensible a tipos.",en:"Listed real estate. Income + appreciation, rate sensitive."}},
+  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,desc:{es:"Las 500 mayores empresas de EE.UU.",en:"Top 500 US companies."}},
+  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,desc:{es:"100 mayores tecnol\u00f3gicas.",en:"Top 100 tech companies."}},
+  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,desc:{es:"1.500 empresas de 23 pa\u00edses desarrollados.",en:"1,500 companies from 23 developed countries."}},
+  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,desc:{es:"Mercados emergentes (China, India, Brasil).",en:"Emerging markets (China, India, Brazil)."}},
+  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,desc:{es:"600 empresas europeas.",en:"600 European companies."}},
+  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,desc:{es:"Todo el mundo en un \u00edndice.",en:"The whole world in one index."}},
+  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,desc:{es:"Ecosistema tech, valor refugio tecnol\u00f3gico.",en:"Tech ecosystem, tech safe haven."}},
+  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,desc:{es:"L\u00edder en chips para IA. Muy vol\u00e1til.",en:"AI chip leader. Very volatile."}},
+  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,desc:{es:"Cloud + IA + software empresarial.",en:"Cloud + AI + enterprise software."}},
+  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,desc:{es:"Veh\u00edculos el\u00e9ctricos + energ\u00eda. Muy vol\u00e1til.",en:"Electric vehicles + energy. Very volatile."}},
+  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,desc:{es:"E-commerce + AWS cloud.",en:"E-commerce + AWS cloud."}},
+  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,desc:{es:"Publicidad digital + cloud + IA.",en:"Digital ads + cloud + AI."}},
+  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,desc:{es:"Valor defensivo, dividendo estable.",en:"Defensive stock, stable dividend."}},
+  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,desc:{es:"Facebook, Instagram, WhatsApp.",en:"Facebook, Instagram, WhatsApp."}},
+  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,desc:{es:"Deuda del gobierno de EE.UU.",en:"US government debt."}},
+  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,desc:{es:"Liquidez con rendimiento m\u00ednimo.",en:"Liquidity with minimal return."}},
+  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,desc:{es:"Oro digital. Alta volatilidad.",en:"Digital gold. High volatility."}},
+  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,desc:{es:"Contratos inteligentes. M\u00e1s riesgo que BTC.",en:"Smart contracts. Higher risk than BTC."}},
+  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,desc:{es:"Protecci\u00f3n contra inflaci\u00f3n y crisis.",en:"Inflation and crisis protection."}},
+  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,desc:{es:"Inmobiliario cotizado.",en:"Listed real estate."}},
 ];
 
-const CATS=[{id:"idx",name:{es:"Indices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}}];
+const CATS=[{id:"idx",name:{es:"\u00cdndices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}}];
 const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e"};
 const COL=["#f87171","#10b981","#60a5fa"];
 
@@ -73,50 +73,51 @@ const COL=["#f87171","#10b981","#60a5fa"];
    ══════════════════════════════════════════════ */
 const T={
   es:{
-    ci:"Interes Compuesto",sim:"Simulador de Cartera",
-    ciSub:"Calcula cuanto crecera tu dinero con el poder del interes compuesto",
-    simSub:"Proyeccion con rolling returns historicos de cartera completa",
-    capIni:"Capital inicial",aport:"Aportacion",intAnual:"Interes anual",horiz:"Horizonte",anos:"anos",
+    ci:"Inter\u00e9s Compuesto",sim:"Simulador de Cartera",
+    ciSub:"Calcula cu\u00e1nto crecer\u00e1 tu dinero con el poder del inter\u00e9s compuesto",
+    capIni:"Capital inicial",aport:"Aportaci\u00f3n",intAnual:"Inter\u00e9s anual",horiz:"Horizonte",anos:"a\u00f1os",
     capFin:"Capital final",tuAp:"Tu aportas",intGen:"Intereses generados",sobreAp:"sobre lo aportado",
-    evo:"Evolucion",capital:"Capital",
+    evo:"Evoluci\u00f3n",capital:"Capital",
     noSabes:"Los intereses fijos no existen",
-    pruebaEl:"En la realidad los mercados suben Y bajan. Descubre que habria pasado con tu dinero usando datos historicos reales.",
+    pruebaEl:"En la realidad los mercados suben Y bajan. Descubre qu\u00e9 habr\u00eda pasado con tu dinero usando datos hist\u00f3ricos reales.",
     verSim:"Ver simulador con datos reales",
-    pess:"Pesimista",esp:"Esperado",opt:"Optimista",ano:"/ano",
+    pess:"Pesimista",esp:"Esperado",opt:"Optimista",ano:"/a\u00f1o",
     preset:"Ejemplo: Cartera equilibrada global - personaliza a tu gusto",
     pesos:"Pesos",equi:"Equiponderar",tuCart:"Tu cartera",riesgo:"Riesgo",
     riskL:["Bajo","Moderado","Alto","Muy alto"],mktGen:"Mercado genera",
-    desglose:"Desglose por activo",activo:"Activo",peso:"Peso",rendEsp:"Rend. esperado",contrib:"Contribucion",
-    como:"Como se calcula?",
-    metodo:"Se calculan rolling returns de la cartera completa (no activo por activo). Percentil 10 = pesimista, mediana = esperado, percentil 75 = optimista. Las probabilidades reflejan la distribucion historica real. Los activos volatiles (crypto, acciones growth) tienen retornos comprimidos para evitar proyecciones irreales.",
-    warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulacion educativa.",
-    optim:"Acceso anticipado al analisis con IA",
-    prox:"Los primeros usuarios tendran acceso gratuito",
+    desglose:"Desglose por activo",activo:"Activo",peso:"Peso",rendEsp:"Rend. esperado",contrib:"Contribuci\u00f3n",
+    como:"\u00bfC\u00f3mo se calcula?",
+    metodo:"1. Para cada a\u00f1o hist\u00f3rico se calcula el retorno de la cartera completa. Si un activo no exist\u00eda ese a\u00f1o (ej. Bitcoin antes de 2014), se redistribuye su peso entre los dem\u00e1s activos proporcionalmente. Esto permite usar hasta 35 a\u00f1os de datos sin descartar informaci\u00f3n.\n\n2. Con esos retornos anuales, se generan ventanas rolling del horizonte elegido (ej. todas las ventanas de 10 a\u00f1os: 1990-1999, 1991-2000...) y se calcula el CAGR (rentabilidad anualizada compuesta) de cada una.\n\n3. Los escenarios salen de percentiles reales de esa distribuci\u00f3n: P10 = pesimista, P50 (mediana) = esperado, P75 = optimista. No se usa P90 para evitar expectativas irreales.\n\n4. La probabilidad de p\u00e9rdida es el % de ventanas que terminaron en negativo. Si es 0 en la muestra, se muestra \"< 1%\" porque el riesgo cero no existe.\n\n5. Para activos con retornos extremos (crypto, growth stocks), se comprime la parte que supera el +50% anual para evitar que un a\u00f1o excepcional distorsione las proyecciones a futuro.",
+    warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulaci\u00f3n educativa.",
+    optim:"Acceso anticipado al an\u00e1lisis con IA",
+    prox:"Los primeros usuarios tendr\u00e1n acceso gratuito",
     avisarme:"Quiero acceso",
-    datosLim:"Datos limitados",mes:"mes",anoF:"ano",eurMes:"EUR/mes",eurAno:"EUR/ano",aportado:"Aportado",
+    mes:"mes",anoF:"a\u00f1o",eurMes:"EUR/mes",eurAno:"EUR/a\u00f1o",
     probPerd:"Probabilidad de perder dinero",
-    insight:"En {yr} anos, esta cartera ha tenido perdidas en {pct}% de los casos",
-    peorCaso:"Peor escenario historico",
-    alerta:"Alta probabilidad de perdidas a corto plazo. Considera ampliar tu horizonte.",
-    datosLimWarn:"Datos historicos limitados: los resultados pueden estar sesgados por periodos recientes",
+    insight:"En {yr} a\u00f1os, esta cartera ha tenido p\u00e9rdidas en {pct} de los casos hist\u00f3ricos",
+    peorCaso:"Peor escenario hist\u00f3rico",
+    alerta:"Alta probabilidad de p\u00e9rdidas a corto plazo. Considera ampliar tu horizonte.",
+    datosLimWarn:"Datos hist\u00f3ricos limitados: los resultados pueden estar sesgados por periodos recientes",
+    pocasVentanas:"Resultado basado en pocas observaciones hist\u00f3ricas ({n} ventanas)",
+    sinDatos:"No hay suficientes datos hist\u00f3ricos para simular {yr} a\u00f1os con esta cartera",
     heroTitle:"Toma el control de tu dinero",
-    heroSub:"Herramientas gratuitas para entender tu cartera de inversion con datos reales — sin humo, sin promesas falsas.",
-    toolIC:"Calculadora de Interes Compuesto",
-    toolICdesc:"Calcula cuanto creceria tu dinero con un interes fijo. Ideal para entender el efecto del tiempo.",
+    heroSub:"Herramientas gratuitas para entender tu cartera de inversi\u00f3n con datos reales \u2014 sin humo, sin promesas falsas.",
+    toolIC:"Calculadora de Inter\u00e9s Compuesto",
+    toolICdesc:"Calcula cu\u00e1nto crecer\u00eda tu dinero con un inter\u00e9s fijo. Ideal para entender el efecto del tiempo.",
     toolSim:"Simulador de Cartera",
-    toolSimDesc:"Proyeccion realista con datos de 20+ activos, escenarios y probabilidades de perdida.",
+    toolSimDesc:"Proyecci\u00f3n realista con datos de 20+ activos, escenarios y probabilidades de p\u00e9rdida.",
     toolSimBadge:"PRO",
     irA:"Ir a la herramienta",
-    homeWhy:"Por que Kartera?",
-    homeW1t:"Datos reales",homeW1d:"35 anos de retornos historicos de indices, acciones, bonos, crypto y mas.",
-    homeW2t:"Riesgo honesto",homeW2d:"No solo cuanto puedes ganar — cuanto puedes perder y con que probabilidad.",
-    homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educacion financiera.",
-    proximamente:"Proximamente",proxItems:"Optimizacion de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
+    homeWhy:"\u00bfPor qu\u00e9 Kartera?",
+    homeW1t:"Datos reales",homeW1d:"35 a\u00f1os de retornos hist\u00f3ricos de \u00edndices, acciones, bonos, crypto y m\u00e1s.",
+    homeW2t:"Riesgo honesto",homeW2d:"No solo cu\u00e1nto puedes ganar \u2014 cu\u00e1nto puedes perder y con qu\u00e9 probabilidad.",
+    homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educaci\u00f3n financiera.",
+    proximamente:"Pr\u00f3ximamente",proxItems:"Optimizaci\u00f3n de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
+    intEsp:"Inter\u00e9s esperado",
   },
   en:{
     ci:"Compound Interest",sim:"Portfolio Simulator",
     ciSub:"Calculate how your money will grow with the power of compound interest",
-    simSub:"Projection with full portfolio historical rolling returns",
     capIni:"Initial capital",aport:"Contribution",intAnual:"Annual interest",horiz:"Horizon",anos:"years",
     capFin:"Final capital",tuAp:"You contribute",intGen:"Interest earned",sobreAp:"on contributed",
     evo:"Evolution",capital:"Capital",
@@ -129,19 +130,21 @@ const T={
     riskL:["Low","Moderate","High","Very high"],mktGen:"Market generates",
     desglose:"Breakdown by asset",activo:"Asset",peso:"Weight",rendEsp:"Exp. return",contrib:"Contribution",
     como:"How is this calculated?",
-    metodo:"Full portfolio rolling returns are computed (not per-asset). 10th percentile = pessimistic, median = expected, 75th percentile = optimistic. Probabilities reflect the real historical distribution. Volatile assets (crypto, growth stocks) have compressed returns to prevent unrealistic projections.",
+    metodo:"1. For each historical year, the full portfolio return is computed. If an asset didn't exist that year (e.g. Bitcoin before 2014), its weight is redistributed proportionally among available assets. This lets us use up to 35 years of data without discarding information.\n\n2. Using those annual returns, rolling windows of the chosen horizon are generated (e.g. all 10-year windows: 1990-1999, 1991-2000...) and the CAGR (compound annual growth rate) of each is calculated.\n\n3. Scenarios come from real percentiles of that distribution: P10 = pessimistic, P50 (median) = expected, P75 = optimistic. P90 is not used to avoid unrealistic expectations.\n\n4. Loss probability is the % of windows that ended negative. If 0 in the sample, we show '< 1%' because zero risk doesn't exist.\n\n5. For assets with extreme returns (crypto, growth stocks), returns above +50% annually are compressed so that one exceptional year doesn't distort future projections.",
     warn:"Past performance does not guarantee future results. Educational simulation.",
     optim:"Early access to AI-powered analysis",
     prox:"First users will get free access",
     avisarme:"Get access",
-    datosLim:"Limited data",mes:"month",anoF:"year",eurMes:"EUR/mo",eurAno:"EUR/yr",aportado:"Contributed",
+    mes:"month",anoF:"year",eurMes:"EUR/mo",eurAno:"EUR/yr",
     probPerd:"Probability of losing money",
-    insight:"Over {yr} years, this portfolio lost money in {pct}% of cases",
+    insight:"Over {yr} years, this portfolio lost money in {pct} of historical cases",
     peorCaso:"Worst historical scenario",
     alerta:"High probability of short-term losses. Consider extending your horizon.",
     datosLimWarn:"Limited historical data: results may be biased by recent periods",
+    pocasVentanas:"Result based on few historical observations ({n} windows)",
+    sinDatos:"Not enough historical data to simulate {yr} years with this portfolio",
     heroTitle:"Take control of your money",
-    heroSub:"Free tools to understand your investment portfolio with real data — no smoke, no false promises.",
+    heroSub:"Free tools to understand your investment portfolio with real data \u2014 no smoke, no false promises.",
     toolIC:"Compound Interest Calculator",
     toolICdesc:"Calculate how your money would grow at a fixed rate. Great for understanding the effect of time.",
     toolSim:"Portfolio Simulator",
@@ -150,24 +153,24 @@ const T={
     irA:"Go to tool",
     homeWhy:"Why Kartera?",
     homeW1t:"Real data",homeW1d:"35 years of historical returns from indices, stocks, bonds, crypto and more.",
-    homeW2t:"Honest risk",homeW2d:"Not just how much you can earn — how much you can lose and how likely.",
+    homeW2t:"Honest risk",homeW2d:"Not just how much you can earn \u2014 how much you can lose and how likely.",
     homeW3t:"No conflict",homeW3d:"We don't sell funds or charge commissions. Just financial education.",
     proximamente:"Coming soon",proxItems:"AI portfolio optimization | Crisis scenario (stress test) | Broker comparison",
+    intEsp:"Expected interest",
   }
 };
 
 /* ══════════════════════════════════════════════
-   UTILITY FUNCTIONS
+   UTILITY
    ══════════════════════════════════════════════ */
 function gY(id){const d=R[id];return d?Object.keys(d).map(Number).sort((a,b)=>a-b):[];}
-function dL(id){return gY(id).length;}
 function pc(a,p){if(!a.length)return null;const i=(p/100)*(a.length-1);const l=Math.floor(i),h=Math.ceil(i);return l===h?a[l]:a[l]+(a[h]-a[l])*(i-l);}
 function cP(ini,mo,yrs,rate){const mr=rate/100/12;const d=[{y:0,v:ini,inv:ini}];let v=ini,inv=ini;for(let y=1;y<=yrs;y++){for(let m=0;m<12;m++){v=v*(1+mr)+mo;inv+=mo;}d.push({y,v,inv});}return d;}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
 
 /* ══════════════════════════════════════════════
-   SIMULATION ENGINE
+   SIMULATION ENGINE — RE-NORMALIZATION
    ══════════════════════════════════════════════ */
 function capExtremeReturn(ret, asset) {
   if (!asset.uf) return ret;
@@ -177,23 +180,33 @@ function capExtremeReturn(ret, asset) {
   return r;
 }
 
+/* RE-NORMALIZATION: use ALL years, redistribute weights when an asset is missing */
 function getPortfolioAnnualReturns(selectedIds, normalizedWeights) {
-  const yearSets = selectedIds.map(id => new Set(gY(id)));
-  if (yearSets.length === 0) return [];
-  let commonYears = [...yearSets[0]];
-  for (let i = 1; i < yearSets.length; i++) commonYears = commonYears.filter(y => yearSets[i].has(y));
-  commonYears.sort((a, b) => a - b);
-  return commonYears.map(year => {
+  // Collect ALL unique years from ALL selected assets
+  const allYearsSet = new Set();
+  selectedIds.forEach(id => gY(id).forEach(y => allYearsSet.add(y)));
+  const allYears = [...allYearsSet].sort((a, b) => a - b);
+  if (allYears.length === 0) return [];
+
+  return allYears.map(year => {
+    // Which assets have data this year?
+    const available = selectedIds.filter(id => R[id] && R[id][year] !== undefined);
+    if (available.length === 0) return null;
+
+    // Sum original weights of available assets, then re-normalize
+    const totalAvailWeight = available.reduce((s, id) => s + (normalizedWeights[id] || 0), 0);
+    if (totalAvailWeight === 0) return null;
+
     let portRet = 0;
-    selectedIds.forEach(id => {
-      const w = (normalizedWeights[id] || 0) / 100;
+    available.forEach(id => {
+      const reW = (normalizedWeights[id] || 0) / totalAvailWeight; // re-normalized weight
       const asset = ASSETS.find(a => a.id === id);
       let r = R[id][year];
       if (asset) r = capExtremeReturn(r, asset);
-      portRet += w * r;
+      portRet += reW * r;
     });
     return { year, ret: portRet };
-  });
+  }).filter(Boolean);
 }
 
 function getPortfolioRollingCAGR(annualReturns, horizon) {
@@ -207,44 +220,50 @@ function getPortfolioRollingCAGR(annualReturns, horizon) {
   return cagrs.sort((a, b) => a - b);
 }
 
-function adjustForLimitedData(cagr, availableYears, fallbackReturn) {
-  if (availableYears >= 20) return cagr;
-  const confidence = Math.min(1, availableYears / 20);
-  return cagr * confidence + (1 - confidence) * fallbackReturn;
-}
-
+/* NO FALLBACKS — return null if insufficient data */
 function computePortfolioScenarios(selectedIds, normalizedWeights, horizon) {
   const activeIds = selectedIds.filter(id => (normalizedWeights[id] || 0) > 0);
   if (activeIds.length === 0) return null;
   const annualRets = getPortfolioAnnualReturns(activeIds, normalizedWeights);
   const numYears = annualRets.length;
-  let wF = 0;
-  activeIds.forEach(id => { const a = ASSETS.find(x => x.id === id); wF += ((normalizedWeights[id] || 0) / 100) * (a?.f || 5); });
-  if (numYears < horizon || numYears < 2) return { p: wF * 0.5, e: wF, o: wF * 1.3, probLoss: horizon <= 3 ? 25 : 10, probPess: 10, probEsp: 65, probOpt: 25, worstCase: wF * 0.3, limitedData: true, dataYears: numYears, rollingCount: 0 };
+  if (numYears < horizon) return { insufficient: true, dataYears: numYears };
+
   const rollingCAGRs = getPortfolioRollingCAGR(annualRets, horizon);
-  if (rollingCAGRs.length < 3) return { p: wF * 0.5, e: wF, o: wF * 1.3, probLoss: horizon <= 3 ? 25 : 10, probPess: 10, probEsp: 65, probOpt: 25, worstCase: wF * 0.3, limitedData: true, dataYears: numYears, rollingCount: rollingCAGRs.length };
-  const limitedData = numYears < 15;
-  let rawP = pc(rollingCAGRs, 10), rawE = pc(rollingCAGRs, 50), rawO = pc(rollingCAGRs, 75);
-  if (limitedData) { rawP = adjustForLimitedData(rawP, numYears, wF * 0.5); rawE = adjustForLimitedData(rawE, numYears, wF); rawO = adjustForLimitedData(rawO, numYears, wF * 1.3); }
+  if (rollingCAGRs.length === 0) return { insufficient: true, dataYears: numYears };
+
+  const rawP = pc(rollingCAGRs, 10), rawE = pc(rollingCAGRs, 50), rawO = pc(rollingCAGRs, 75);
   const negCount = rollingCAGRs.filter(c => c < 0).length;
-  const probLoss = Math.round((negCount / rollingCAGRs.length) * 100);
+  const rawProbLoss = negCount / rollingCAGRs.length;
+  // "< 1%" floor — never show 0%
+  const probLossDisplay = rawProbLoss === 0 ? "< 1%" : Math.round(rawProbLoss * 100) + "%";
+  const probLossNum = Math.round(rawProbLoss * 100);
+
   const p10val = pc(rollingCAGRs, 10), p75val = pc(rollingCAGRs, 75);
   const pessCount = rollingCAGRs.filter(c => c <= p10val).length;
   const optCount = rollingCAGRs.filter(c => c >= p75val).length;
   const probPess = Math.round((pessCount / rollingCAGRs.length) * 100);
   const probOpt = Math.round((optCount / rollingCAGRs.length) * 100);
-  return { p: rawP, e: rawE, o: rawO, probLoss, probPess, probEsp: 100 - probPess - probOpt, probOpt, worstCase: rollingCAGRs[0], limitedData, dataYears: numYears, rollingCount: rollingCAGRs.length };
+
+  return {
+    insufficient: false,
+    p: rawP, e: rawE, o: rawO,
+    probLossDisplay, probLossNum,
+    probPess, probEsp: 100 - probPess - probOpt, probOpt,
+    worstCase: rollingCAGRs[0],
+    dataYears: numYears,
+    rollingCount: rollingCAGRs.length,
+    fewWindows: rollingCAGRs.length < 10,
+  };
 }
 
 function gS(id,h){
-  const a=ASSETS.find(x=>x.id===id);if(!a)return{p:0,e:0,o:0};
-  const yrs=gY(id);const d=R[id];if(!d)return{p:a.f,e:a.f,o:a.f};
-  if(h<1||h>yrs.length-1)return{p:a.f*0.5,e:a.f,o:a.f*1.3};
+  const a=ASSETS.find(x=>x.id===id);if(!a)return{e:0};
+  const yrs=gY(id);const d=R[id];if(!d||h<1||h>yrs.length-1)return{e:a.f};
   const rr=[];
   for(let i=0;i<=yrs.length-h;i++){let cum=1;let ok=true;for(let j=0;j<h;j++){let r=d[yrs[i+j]];if(r===undefined){ok=false;break;}r=capExtremeReturn(r,a);cum*=(1+r/100);}if(ok)rr.push((Math.pow(cum,1/h)-1)*100);}
   rr.sort((a,b)=>a-b);
-  if(rr.length<3)return{p:a.f*0.5,e:a.f,o:a.f*1.3};
-  return{p:pc(rr,10),e:pc(rr,50),o:pc(rr,75)};
+  if(rr.length<3)return{e:a.f};
+  return{e:pc(rr,50)};
 }
 
 /* ══════════════════════════════════════════════
@@ -253,24 +272,64 @@ function gS(id,h){
 const cdS={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
 
 function SvgChart({lines,years,labels,colors,fill}){
-  const W=580,H=200,pad={l:50,r:10,t:10,b:24},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const W=580,H=220,pad={l:50,r:10,t:10,b:24},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
   const allV=lines.flatMap(d=>d.map(p=>p.v));const mx=Math.max(...allV)*1.05;
   const sx=yr=>pad.l+(yr/years)*w,sy=val=>pad.t+h-(val/mx)*h;
   const ml=pts=>pts.map((p,i)=>(i===0?"M":"L")+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join(" ");
   const ft=v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v.toFixed(0);
+  const[hover,setHover]=useState(null);
+  const svgRef=useRef(null);
+  const getYear=e=>{
+    if(!svgRef.current)return null;
+    const rect=svgRef.current.getBoundingClientRect();
+    const x=(e.clientX||e.touches?.[0]?.clientX||0)-rect.left;
+    const ratio=x/rect.width;
+    const yr=Math.round(ratio*(W)- pad.l)/(w)*years;
+    return Math.max(0,Math.min(years,Math.round(yr)));
+  };
+  const onMove=e=>{const yr=getYear(e);if(yr!==null)setHover(yr);};
+
   return(<div>
-    <svg viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block"}}>
+    <svg ref={svgRef} viewBox={"0 0 "+W+" "+H} width="100%" style={{display:"block",cursor:"crosshair"}}
+      onMouseMove={onMove} onTouchMove={onMove} onMouseLeave={()=>setHover(null)} onTouchEnd={()=>setHover(null)}>
       {[0,.25,.5,.75,1].map((f,i)=>{const val=mx*f;return<g key={i}><line x1={pad.l} y1={sy(val)} x2={W-pad.r} y2={sy(val)} stroke="#f0f0f0" strokeWidth="0.7"/><text x={pad.l-4} y={sy(val)+3} textAnchor="end" fontSize="9" fill="#bbb" fontFamily="monospace">{ft(val)}</text></g>;})}
       {Array.from({length:Math.min(years+1,8)},(_,i)=>{const yr=Math.round((i/Math.min(years,7))*years);return<text key={yr} x={sx(yr)} y={H-4} textAnchor="middle" fontSize="9" fill="#bbb">{yr}a</text>;})}
       <path d={ml(lines[0].map(p=>({y:p.y,v:p.inv})))} fill="none" stroke="#d1d5db" strokeWidth="1" strokeDasharray="5,4"/>
       {fill&&lines.length>2&&<path d={ml(lines[2])+lines[0].slice().reverse().map(p=>"L"+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join("")+"Z"} fill="#10b981" opacity="0.05"/>}
       {fill&&lines.length===1&&<path d={ml(lines[0])+"L"+sx(years).toFixed(1)+","+sy(0).toFixed(1)+"L"+sx(0).toFixed(1)+","+sy(0).toFixed(1)+"Z"} fill={colors[0]} opacity="0.08"/>}
       {lines.map((d,i)=><path key={i} d={ml(d)} fill="none" stroke={colors[i]} strokeWidth={2.5} strokeDasharray={lines.length>1&&i!==1?"6,4":"none"}/>)}
+      {hover!==null&&hover>=0&&hover<=years&&<>
+        <line x1={sx(hover)} y1={pad.t} x2={sx(hover)} y2={pad.t+h} stroke="#aaa" strokeWidth="0.8" strokeDasharray="3,3"/>
+        {lines.map((d,i)=>{const pt=d.find(p=>p.y===hover);if(!pt)return null;return<circle key={i} cx={sx(hover)} cy={sy(pt.v)} r="4" fill={colors[i]} stroke="#fff" strokeWidth="1.5"/>;})}
+      </>}
     </svg>
-    <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
+    {/* Tooltip */}
+    {hover!==null&&hover>=0&&hover<=years&&<div style={{background:"#111",color:"#fff",borderRadius:8,padding:"6px 10px",fontSize:11,display:"flex",gap:12,justifyContent:"center",marginTop:2}}>
+      <span style={{fontWeight:700}}>A\u00f1o {hover}</span>
+      {lines.map((d,i)=>{const pt=d.find(p=>p.y===hover);if(!pt)return null;return<span key={i} style={{color:colors[i]}}>{labels[i]}: <b>{fm(Math.round(pt.v))}</b></span>;})}
+    </div>}
+    {hover===null&&<div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
       {labels.map((n,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:12,height:2,background:colors[i],display:"inline-block",borderRadius:1}}/>{n}</span>)}
-    </div>
+    </div>}
   </div>);
+}
+
+/* DONUT CHART */
+function Donut({items,size}){
+  const r=size/2,ir=r*0.6,c=2*Math.PI;
+  let cum=0;
+  const total=items.reduce((s,i)=>s+i.w,0)||1;
+  const paths=items.map((item,idx)=>{
+    const frac=item.w/total;const start=cum;cum+=frac;
+    const a1=start*c-Math.PI/2,a2=(start+frac)*c-Math.PI/2;
+    const la=frac>0.5?1:0;
+    const x1=r+r*Math.cos(a1),y1=r+r*Math.sin(a1);
+    const x2=r+r*Math.cos(a2),y2=r+r*Math.sin(a2);
+    const ix1=r+ir*Math.cos(a1),iy1=r+ir*Math.sin(a1);
+    const ix2=r+ir*Math.cos(a2),iy2=r+ir*Math.sin(a2);
+    return<path key={idx} d={`M${x1},${y1}A${r},${r} 0 ${la} 1 ${x2},${y2}L${ix2},${iy2}A${ir},${ir} 0 ${la} 0 ${ix1},${iy1}Z`} fill={item.c}/>;
+  });
+  return<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{paths}</svg>;
 }
 
 function Inputs({params}){return(
@@ -288,14 +347,10 @@ function Inputs({params}){return(
 );}
 
 /* ══════════════════════════════════════════════
-   PAGE: HOME
+   HOME
    ══════════════════════════════════════════════ */
 function HomePage({t, go}) {
-  const whyItems = [
-    {icon:"\u{1F4CA}",t:t.homeW1t,d:t.homeW1d},
-    {icon:"\u{2696}\uFE0F",t:t.homeW2t,d:t.homeW2d},
-    {icon:"\u{1F6E1}\uFE0F",t:t.homeW3t,d:t.homeW3d},
-  ];
+  const whyItems=[{icon:"\u{1F4CA}",t:t.homeW1t,d:t.homeW1d},{icon:"\u2696\uFE0F",t:t.homeW2t,d:t.homeW2d},{icon:"\u{1F6E1}\uFE0F",t:t.homeW3t,d:t.homeW3d}];
   return(<div>
     <div style={{textAlign:"center",padding:"28px 0 24px"}}>
       <h2 style={{fontSize:22,fontWeight:800,color:"#111",marginBottom:8,lineHeight:1.3}}>{t.heroTitle}</h2>
@@ -318,14 +373,7 @@ function HomePage({t, go}) {
     </div>
     <div style={{marginBottom:24}}>
       <h3 style={{fontSize:14,fontWeight:800,color:"#111",marginBottom:12}}>{t.homeWhy}</h3>
-      <div style={{display:"grid",gap:10}}>
-        {whyItems.map((w,i)=>(
-          <div key={i} style={{...cdS,marginBottom:0,display:"flex",gap:12,alignItems:"flex-start",padding:14}}>
-            <span style={{fontSize:22}}>{w.icon}</span>
-            <div><div style={{fontSize:13,fontWeight:700,color:"#111",marginBottom:2}}>{w.t}</div><div style={{fontSize:11,color:"#888",lineHeight:1.5}}>{w.d}</div></div>
-          </div>
-        ))}
-      </div>
+      <div style={{display:"grid",gap:10}}>{whyItems.map((w,i)=>(<div key={i} style={{...cdS,marginBottom:0,display:"flex",gap:12,alignItems:"flex-start",padding:14}}><span style={{fontSize:22}}>{w.icon}</span><div><div style={{fontSize:13,fontWeight:700,color:"#111",marginBottom:2}}>{w.t}</div><div style={{fontSize:11,color:"#888",lineHeight:1.5}}>{w.d}</div></div></div>))}</div>
     </div>
     <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
       <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:6}}>{t.proximamente}</div>
@@ -336,7 +384,7 @@ function HomePage({t, go}) {
 }
 
 /* ══════════════════════════════════════════════
-   PAGE: COMPOUND INTEREST
+   COMPOUND INTEREST
    ══════════════════════════════════════════════ */
 function CompoundCalc({go,t}){
   const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[rate,sR]=useState(7);const[freq,sF]=useState("mes");
@@ -365,7 +413,7 @@ function CompoundCalc({go,t}){
 }
 
 /* ══════════════════════════════════════════════
-   PAGE: PORTFOLIO SIMULATOR
+   PORTFOLIO SIMULATOR
    ══════════════════════════════════════════════ */
 function PortfolioSim({t,lang}){
   const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[freq,sF]=useState("mes");
@@ -382,16 +430,18 @@ function PortfolioSim({t,lang}){
     return computePortfolioScenarios(sel, nW, yr);
   },[sel,nW,yr,tW]);
 
-  const scs=useMemo(()=>{if(!pS)return null;return[{l:t.pess,r:pS.p,d:cP(ini,moM,yr,pS.p),prob:pS.probPess},{l:t.esp,r:pS.e,d:cP(ini,moM,yr,pS.e),prob:pS.probEsp},{l:t.opt,r:pS.o,d:cP(ini,moM,yr,pS.o),prob:pS.probOpt}];},[pS,ini,moM,yr,t]);
+  const scs=useMemo(()=>{if(!pS||pS.insufficient)return null;return[{l:t.pess,r:pS.p,d:cP(ini,moM,yr,pS.p),prob:pS.probPess},{l:t.esp,r:pS.e,d:cP(ini,moM,yr,pS.e),prob:pS.probEsp},{l:t.opt,r:pS.o,d:cP(ini,moM,yr,pS.o),prob:pS.probOpt}];},[pS,ini,moM,yr,t]);
   const tI=ini+moM*12*yr;
   const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
   const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.name[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
-  const assetBreakdown=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,desc:a.desc[lang],weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
+  const assetBreakdown=useMemo(()=>{if(!pS||pS.insufficient)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e,cat:a.cat};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
+  // Donut items per asset
+  const donutItems=useMemo(()=>{const assetColors={sp500:"#3b82f6",nasdaq:"#6366f1",msci_world:"#0ea5e9",msci_em:"#14b8a6",stoxx600:"#2563eb",msci_acwi:"#0284c7",apple:"#10b981",nvidia:"#34d399",microsoft:"#059669",tesla:"#f97316",amazon:"#f59e0b",google:"#eab308",coca_cola:"#84cc16",meta:"#22d3ee",us_bond:"#1e40af",cash:"#60a5fa",btc:"#f59e0b",eth:"#8b5cf6",gold:"#92400e",reits:"#a16207"};return sel.filter(id=>(nW[id]||0)>0).map(id=>({name:ASSETS.find(a=>a.id===id)?.name||id,w:nW[id]||0,c:assetColors[id]||"#999"}));},[sel,nW]);
+
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
-  const showShortTermWarning = pS && yr < 5 && pS.probLoss > 25;
+  const showShortTermWarning = pS && !pS.insufficient && yr < 5 && pS.probLossNum > 25;
 
   return(<div>
-    <p style={{fontSize:12,color:"#999",marginBottom:6}}>{t.simSub}</p>
     <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
@@ -409,53 +459,79 @@ function PortfolioSim({t,lang}){
       </div>;})}
     </div>}
 
+    {/* INSUFFICIENT DATA */}
+    {pS&&pS.insufficient&&<div style={{padding:"16px",borderRadius:12,background:"#fef2f2",border:"1px solid #fecaca",textAlign:"center",marginBottom:12}}>
+      <div style={{fontSize:13,fontWeight:700,color:"#991b1b",marginBottom:4}}>{t.sinDatos.replace("{yr}",String(yr))}</div>
+      <div style={{fontSize:11,color:"#92400e"}}>({pS.dataYears} {t.anos} disponibles)</div>
+    </div>}
+
     {scs&&<div>
-      {pS.limitedData&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>{t.datosLimWarn} ({pS.dataYears} {t.anos})</div>}
+      {/* Few windows warning */}
+      {pS.fewWindows&&<div style={{padding:"8px 14px",borderRadius:10,background:"#fffbeb",border:"1px solid #fef3c7",fontSize:11,color:"#92400e",marginBottom:10}}>{t.pocasVentanas.replace("{n}",String(pS.rollingCount))}</div>}
+
       {showShortTermWarning&&<div style={{padding:"10px 14px",borderRadius:10,background:"#fef2f2",border:"1px solid #fecaca",fontSize:12,color:"#991b1b",marginBottom:10,fontWeight:600,display:"flex",alignItems:"center",gap:8}}>
         <span style={{fontSize:18}}>{"\u26A0"}</span>{t.alerta}
       </div>}
 
+      {/* SCENARIO CARDS — % annual big, money small */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))",gap:10,marginBottom:12}}>
         {scs.map((s,i)=>{const fin=s.d[s.d.length-1].v;const pr=fin-tI;const mu=tI>0?fin/tI:0;return<div key={i} style={{...cdS,marginBottom:0,border:i===1?"2px solid #10b98133":"1px solid #eee",background:i===1?"#f0fdf8":"#fff",position:"relative"}}>
           {i===1&&<div style={{position:"absolute",top:-1,left:"50%",transform:"translateX(-50%)",background:"#10b981",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 8px",borderRadius:"0 0 6px 6px"}}>{s.l}</div>}
           <div style={{fontSize:10,fontWeight:700,color:COL[i],textTransform:"uppercase",marginBottom:5,marginTop:i===1?6:0}}>{s.l} <span style={{fontWeight:500,opacity:0.7}}>({s.prob}%)</span></div>
-          <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:"#111"}}>{fm(fin)} EUR</div>
-          <div style={{fontSize:10,color:"#aaa",marginTop:2}}>{fp(s.r)} {t.ano}</div>
-          <div style={{fontSize:11,color:pr>=0?"#10b981":"#ef4444",fontWeight:600,marginTop:6,paddingTop:6,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{mu.toFixed(1)}</div>
+          <div style={{fontSize:24,fontWeight:800,fontFamily:"monospace",color:s.r>=0?"#10b981":"#ef4444"}}>{fp(s.r)} <span style={{fontSize:11,fontWeight:500,color:"#aaa"}}>{t.ano}</span></div>
+          <div style={{fontSize:13,color:"#555",fontFamily:"monospace",marginTop:4}}>{fm(fin)} EUR</div>
+          <div style={{fontSize:10,color:"#aaa",marginTop:4,paddingTop:4,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{mu.toFixed(1)}</div>
         </div>;})}
       </div>
 
+      {/* PROBABILITY & WORST CASE */}
       <div style={{...cdS,background:"#fafafa",padding:"12px 16px"}}>
         <div style={{display:"flex",flexWrap:"wrap",gap:12,alignItems:"stretch"}}>
           <div style={{flex:"1 1 140px",background:"#fff",borderRadius:10,padding:"10px 14px",border:"1px solid #eee",textAlign:"center"}}>
             <div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.probPerd}</div>
-            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:pS.probLoss>25?"#ef4444":pS.probLoss>10?"#f59e0b":"#10b981"}}>{pS.probLoss}%</div>
+            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:pS.probLossNum>25?"#ef4444":pS.probLossNum>10?"#f59e0b":"#10b981"}}>{pS.probLossDisplay}</div>
           </div>
           <div style={{flex:"1 1 140px",background:"#fff",borderRadius:10,padding:"10px 14px",border:"1px solid #eee",textAlign:"center"}}>
             <div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.peorCaso}</div>
-            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:"#ef4444"}}>{pS.worstCase!==undefined?fp(pS.worstCase):"\u2014"}</div>
+            <div style={{fontSize:26,fontWeight:800,fontFamily:"monospace",color:"#ef4444"}}>{fp(pS.worstCase)}</div>
           </div>
         </div>
         <div style={{marginTop:10,fontSize:11,color:"#666",textAlign:"center",fontStyle:"italic"}}>
-          {t.insight.replace("{yr}",String(yr)).replace("{pct}",String(pS.probLoss))}
+          {t.insight.replace("{yr}",String(yr)).replace("{pct}",pS.probLossDisplay)}
         </div>
       </div>
 
+      {/* CHART */}
       <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pess,t.esp,t.opt]} colors={COL} fill={true}/></div>
 
+      {/* PORTFOLIO COMPOSITION + DONUT + RISK */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
-        <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCart}</div>{cC.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:8,height:8,borderRadius:2,background:CATCO[c.id]}}/><span style={{flex:1,fontSize:12,color:"#777"}}>{c.name}</span><span style={{fontSize:12,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(c.w)}%</span></div>)}</div>
+        <div style={cdS}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.tuCart}</div>
+          <div style={{display:"flex",gap:14,alignItems:"center"}}>
+            <Donut items={donutItems} size={80}/>
+            <div style={{flex:1}}>
+              {donutItems.map(d=><div key={d.name} style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                <div style={{width:8,height:8,borderRadius:2,background:d.c,flexShrink:0}}/>
+                <span style={{flex:1,fontSize:11,color:"#777"}}>{d.name}</span>
+                <span style={{fontSize:11,fontFamily:"monospace",fontWeight:600,color:"#999"}}>{Math.round(d.w)}%</span>
+              </div>)}
+            </div>
+          </div>
+        </div>
         <div style={cdS}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.riesgo}</div>
           <div style={{display:"flex",gap:2,marginBottom:5}}>{rlC.map((c,i)=><div key={i} style={{flex:1,height:5,borderRadius:3,background:i<=rL?c:"#eee"}}/>)}</div>
-          <div style={{fontSize:13,fontWeight:700,color:rlC[rL]}}>{t.riskL[rL]}</div>
-          <div style={{marginTop:12,display:"flex",gap:6}}>
-            <div style={{flex:1,background:"#f9fafb",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.tuAp}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)}</div></div>
-            <div style={{flex:1,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.mktGen}</div><div style={{fontSize:14,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
+          <div style={{fontSize:13,fontWeight:700,color:rlC[rL],marginBottom:12}}>{t.riskL[rL]}</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            <div style={{flex:1,minWidth:60,background:"#f9fafb",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.tuAp}</div><div style={{fontSize:13,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)}</div></div>
+            <div style={{flex:1,minWidth:60,background:"#ecfdf5",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.mktGen}</div><div style={{fontSize:13,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(Math.max(0,scs[1].d[scs[1].d.length-1].v-tI))}</div></div>
+            <div style={{flex:1,minWidth:60,background:"#eef2ff",borderRadius:10,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:9,color:"#aaa"}}>{t.intEsp}</div><div style={{fontSize:13,fontWeight:800,fontFamily:"monospace",color:"#6366f1"}}>{fp(pS.e)}</div></div>
           </div>
         </div>
       </div>
 
+      {/* ASSET BREAKDOWN */}
       <div style={{...cdS,padding:0}}>
         <button onClick={()=>sBk(!showBk)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:700,color:"#555"}}><span>{t.desglose}</span><span>{showBk?"\u25B2":"\u25BC"}</span></button>
         {showBk&&<div style={{padding:"0 16px 14px"}}>
@@ -473,9 +549,11 @@ function PortfolioSim({t,lang}){
         </div>}
       </div>
 
-      <div style={{...cdS,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"\u25B2":"\u25BC"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#aaa",lineHeight:1.7}}>{t.metodo}</div>}</div>
+      {/* METHODOLOGY */}
+      <div style={{...cdS,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"\u25B2":"\u25BC"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#777",lineHeight:1.8,whiteSpace:"pre-line"}}>{t.metodo}</div>}</div>
       <div style={{fontSize:11,color:"#92400e",background:"#fffbeb",padding:12,borderRadius:10,textAlign:"center",border:"1px solid #fef3c7",marginBottom:12}}>{t.warn}</div>
 
+      {/* CTA */}
       <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
         <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:3}}>{t.optim}</div>
         <div style={{fontSize:11,color:"#888",marginBottom:10}}>{t.prox}</div>
@@ -504,16 +582,13 @@ export default function App(){
           </div>
           <button onClick={()=>setLang(lang==="es"?"en":"es")} style={{background:"#f3f4f6",border:"none",borderRadius:7,padding:"5px 10px",fontSize:11,color:"#888",cursor:"pointer",fontWeight:700}}>{lang==="es"?"EN":"ES"}</button>
         </div>
-
         {path!=="/"&&<div style={{display:"flex",background:"#e5e7eb",borderRadius:10,padding:3,marginBottom:18}}>
           <button onClick={()=>go("/interes-compuesto")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/interes-compuesto"?"#fff":"transparent",color:path==="/interes-compuesto"?"#111":"#999",boxShadow:path==="/interes-compuesto"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.ci}</button>
           <button onClick={()=>go("/simulador-cartera")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/simulador-cartera"?"#fff":"transparent",color:path==="/simulador-cartera"?"#111":"#999",boxShadow:path==="/simulador-cartera"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.sim}</button>
         </div>}
-
         {path==="/"&&<HomePage t={t} go={go}/>}
         {path==="/interes-compuesto"&&<CompoundCalc go={go} t={t}/>}
         {path==="/simulador-cartera"&&<PortfolioSim t={t} lang={lang}/>}
-
         <div style={{textAlign:"center",marginTop:24,fontSize:10,color:"#ddd"}}>kartera.pro 2026</div>
       </div>
     </div>
