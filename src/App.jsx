@@ -1,17 +1,17 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 
 /* ══════════════════════════════════════════════
-   ROUTING
+   ROUTING — pathname-based, multi-HTML
    ══════════════════════════════════════════════ */
 function useRouter() {
-  const getPath = () => window.location.hash.replace("#", "") || "/";
-  const [path, setPath] = useState(getPath);
-  useEffect(() => {
-    const h = () => setPath(getPath());
-    window.addEventListener("hashchange", h);
-    return () => window.removeEventListener("hashchange", h);
+  const raw = window.location.pathname;
+  const path = raw.includes("interes-compuesto") ? "/interes-compuesto"
+    : raw.includes("simulador-cartera") ? "/simulador-cartera"
+    : "/";
+  const go = useCallback((p) => {
+    const map = { "/": "/", "/interes-compuesto": "/interes-compuesto.html", "/simulador-cartera": "/simulador-cartera.html" };
+    window.location.href = map[p] || p;
   }, []);
-  const go = useCallback((p) => { window.location.hash = p; }, []);
   return { path, go };
 }
 
