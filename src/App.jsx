@@ -113,6 +113,10 @@ const T={
     homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educación financiera.",
     proximamente:"Próximamente",proxItems:"Optimización de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
     intEsp:"Interés esperado",
+    seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
+    seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
+    seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
+    seoCta:"¿Quieres ver datos reales?",seoCtaDesc:"Nuestro simulador de cartera usa 35 años de retornos históricos de 20+ activos para mostrarte escenarios pesimista, esperado y optimista.",seoCtaBtn:"Ver simulación realista de cartera",
   },
   en:{
     ci:"Compound Interest",sim:"Portfolio Simulator",
@@ -155,6 +159,10 @@ const T={
     homeW3t:"No conflict",homeW3d:"We don't sell funds or charge commissions. Just financial education.",
     proximamente:"Coming soon",proxItems:"AI portfolio optimization | Crisis scenario (stress test) | Broker comparison",
     intEsp:"Expected interest",
+    seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
+    seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
+    seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
+    seoCta:"Want to see real data?",seoCtaDesc:"Our portfolio simulator uses 35 years of historical returns from 20+ assets to show you pessimistic, expected and optimistic scenarios.",seoCtaBtn:"See realistic portfolio simulation",
   }
 };
 
@@ -405,21 +413,21 @@ function CompoundCalc({go,t}){
     {/* SEO CONTENT */}
     <div style={{marginTop:24}}>
       <div style={{...cdS,padding:20}}>
-        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>¿Qué es el interés compuesto?</h2>
-        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó "la fuerza más poderosa del universo" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.</p>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>{t.seoH1}</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>{t.seoP1}</p>
       </div>
       <div style={{...cdS,padding:20}}>
-        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>Cómo usar la calculadora de interés compuesto</h2>
-        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.</p>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>{t.seoH2}</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>{t.seoP2}</p>
       </div>
       <div style={{...cdS,padding:20}}>
-        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>¿Qué rentabilidad usar?</h2>
-        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.</p>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>{t.seoH3}</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>{t.seoP3}</p>
       </div>
       <div style={{padding:20,borderRadius:14,background:"linear-gradient(135deg,#eef2ff,#e0e7ff)",border:"1px solid #c7d2fe",textAlign:"center"}}>
-        <div style={{fontSize:15,fontWeight:800,color:"#3730a3",marginBottom:6}}>¿Quieres ver datos reales?</div>
-        <p style={{fontSize:12,color:"#6366f1",lineHeight:1.6,marginBottom:12,maxWidth:420,margin:"0 auto 12px"}}>Nuestro simulador de cartera usa 35 años de retornos históricos de 20+ activos para mostrarte escenarios pesimista, esperado y optimista.</p>
-        <button onClick={()=>go("/simulador-cartera")} style={{padding:"10px 24px",fontSize:13,background:"#6366f1",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>Ver simulación realista de cartera →</button>
+        <div style={{fontSize:15,fontWeight:800,color:"#3730a3",marginBottom:6}}>{t.seoCta}</div>
+        <p style={{fontSize:12,color:"#6366f1",lineHeight:1.6,marginBottom:12,maxWidth:420,margin:"0 auto 12px"}}>{t.seoCtaDesc}</p>
+        <button onClick={()=>go("/simulador-cartera")} style={{padding:"10px 24px",fontSize:13,background:"#6366f1",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>{t.seoCtaBtn} →</button>
       </div>
     </div>
   </div>);
@@ -575,7 +583,8 @@ function PortfolioSim({t,lang}){
    ══════════════════════════════════════════════ */
 export default function App(){
   const {path, go} = useRouter();
-  const[lang,setLang]=useState("es");
+  const[lang,setLangState]=useState(()=>{try{return localStorage.getItem("kartera_lang")||"es";}catch(e){return "es";}});
+  const setLang=(l)=>{setLangState(l);try{localStorage.setItem("kartera_lang",l);}catch(e){}};
   const t=T[lang];
   const pageTitle = path==="/interes-compuesto" ? t.ci : path==="/simulador-cartera" ? t.sim : null;
   return(
