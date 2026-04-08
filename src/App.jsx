@@ -9,13 +9,9 @@ function useRouter() {
     : raw.includes("simulador-cartera") ? "/simulador-cartera"
     : "/";
   const go = useCallback((p) => {
-  const map = { 
-    "/": "/", 
-    "/interes-compuesto": "/interes-compuesto", 
-    "/simulador-cartera": "/simulador-cartera" 
-  };
-  window.location.href = map[p] || p;
-}, []);
+    const map = { "/": "/", "/interes-compuesto": "/interes-compuesto", "/simulador-cartera": "/simulador-cartera" };
+    window.location.href = map[p] || p;
+  }, []);
   return { path, go };
 }
 
@@ -405,6 +401,26 @@ function CompoundCalc({go,t}){
       <div style={{fontSize:15,fontWeight:800,color:"#991b1b",marginBottom:6}}>{t.noSabes}</div>
       <p style={{fontSize:12,color:"#78716c",lineHeight:1.6,marginBottom:12,maxWidth:420,margin:"0 auto 12px"}}>{t.pruebaEl}</p>
       <button onClick={()=>go("/simulador-cartera")} style={{padding:"10px 24px",fontSize:13,background:"#10b981",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>{t.verSim} →</button>
+    </div>
+    {/* SEO CONTENT */}
+    <div style={{marginTop:24}}>
+      <div style={{...cdS,padding:20}}>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>¿Qué es el interés compuesto?</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó "la fuerza más poderosa del universo" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.</p>
+      </div>
+      <div style={{...cdS,padding:20}}>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>Cómo usar la calculadora de interés compuesto</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.</p>
+      </div>
+      <div style={{...cdS,padding:20}}>
+        <h2 style={{fontSize:17,fontWeight:800,color:"#111",marginTop:0,marginBottom:8}}>¿Qué rentabilidad usar?</h2>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0}}>Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.</p>
+      </div>
+      <div style={{padding:20,borderRadius:14,background:"linear-gradient(135deg,#eef2ff,#e0e7ff)",border:"1px solid #c7d2fe",textAlign:"center"}}>
+        <div style={{fontSize:15,fontWeight:800,color:"#3730a3",marginBottom:6}}>¿Quieres ver datos reales?</div>
+        <p style={{fontSize:12,color:"#6366f1",lineHeight:1.6,marginBottom:12,maxWidth:420,margin:"0 auto 12px"}}>Nuestro simulador de cartera usa 35 años de retornos históricos de 20+ activos para mostrarte escenarios pesimista, esperado y optimista.</p>
+        <button onClick={()=>go("/simulador-cartera")} style={{padding:"10px 24px",fontSize:13,background:"#6366f1",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>Ver simulación realista de cartera →</button>
+      </div>
     </div>
   </div>);
 }
