@@ -9,8 +9,11 @@ function useRouter() {
     : raw.includes("simulador-cartera") ? "/simulador-cartera"
     : "/";
   const go = useCallback((p) => {
-    const map = { "/": "/", "/interes-compuesto": "/interes-compuesto.html", "/simulador-cartera": "/simulador-cartera.html" };
-    window.location.href = map[p] || p;
+    const map = { 
+  "/": "/", 
+  "/interes-compuesto": "/interes-compuesto", 
+  "/simulador-cartera": "/simulador-cartera" 
+};
   }, []);
   return { path, go };
 }
