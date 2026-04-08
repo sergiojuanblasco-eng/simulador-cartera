@@ -42,26 +42,26 @@ const R = {
 };
 
 const ASSETS=[
-  {id:"sp500",name:"S&P 500",cat:"idx",f:5,s:15,uf:false,desc:{es:"Las 500 mayores empresas de EE.UU.",en:"Top 500 US companies."}},
-  {id:"nasdaq",name:"Nasdaq 100",cat:"idx",f:7,s:20,uf:false,desc:{es:"100 mayores tecnológicas.",en:"Top 100 tech companies."}},
-  {id:"msci_world",name:"MSCI World",cat:"idx",f:6,s:15,uf:false,desc:{es:"1.500 empresas de 23 países desarrollados.",en:"1,500 companies from 23 developed countries."}},
-  {id:"msci_em",name:"Emergentes",cat:"idx",f:7.5,s:20,uf:false,desc:{es:"Mercados emergentes (China, India, Brasil).",en:"Emerging markets (China, India, Brazil)."}},
-  {id:"stoxx600",name:"Europa 600",cat:"idx",f:5.5,s:15,uf:false,desc:{es:"600 empresas europeas.",en:"600 European companies."}},
-  {id:"msci_acwi",name:"MSCI ACWI",cat:"idx",f:6,s:15,uf:false,desc:{es:"Todo el mundo en un índice.",en:"The whole world in one index."}},
-  {id:"apple",name:"Apple",cat:"stk",f:10,s:30,uf:true,desc:{es:"Ecosistema tech, valor refugio tecnológico.",en:"Tech ecosystem, tech safe haven."}},
-  {id:"nvidia",name:"NVIDIA",cat:"stk",f:13,s:35,uf:true,desc:{es:"Líder en chips para IA. Muy volátil.",en:"AI chip leader. Very volatile."}},
-  {id:"microsoft",name:"Microsoft",cat:"stk",f:10,s:28,uf:true,desc:{es:"Cloud + IA + software empresarial.",en:"Cloud + AI + enterprise software."}},
-  {id:"tesla",name:"Tesla",cat:"stk",f:12,s:40,uf:true,desc:{es:"Vehículos eléctricos + energía. Muy volátil.",en:"Electric vehicles + energy. Very volatile."}},
-  {id:"amazon",name:"Amazon",cat:"stk",f:11,s:30,uf:true,desc:{es:"E-commerce + AWS cloud.",en:"E-commerce + AWS cloud."}},
-  {id:"google",name:"Alphabet",cat:"stk",f:10,s:28,uf:true,desc:{es:"Publicidad digital + cloud + IA.",en:"Digital ads + cloud + AI."}},
-  {id:"coca_cola",name:"Coca-Cola",cat:"stk",f:7,s:15,uf:true,desc:{es:"Valor defensivo, dividendo estable.",en:"Defensive stock, stable dividend."}},
-  {id:"meta",name:"Meta",cat:"stk",f:11,s:35,uf:true,desc:{es:"Facebook, Instagram, WhatsApp.",en:"Facebook, Instagram, WhatsApp."}},
-  {id:"us_bond",name:"Bonos USA 10Y",cat:"fi",f:4.5,s:8,uf:false,desc:{es:"Deuda del gobierno de EE.UU.",en:"US government debt."}},
-  {id:"cash",name:"Monetario",cat:"fi",f:3,s:2,uf:false,desc:{es:"Liquidez con rendimiento mínimo.",en:"Liquidity with minimal return."}},
-  {id:"btc",name:"Bitcoin",cat:"cry",f:15,s:60,uf:true,desc:{es:"Oro digital. Alta volatilidad.",en:"Digital gold. High volatility."}},
-  {id:"eth",name:"Ethereum",cat:"cry",f:12,s:65,uf:true,desc:{es:"Contratos inteligentes. Más riesgo que BTC.",en:"Smart contracts. Higher risk than BTC."}},
-  {id:"gold",name:"Oro",cat:"alt",f:5,s:15,uf:false,desc:{es:"Protección contra inflación y crisis.",en:"Inflation and crisis protection."}},
-  {id:"reits",name:"REITs",cat:"alt",f:6.5,s:15,uf:false,desc:{es:"Inmobiliario cotizado.",en:"Listed real estate."}},
+  {id:"sp500",name:{es:"S&P 500",en:"S&P 500"},cat:"idx",f:5,s:15,uf:false,desc:{es:"Las 500 mayores empresas de EE.UU.",en:"Top 500 US companies."}},
+  {id:"nasdaq",name:{es:"Nasdaq 100",en:"Nasdaq 100"},cat:"idx",f:7,s:20,uf:false,desc:{es:"100 mayores tecnológicas.",en:"Top 100 tech companies."}},
+  {id:"msci_world",name:{es:"MSCI World",en:"MSCI World"},cat:"idx",f:6,s:15,uf:false,desc:{es:"1.500 empresas de 23 países desarrollados.",en:"1,500 companies from 23 developed countries."}},
+  {id:"msci_em",name:{es:"Emergentes",en:"Emerging"},cat:"idx",f:7.5,s:20,uf:false,desc:{es:"Mercados emergentes (China, India, Brasil).",en:"Emerging markets (China, India, Brazil)."}},
+  {id:"stoxx600",name:{es:"Europa 600",en:"Europe 600"},cat:"idx",f:5.5,s:15,uf:false,desc:{es:"600 empresas europeas.",en:"600 European companies."}},
+  {id:"msci_acwi",name:{es:"MSCI ACWI",en:"MSCI ACWI"},cat:"idx",f:6,s:15,uf:false,desc:{es:"Todo el mundo en un índice.",en:"The whole world in one index."}},
+  {id:"apple",name:{es:"Apple",en:"Apple"},cat:"stk",f:10,s:30,uf:true,desc:{es:"Ecosistema tech, valor refugio tecnológico.",en:"Tech ecosystem, tech safe haven."}},
+  {id:"nvidia",name:{es:"NVIDIA",en:"NVIDIA"},cat:"stk",f:13,s:35,uf:true,desc:{es:"Líder en chips para IA. Muy volátil.",en:"AI chip leader. Very volatile."}},
+  {id:"microsoft",name:{es:"Microsoft",en:"Microsoft"},cat:"stk",f:10,s:28,uf:true,desc:{es:"Cloud + IA + software empresarial.",en:"Cloud + AI + enterprise software."}},
+  {id:"tesla",name:{es:"Tesla",en:"Tesla"},cat:"stk",f:12,s:40,uf:true,desc:{es:"Vehículos eléctricos + energía. Muy volátil.",en:"Electric vehicles + energy. Very volatile."}},
+  {id:"amazon",name:{es:"Amazon",en:"Amazon"},cat:"stk",f:11,s:30,uf:true,desc:{es:"E-commerce + AWS cloud.",en:"E-commerce + AWS cloud."}},
+  {id:"google",name:{es:"Alphabet",en:"Alphabet"},cat:"stk",f:10,s:28,uf:true,desc:{es:"Publicidad digital + cloud + IA.",en:"Digital ads + cloud + AI."}},
+  {id:"coca_cola",name:{es:"Coca-Cola",en:"Coca-Cola"},cat:"stk",f:7,s:15,uf:true,desc:{es:"Valor defensivo, dividendo estable.",en:"Defensive stock, stable dividend."}},
+  {id:"meta",name:{es:"Meta",en:"Meta"},cat:"stk",f:11,s:35,uf:true,desc:{es:"Facebook, Instagram, WhatsApp.",en:"Facebook, Instagram, WhatsApp."}},
+  {id:"us_bond",name:{es:"Bonos USA 10Y",en:"US Bonds 10Y"},cat:"fi",f:4.5,s:8,uf:false,desc:{es:"Deuda del gobierno de EE.UU.",en:"US government debt."}},
+  {id:"cash",name:{es:"Monetario",en:"Money Market"},cat:"fi",f:3,s:2,uf:false,desc:{es:"Liquidez con rendimiento mínimo.",en:"Liquidity with minimal return."}},
+  {id:"btc",name:{es:"Bitcoin",en:"Bitcoin"},cat:"cry",f:15,s:60,uf:true,desc:{es:"Oro digital. Alta volatilidad.",en:"Digital gold. High volatility."}},
+  {id:"eth",name:{es:"Ethereum",en:"Ethereum"},cat:"cry",f:12,s:65,uf:true,desc:{es:"Contratos inteligentes. Más riesgo que BTC.",en:"Smart contracts. Higher risk than BTC."}},
+  {id:"gold",name:{es:"Oro",en:"Gold"},cat:"alt",f:5,s:15,uf:false,desc:{es:"Protección contra inflación y crisis.",en:"Inflation and crisis protection."}},
+  {id:"reits",name:{es:"REITs",en:"REITs"},cat:"alt",f:6.5,s:15,uf:false,desc:{es:"Inmobiliario cotizado.",en:"Listed real estate."}},
 ];
 
 const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}}];
@@ -112,7 +112,7 @@ const T={
     homeW2t:"Riesgo honesto",homeW2d:"No solo cuánto puedes ganar — cuánto puedes perder y con qué probabilidad.",
     homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educación financiera.",
     proximamente:"Próximamente",proxItems:"Optimización de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
-    intEsp:"Interés esperado",
+    intEsp:"Interés esperado",yearN:"Año",
     seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
     seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
     seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
@@ -158,7 +158,7 @@ const T={
     homeW2t:"Honest risk",homeW2d:"Not just how much you can earn — how much you can lose and how likely.",
     homeW3t:"No conflict",homeW3d:"We don't sell funds or charge commissions. Just financial education.",
     proximamente:"Coming soon",proxItems:"AI portfolio optimization | Crisis scenario (stress test) | Broker comparison",
-    intEsp:"Expected interest",
+    intEsp:"Expected interest",yearN:"Year",
     seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
     seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
     seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
@@ -279,7 +279,7 @@ function gS(id,h){
    ══════════════════════════════════════════════ */
 const cdS={background:"#fff",borderRadius:12,padding:16,border:"1px solid #eee",marginBottom:12};
 
-function SvgChart({lines,years,labels,colors,fill}){
+function SvgChart({lines,years,labels,colors,fill,yearLabel}){
   const W=580,H=220,pad={l:50,r:10,t:10,b:24},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
   const allV=lines.flatMap(d=>d.map(p=>p.v));const mx=Math.max(...allV)*1.05;
   const sx=yr=>pad.l+(yr/years)*w,sy=val=>pad.t+h-(val/mx)*h;
@@ -313,7 +313,7 @@ function SvgChart({lines,years,labels,colors,fill}){
       </>}
     </svg>
     {hover!==null?<div style={{background:"#111",color:"#fff",borderRadius:8,padding:"6px 10px",fontSize:11,display:"flex",gap:12,justifyContent:"center",marginTop:2,flexWrap:"wrap"}}>
-      <span style={{fontWeight:700}}>{"Año "+hover}</span>
+      <span style={{fontWeight:700}}>{(yearLabel||"Año")+" "+hover}</span>
       {lines.map((d,i)=>{const pt=d.find(p=>p.y===hover);if(!pt)return null;return<span key={i} style={{color:colors[i]}}>{labels[i]}: <b>{fm(Math.round(pt.v))}</b></span>;})}
     </div>
     :<div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
@@ -404,7 +404,7 @@ function CompoundCalc({go,t}){
       <div style={cdS}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.tuAp}</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace"}}>{fm(tI)} EUR</div></div>
       <div style={cdS}><div style={{fontSize:10,color:"#aaa",fontWeight:600,marginBottom:4}}>{t.intGen}</div><div style={{fontSize:20,fontWeight:800,fontFamily:"monospace",color:"#10b981"}}>+{fm(prof)} EUR</div><div style={{fontSize:10,color:"#aaa",marginTop:2}}>{tI>0?Math.round(prof/tI*100):0}% {t.sobreAp}</div></div>
     </div>
-    <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[data]} years={yr} labels={[t.capital]} colors={["#10b981"]} fill={true}/></div>
+    <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[data]} years={yr} labels={[t.capital]} colors={["#10b981"]} fill={true} yearLabel={t.yearN}/></div>
     <div style={{padding:20,borderRadius:14,background:"linear-gradient(135deg,#fef2f2,#fff7ed)",border:"1px solid #fecaca",textAlign:"center"}}>
       <div style={{fontSize:15,fontWeight:800,color:"#991b1b",marginBottom:6}}>{t.noSabes}</div>
       <p style={{fontSize:12,color:"#78716c",lineHeight:1.6,marginBottom:12,maxWidth:420,margin:"0 auto 12px"}}>{t.pruebaEl}</p>
@@ -455,8 +455,8 @@ function PortfolioSim({t,lang}){
   const tI=ini+moM*12*yr;
   const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
   const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.name[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
-  const assetBreakdown=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name,weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
-  const donutItems=useMemo(()=>{const ac={sp500:"#3b82f6",nasdaq:"#6366f1",msci_world:"#0ea5e9",msci_em:"#14b8a6",stoxx600:"#2563eb",msci_acwi:"#0284c7",apple:"#10b981",nvidia:"#34d399",microsoft:"#059669",tesla:"#f97316",amazon:"#f59e0b",google:"#eab308",coca_cola:"#84cc16",meta:"#22d3ee",us_bond:"#1e40af",cash:"#60a5fa",btc:"#f59e0b",eth:"#8b5cf6",gold:"#92400e",reits:"#a16207"};return sel.filter(id=>(nW[id]||0)>0).map(id=>({name:ASSETS.find(a=>a.id===id)?.name||id,w:nW[id]||0,c:ac[id]||"#999"}));},[sel,nW]);
+  const assetBreakdown=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name[lang],weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
+  const donutItems=useMemo(()=>{const ac={sp500:"#3b82f6",nasdaq:"#6366f1",msci_world:"#0ea5e9",msci_em:"#14b8a6",stoxx600:"#2563eb",msci_acwi:"#0284c7",apple:"#10b981",nvidia:"#34d399",microsoft:"#059669",tesla:"#f97316",amazon:"#f59e0b",google:"#eab308",coca_cola:"#84cc16",meta:"#22d3ee",us_bond:"#1e40af",cash:"#60a5fa",btc:"#f59e0b",eth:"#8b5cf6",gold:"#92400e",reits:"#a16207"};return sel.filter(id=>(nW[id]||0)>0).map(id=>({name:ASSETS.find(a=>a.id===id)?.name[lang]||id,w:nW[id]||0,c:ac[id]||"#999"}));},[sel,nW,lang]);
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
   const showShortTermWarning = pS && yr < 5 && pS.probLossNum > 25;
 
@@ -464,12 +464,12 @@ function PortfolioSim({t,lang}){
     <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name}{on?" ✓":""}</button>;})}</div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name[lang]}{on?" ✓":""}</button>;})}</div>
     {sel.length>0&&<div style={cdS}>
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:13,fontWeight:700}}>{t.pesos}: <span style={{color:Math.abs(tW-100)<1?"#10b981":"#f59e0b",fontFamily:"monospace"}}>{tW}%</span> / 100%</span><button onClick={()=>{const w=Math.floor(100/sel.length);const rem=100-w*sel.length;const n={};sel.forEach((id,i)=>{n[id]=w+(i<rem?1:0);});sW(n);}} style={{fontSize:11,background:"#f3f4f6",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontWeight:600}}>{t.equi}</button></div>
       {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<div key={id} style={{marginBottom:8}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-          <span style={{width:90,fontSize:12,fontWeight:600,flexShrink:0}}>{a.name}</span>
+          <span style={{width:90,fontSize:12,fontWeight:600,flexShrink:0}}>{a.name[lang]}</span>
           <input type="range" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Number(e.target.value)})} style={{flex:1}}/>
           <div style={{display:"flex",alignItems:"center",background:"#f9fafb",border:"1.5px solid #eee",borderRadius:8,width:54,flexShrink:0}}><input type="number" min={0} max={100} value={wt[id]||0} onChange={e=>sW({...wt,[id]:Math.max(0,Math.min(100,Number(e.target.value)||0))})} style={{width:32,border:"none",background:"transparent",textAlign:"right",fontSize:12,fontWeight:700,outline:"none",padding:"4px 0 4px 3px",fontFamily:"monospace",color:"#333"}}/><span style={{fontSize:10,color:"#bbb",paddingRight:4}}>%</span></div>
           <button onClick={()=>tog(id)} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:16}}>x</button>
@@ -518,7 +518,7 @@ function PortfolioSim({t,lang}){
       </div>
 
       {/* CHART */}
-      <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pess,t.esp,t.opt]} colors={COL} fill={true}/></div>
+      <div style={cdS}><div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{t.evo}</div><SvgChart lines={[scs[0].d,scs[1].d,scs[2].d]} years={yr} labels={[t.pess,t.esp,t.opt]} colors={COL} fill={true} yearLabel={t.yearN}/></div>
 
       {/* PORTFOLIO + DONUT + RISK */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:10,marginBottom:12}}>
