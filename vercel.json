@@ -2,11 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": 
-   {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
   "rewrites": [
     { "source": "/simulador-cartera", "destination": "/simulador-cartera.html" },
     { "source": "/interes-compuesto", "destination": "/interes-compuesto.html" },
