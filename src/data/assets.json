@@ -1,0 +1,22 @@
+[
+  {"id":"sp500","name":{"es":"S&P 500","en":"S&P 500"},"cat":"idx","color":"#3b82f6","f":5,"s":15,"uf":false,"desc":{"es":"Las 500 mayores empresas de EE.UU.","en":"Top 500 US companies."}},
+  {"id":"nasdaq","name":{"es":"Nasdaq 100","en":"Nasdaq 100"},"cat":"idx","color":"#6366f1","f":7,"s":20,"uf":false,"desc":{"es":"100 mayores tecnológicas.","en":"Top 100 tech companies."}},
+  {"id":"msci_world","name":{"es":"MSCI World","en":"MSCI World"},"cat":"idx","color":"#0ea5e9","f":6,"s":15,"uf":false,"desc":{"es":"1.500 empresas de 23 países desarrollados.","en":"1,500 companies from 23 developed countries."}},
+  {"id":"msci_em","name":{"es":"Emergentes","en":"Emerging"},"cat":"idx","color":"#14b8a6","f":7.5,"s":20,"uf":false,"desc":{"es":"Mercados emergentes (China, India, Brasil).","en":"Emerging markets (China, India, Brazil)."}},
+  {"id":"stoxx600","name":{"es":"Europa 600","en":"Europe 600"},"cat":"idx","color":"#2563eb","f":5.5,"s":15,"uf":false,"desc":{"es":"600 empresas europeas.","en":"600 European companies."}},
+  {"id":"msci_acwi","name":{"es":"MSCI ACWI","en":"MSCI ACWI"},"cat":"idx","color":"#0284c7","f":6,"s":15,"uf":false,"desc":{"es":"Todo el mundo en un índice.","en":"The whole world in one index."}},
+  {"id":"apple","name":{"es":"Apple","en":"Apple"},"cat":"stk","color":"#10b981","f":10,"s":30,"uf":true,"desc":{"es":"Ecosistema tech, valor refugio tecnológico.","en":"Tech ecosystem, tech safe haven."}},
+  {"id":"nvidia","name":{"es":"NVIDIA","en":"NVIDIA"},"cat":"stk","color":"#34d399","f":13,"s":35,"uf":true,"desc":{"es":"Líder en chips para IA. Muy volátil.","en":"AI chip leader. Very volatile."}},
+  {"id":"microsoft","name":{"es":"Microsoft","en":"Microsoft"},"cat":"stk","color":"#059669","f":10,"s":28,"uf":true,"desc":{"es":"Cloud + IA + software empresarial.","en":"Cloud + AI + enterprise software."}},
+  {"id":"tesla","name":{"es":"Tesla","en":"Tesla"},"cat":"stk","color":"#f97316","f":12,"s":40,"uf":true,"desc":{"es":"Vehículos eléctricos + energía. Muy volátil.","en":"Electric vehicles + energy. Very volatile."}},
+  {"id":"amazon","name":{"es":"Amazon","en":"Amazon"},"cat":"stk","color":"#f59e0b","f":11,"s":30,"uf":true,"desc":{"es":"E-commerce + AWS cloud.","en":"E-commerce + AWS cloud."}},
+  {"id":"google","name":{"es":"Alphabet","en":"Alphabet"},"cat":"stk","color":"#eab308","f":10,"s":28,"uf":true,"desc":{"es":"Publicidad digital + cloud + IA.","en":"Digital ads + cloud + AI."}},
+  {"id":"coca_cola","name":{"es":"Coca-Cola","en":"Coca-Cola"},"cat":"stk","color":"#84cc16","f":7,"s":15,"uf":true,"desc":{"es":"Valor defensivo, dividendo estable.","en":"Defensive stock, stable dividend."}},
+  {"id":"meta","name":{"es":"Meta","en":"Meta"},"cat":"stk","color":"#22d3ee","f":11,"s":35,"uf":true,"desc":{"es":"Facebook, Instagram, WhatsApp.","en":"Facebook, Instagram, WhatsApp."}},
+  {"id":"us_bond","name":{"es":"Bonos USA 10Y","en":"US Bonds 10Y"},"cat":"fi","color":"#1e40af","f":4.5,"s":8,"uf":false,"desc":{"es":"Deuda del gobierno de EE.UU.","en":"US government debt."}},
+  {"id":"cash","name":{"es":"Monetario","en":"Money Market"},"cat":"fi","color":"#60a5fa","f":3,"s":2,"uf":false,"desc":{"es":"Liquidez con rendimiento mínimo.","en":"Liquidity with minimal return."}},
+  {"id":"btc","name":{"es":"Bitcoin","en":"Bitcoin"},"cat":"cry","color":"#f59e0b","f":15,"s":60,"uf":true,"desc":{"es":"Oro digital. Alta volatilidad.","en":"Digital gold. High volatility."}},
+  {"id":"eth","name":{"es":"Ethereum","en":"Ethereum"},"cat":"cry","color":"#8b5cf6","f":12,"s":65,"uf":true,"desc":{"es":"Contratos inteligentes. Más riesgo que BTC.","en":"Smart contracts. Higher risk than BTC."}},
+  {"id":"gold","name":{"es":"Oro","en":"Gold"},"cat":"alt","color":"#92400e","f":5,"s":15,"uf":false,"desc":{"es":"Protección contra inflación y crisis.","en":"Inflation and crisis protection."}},
+  {"id":"reits","name":{"es":"REITs","en":"REITs"},"cat":"alt","color":"#a16207","f":6.5,"s":15,"uf":false,"desc":{"es":"Inmobiliario cotizado.","en":"Listed real estate."}}
+]
