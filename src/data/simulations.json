@@ -2,12 +2,16 @@
   {
     "slug": "cartera-60-40",
     "title": {
-      "es": "¿Qué hubiera pasado con una cartera 60/40?",
-      "en": "What would have happened with a 60/40 portfolio?"
+      "es": "¿Vale la pena la cartera 60/40?",
+      "en": "Is the 60/40 portfolio worth it?"
+    },
+    "hook": {
+      "es": "Invertir 10.000€ + 200€/mes durante 10 años en una cartera 60/40 habría generado entre 38.000€ y 62.000€, dependiendo del momento en el que empezaras.\n\nLa probabilidad de haber perdido dinero en ese periodo: solo un 8%.",
+      "en": "Investing €10,000 + €200/month for 10 years in a 60/40 portfolio would have generated between €38,000 and €62,000, depending on when you started.\n\nThe probability of losing money over that period: only 8%."
     },
     "intro": {
-      "es": "La cartera 60/40 (60% renta variable, 40% renta fija) es la estrategia más clásica de inversión. Aquí puedes ver qué habría pasado históricamente — y ajustar los porcentajes a tu gusto.",
-      "en": "The 60/40 portfolio (60% equities, 40% bonds) is the most classic investment strategy. Here you can see what would have happened historically — and adjust the percentages to your liking."
+      "es": "Esta simulación utiliza datos históricos reales para mostrar qué habría pasado con tu dinero en distintos escenarios de mercado.\n\nEn lugar de una única rentabilidad media, verás cómo puede variar el resultado dependiendo del momento en el que empieces a invertir.\n\nTambién calcula la probabilidad real de haber terminado en negativo en ese horizonte.\n\nPuedes ajustar el importe, el plazo y los porcentajes — los resultados se actualizan al instante.",
+      "en": "This simulation uses real historical data to show what would have happened to your money under different market scenarios.\n\nInstead of a single average return, you'll see how results can vary depending on when you start investing.\n\nIt also calculates the real probability of ending up in negative territory over that horizon.\n\nYou can adjust the amount, the time frame and the percentages — results update instantly."
     },
     "assets": [
       {"id": "msci_world", "weight": 60},
@@ -16,38 +20,67 @@
     "horizon": 10,
     "initial": 10000,
     "monthly": 200,
-    "seo": [
-      {
-        "h2": {
-          "es": "¿Por qué la cartera 60/40 es tan popular?",
-          "en": "Why is the 60/40 portfolio so popular?"
-        },
-        "p": {
-          "es": "La idea es simple: la renta variable (acciones) aporta crecimiento a largo plazo, y la renta fija (bonos) amortigua las caídas. Durante décadas, esta combinación ha ofrecido un equilibrio entre rentabilidad y riesgo que funciona para la mayoría de inversores. No es la cartera más rentable ni la más segura — es la más equilibrada.",
-          "en": "The idea is simple: equities provide long-term growth, and bonds cushion the falls. For decades, this combination has offered a balance between returns and risk that works for most investors. It's not the most profitable or the safest portfolio — it's the most balanced."
+    "analysis": {
+      "meaning": {
+        "es": "En la mayoría de los periodos históricos, esta cartera ha generado un crecimiento relativamente estable a largo plazo.\n\nNo está diseñada para maximizar rentabilidad en el corto plazo, sino para evitar grandes errores y ofrecer una evolución más predecible.\n\nDependiendo del momento en el que empieces a invertir, el resultado puede variar de forma significativa — por eso es importante entender el rango de posibles resultados, no solo una media.",
+        "en": "In most historical periods, this portfolio has generated relatively stable long-term growth.\n\nIt's not designed to maximize short-term returns, but to avoid big mistakes and offer a more predictable trajectory.\n\nDepending on when you start investing, the result can vary significantly — that's why it's important to understand the range of possible outcomes, not just an average."
+      },
+      "risk": {
+        "title": {"es": "El riesgo real", "en": "The real risk"},
+        "es": "A 10 años, aproximadamente un 8% de los periodos históricos terminaron en pérdidas.\n\nDicho de otra forma: en la mayoría de los casos habrías ganado dinero, pero no siempre.\n\nA corto plazo, esta cartera puede sufrir caídas y obligarte a tener paciencia. En algunos periodos, esas caídas han rondado el -15% antes de recuperarse.\n\nA medida que aumenta el horizonte temporal, esos escenarios negativos se vuelven menos frecuentes.",
+        "en": "Over 10 years, approximately 8% of historical periods ended in losses.\n\nPut another way: in most cases you would have made money, but not always.\n\nIn the short term, this portfolio can suffer drops and force you to be patient. In some periods, those drops were around -15% before recovering.\n\nAs the time horizon increases, those negative scenarios become less frequent."
+      },
+      "why": {
+        "title": {"es": "Por qué funciona esta combinación", "en": "Why this combination works"},
+        "items": [
+          {
+            "es": "MSCI World (60%) → es el motor de crecimiento. Representa más de 1.500 empresas de 23 países y es el principal responsable de la rentabilidad a largo plazo.",
+            "en": "MSCI World (60%) → the growth engine. Represents over 1,500 companies from 23 countries and is the main driver of long-term returns."
+          },
+          {
+            "es": "Bonos Global (40%) → actúan como amortiguador. Reducen la volatilidad y ayudan a estabilizar la cartera en momentos de crisis.",
+            "en": "Global Bonds (40%) → act as a buffer. They reduce volatility and help stabilize the portfolio during crises."
+          }
+        ],
+        "extra": {
+          "es": "Un ejemplo claro: en 2008, mientras las acciones globales cayeron alrededor de un -40%, los bonos llegaron a subir cerca de un +5%.\n\nEsa combinación es la que convierte caídas muy agresivas en movimientos más manejables.",
+          "en": "A clear example: in 2008, while global stocks fell around -40%, bonds rose close to +5%.\n\nThat combination is what turns aggressive drops into more manageable movements."
         }
       },
-      {
-        "h2": {
-          "es": "¿Funciona todavía en 2025?",
-          "en": "Does it still work in 2025?"
+      "profile": {
+        "title": {"es": "¿Para quién es esta cartera?", "en": "Who is this portfolio for?"},
+        "risk_level": {"es": "Moderado", "en": "Moderate"},
+        "horizon": {"es": "Mínimo 7–10 años", "en": "Minimum 7–10 years"},
+        "ideal": {
+          "es": "Inversores que buscan crecimiento sin asumir caídas demasiado agresivas",
+          "en": "Investors seeking growth without taking on overly aggressive drawdowns"
         },
-        "p": {
-          "es": "2022 fue el peor año de la historia para la cartera 60/40: tanto acciones como bonos cayeron a la vez. Muchos declararon su muerte. Pero los datos históricos muestran que esto ha pasado pocas veces, y que a horizontes de 10+ años la estrategia sigue siendo sólida. La simulación de arriba te muestra exactamente las probabilidades.",
-          "en": "2022 was the worst year in history for the 60/40 portfolio: both stocks and bonds fell simultaneously. Many declared it dead. But historical data shows this has rarely happened, and at 10+ year horizons the strategy remains solid. The simulation above shows you the exact probabilities."
+        "note": {
+          "es": "No es la cartera más rentable posible, pero sí una de las más fáciles de mantener en el tiempo.",
+          "en": "It's not the most profitable portfolio possible, but it's one of the easiest to stick with over time."
         }
       },
-      {
-        "h2": {
-          "es": "¿Qué alternativas existen?",
-          "en": "What alternatives exist?"
-        },
-        "p": {
-          "es": "Puedes ajustar los porcentajes: 80/20 si eres más agresivo, 40/60 si eres conservador. También puedes añadir oro, REITs o materias primas para diversificar más. Prueba diferentes combinaciones con el simulador de arriba — los datos son reales.",
-          "en": "You can adjust the percentages: 80/20 if you're more aggressive, 40/60 if you're conservative. You can also add gold, REITs or commodities for more diversification. Try different combinations with the simulator above — the data is real."
-        }
+      "conclusion": {
+        "expect": {"es": "Crecimiento estable a largo plazo (~5–7% anual)", "en": "Stable long-term growth (~5–7% annually)"},
+        "risk": {"es": "Caídas puntuales de hasta ~15% en periodos complicados", "en": "Occasional drops of up to ~15% in difficult periods"},
+        "target": {"es": "Inversores conservadores o moderados que priorizan estabilidad", "en": "Conservative or moderate investors who prioritize stability"}
       }
-    ]
+    },
+    "faq": [
+      {
+        "q": {"es": "¿Por qué la cartera 60/40 es tan popular?", "en": "Why is the 60/40 portfolio so popular?"},
+        "a": {"es": "Porque resuelve el principal problema del inversor: querer rentabilidad sin asumir caídas extremas. Las acciones aportan crecimiento y los bonos reducen el impacto de las crisis. Por eso lleva décadas siendo la base de muchas carteras diversificadas.", "en": "Because it solves the main investor problem: wanting returns without extreme drawdowns. Stocks provide growth and bonds reduce the impact of crises. That's why it's been the foundation of many diversified portfolios for decades."}
+      },
+      {
+        "q": {"es": "¿Es segura la cartera 60/40?", "en": "Is the 60/40 portfolio safe?"},
+        "a": {"es": "No existe una inversión sin riesgo. Sin embargo, históricamente ha reducido mucho las pérdidas frente a una cartera 100% en acciones. Incluso en 2022 — uno de sus peores años — la caída fue cercana al -15%, aproximadamente la mitad que una cartera solo de renta variable.", "en": "No investment is risk-free. However, historically it has greatly reduced losses compared to a 100% equity portfolio. Even in 2022 — one of its worst years — the drop was around -15%, roughly half that of an equity-only portfolio."}
+      },
+      {
+        "q": {"es": "¿Sigue funcionando hoy en día?", "en": "Does it still work today?"},
+        "a": {"es": "Puede haber periodos donde no funcione tan bien, especialmente cuando acciones y bonos caen a la vez. Sin embargo, estos escenarios han sido poco frecuentes, y a largo plazo sigue siendo una estrategia sólida para equilibrar riesgo y rentabilidad.", "en": "There may be periods where it doesn't work as well, especially when stocks and bonds fall together. However, these scenarios have been rare, and long-term it remains a solid strategy for balancing risk and return."}
+      }
+    ],
+    "related": ["sp500-vs-msci-world", "bitcoin-en-cartera"]
   },
   {
     "slug": "sp500-vs-msci-world",
@@ -55,9 +88,13 @@
       "es": "S&P 500 vs MSCI World: ¿cuál es mejor?",
       "en": "S&P 500 vs MSCI World: which is better?"
     },
+    "hook": {
+      "es": "El S&P 500 ha superado al MSCI World en los últimos 15 años. Pero eso no significa que siempre vaya a hacerlo. Aquí puedes comparar ambos con datos reales de 36 años y decidir por ti mismo.",
+      "en": "The S&P 500 has outperformed the MSCI World over the last 15 years. But that doesn't mean it always will. Here you can compare both with 36 years of real data and decide for yourself."
+    },
     "intro": {
-      "es": "El eterno debate: ¿invertir solo en EE.UU. (S&P 500) o diversificar globalmente (MSCI World)? Aquí tienes los datos reales de 35 años. Cambia los pesos y decide por ti mismo.",
-      "en": "The eternal debate: invest only in the US (S&P 500) or diversify globally (MSCI World)? Here you have 35 years of real data. Change the weights and decide for yourself."
+      "es": "Esta simulación divide tu inversión entre el S&P 500 (solo EE.UU.) y el MSCI World (global) para que veas cómo se habría comportado cada combinación.\n\nPuedes ajustar los porcentajes, el plazo y los importes. Los resultados reflejan datos históricos reales — no proyecciones teóricas.",
+      "en": "This simulation splits your investment between the S&P 500 (US only) and the MSCI World (global) so you can see how each combination would have performed.\n\nYou can adjust the percentages, time frame and amounts. Results reflect real historical data — not theoretical projections."
     },
     "assets": [
       {"id": "sp500", "weight": 50},
@@ -66,38 +103,81 @@
     "horizon": 15,
     "initial": 10000,
     "monthly": 300,
-    "seo": [
-      {
-        "h2": {
-          "es": "¿Por qué el S&P 500 ha ganado casi siempre?",
-          "en": "Why has the S&P 500 won almost always?"
-        },
-        "p": {
-          "es": "En los últimos 15 años, el S&P 500 ha superado al MSCI World consistentemente. La razón: EE.UU. representa ~70% del MSCI World, así que cuando EE.UU. va bien, ambos van bien — pero el S&P 500 va mejor porque no tiene el lastre de mercados más lentos como Europa o Japón. Pero cuidado: esto no garantiza que siga siendo así.",
-          "en": "Over the last 15 years, the S&P 500 has consistently outperformed the MSCI World. The reason: the US represents ~70% of MSCI World, so when the US does well, both do well — but the S&P 500 does better because it doesn't carry the drag of slower markets like Europe or Japan. But beware: this doesn't guarantee it will continue."
+    "analysis": {
+      "meaning": {
+        "es": "Si miras los últimos 15 años, el S&P 500 ha ganado más que el MSCI World casi siempre. La razón: EE.UU. representa aproximadamente el 70% del MSCI World, así que cuando las empresas americanas van bien, ambos índices suben — pero el S&P 500 sube más porque no arrastra el peso de mercados más lentos como Europa o Japón.\n\nPero si amplías la mirada a los 36 años de datos disponibles, la diferencia se reduce mucho. Y en la década de 2000-2010, el MSCI World cayó menos que el S&P 500 gracias a la diversificación geográfica.",
+        "en": "If you look at the last 15 years, the S&P 500 has outperformed the MSCI World almost always. The reason: the US represents roughly 70% of the MSCI World, so when American companies do well, both indices rise — but the S&P 500 rises more because it doesn't carry the weight of slower markets like Europe or Japan.\n\nBut if you widen the view to all 36 years of available data, the difference shrinks considerably. And in the 2000-2010 decade, the MSCI World fell less than the S&P 500 thanks to geographic diversification."
+      },
+      "risk": {
+        "title": {"es": "El riesgo de apostar todo a un país", "en": "The risk of betting everything on one country"},
+        "es": "Invertir solo en el S&P 500 es apostar a que EE.UU. seguirá siendo el motor de la economía mundial. Probablemente lo sea — pero nadie lo garantiza. Japón era el mercado dominante en los años 80 y luego pasó 30 años estancado.\n\nEl MSCI World no te protege de las caídas globales, pero sí de que un solo país te arrastre. Es la diferencia entre concentrar y diversificar.",
+        "en": "Investing only in the S&P 500 is betting that the US will remain the engine of the global economy. It probably will — but nobody guarantees it. Japan was the dominant market in the 80s and then spent 30 years stagnant.\n\nThe MSCI World doesn't protect you from global drops, but it does protect you from one country dragging you down. It's the difference between concentrating and diversifying."
+      },
+      "why": {
+        "title": {"es": "Qué aporta cada uno", "en": "What each one brings"},
+        "items": [
+          {
+            "es": "S&P 500 → las 500 mayores empresas de EE.UU. Concentrado en tecnología, salud y finanzas americanas. Mayor rentabilidad histórica reciente, pero mayor dependencia de un solo mercado.",
+            "en": "S&P 500 → the 500 largest US companies. Concentrated in American tech, healthcare and financials. Higher recent historical returns, but more dependence on a single market."
+          },
+          {
+            "es": "MSCI World → 1.500 empresas de 23 países desarrollados. Incluye EE.UU. (que ya pesa un 70%) más Europa, Japón, Canadá y otros. Menor concentración, menor riesgo de un solo país.",
+            "en": "MSCI World → 1,500 companies from 23 developed countries. Includes the US (already weighing 70%) plus Europe, Japan, Canada and others. Less concentration, less single-country risk."
+          }
+        ],
+        "extra": {
+          "es": "En la práctica, no son tan diferentes: se mueven juntos el 85-90% del tiempo. La diferencia aparece en los extremos — cuando un mercado va especialmente bien o especialmente mal.",
+          "en": "In practice, they're not that different: they move together 85-90% of the time. The difference appears at the extremes — when one market does especially well or especially poorly."
         }
       },
-      {
-        "h2": {
-          "es": "¿Cuándo conviene diversificar con MSCI World?",
-          "en": "When does diversifying with MSCI World make sense?"
+      "profile": {
+        "title": {"es": "¿Para quién es cada uno?", "en": "Who is each one for?"},
+        "risk_level": {"es": "Moderado a alto", "en": "Moderate to high"},
+        "horizon": {"es": "Mínimo 10–15 años", "en": "Minimum 10–15 years"},
+        "ideal": {
+          "es": "Depende de tu visión: solo S&P 500 para quien cree en EE.UU., solo MSCI World para diversificar, o una mezcla para sobreponderar sin apostar todo",
+          "en": "Depends on your view: S&P 500 only for US believers, MSCI World only to diversify, or a mix to overweight without betting everything"
         },
-        "p": {
-          "es": "Si miras los datos de 2000-2010 (la 'década perdida' de EE.UU.), el MSCI World cayó menos gracias a la diversificación. El problema es que nadie sabe cuándo vendrá la próxima década perdida. Diversificar es aceptar un poco menos de rentabilidad esperada a cambio de menos riesgo de concentración.",
-          "en": "If you look at 2000-2010 data (the US 'lost decade'), MSCI World fell less thanks to diversification. The problem is nobody knows when the next lost decade will come. Diversifying means accepting slightly lower expected returns in exchange for less concentration risk."
+        "note": {
+          "es": "No hay una respuesta correcta. Lo importante es entender qué estás eligiendo y por qué.",
+          "en": "There's no right answer. What matters is understanding what you're choosing and why."
         }
+      },
+      "conclusion": {
+        "expect": {"es": "Ambos han ofrecido entre un 7-10% anual a largo plazo, con el S&P 500 ligeramente por encima en las últimas décadas", "en": "Both have offered 7-10% annually long-term, with the S&P 500 slightly ahead in recent decades"},
+        "risk": {"es": "El S&P 500 depende de un solo país; el MSCI World diluye ese riesgo pero también la rentabilidad cuando EE.UU. lidera", "en": "The S&P 500 depends on one country; the MSCI World dilutes that risk but also returns when the US leads"},
+        "target": {"es": "No se trata de cuál es mejor, sino de cuánta concentración estás dispuesto a asumir", "en": "It's not about which is better, but how much concentration you're willing to take on"}
       }
-    ]
+    },
+    "faq": [
+      {
+        "q": {"es": "¿Por qué el S&P 500 ha ganado más en los últimos años?", "en": "Why has the S&P 500 won more in recent years?"},
+        "a": {"es": "Principalmente por el peso de las grandes tecnológicas americanas (Apple, Microsoft, NVIDIA, Amazon). Estas empresas han crecido más que cualquier otro sector en cualquier otro país. El MSCI World las incluye, pero su peso se diluye con empresas europeas y asiáticas que han crecido menos.", "en": "Mainly due to the weight of big American tech companies (Apple, Microsoft, NVIDIA, Amazon). These companies have grown more than any other sector in any other country. The MSCI World includes them, but their weight is diluted with European and Asian companies that have grown less."}
+      },
+      {
+        "q": {"es": "¿Puedo invertir en los dos a la vez?", "en": "Can I invest in both at the same time?"},
+        "a": {"es": "Sí, pero ten en cuenta que se solapan mucho. El MSCI World ya incluye todas las empresas del S&P 500. Si inviertes 50/50, realmente estás poniendo un ~85% en EE.UU. y un ~15% en el resto del mundo. No es malo — pero conviene saberlo.", "en": "Yes, but keep in mind they overlap significantly. The MSCI World already includes all S&P 500 companies. If you invest 50/50, you're really putting ~85% in the US and ~15% in the rest of the world. Not bad — but worth knowing."}
+      },
+      {
+        "q": {"es": "¿Qué pasaría si EE.UU. deja de liderar?", "en": "What would happen if the US stops leading?"},
+        "a": {"es": "Nadie lo sabe. Pero si ocurriera, una cartera 100% S&P 500 sufriría más que una MSCI World. La diversificación no mejora el mejor escenario — mejora el peor. Y el peor escenario es el que te hace abandonar.", "en": "Nobody knows. But if it happened, a 100% S&P 500 portfolio would suffer more than an MSCI World. Diversification doesn't improve the best scenario — it improves the worst. And the worst scenario is the one that makes you quit."}
+      }
+    ],
+    "related": ["cartera-60-40", "bitcoin-en-cartera"]
   },
   {
     "slug": "bitcoin-en-cartera",
     "title": {
-      "es": "¿Qué pasa si metes Bitcoin en tu cartera?",
+      "es": "¿Qué pasa si añades Bitcoin a tu cartera?",
       "en": "What happens if you add Bitcoin to your portfolio?"
     },
+    "hook": {
+      "es": "Un 5% en Bitcoin habría aumentado la rentabilidad esperada de una cartera equilibrada — pero también habría multiplicado la volatilidad. Aquí puedes ver si compensa, con datos reales desde 2014.",
+      "en": "A 5% Bitcoin allocation would have increased a balanced portfolio's expected return — but also multiplied its volatility. Here you can see if it's worth it, with real data since 2014."
+    },
     "intro": {
-      "es": "¿Un 5% en Bitcoin mejora o empeora tu cartera? Aquí lo puedes ver con datos reales desde 2014. Spoiler: la respuesta depende de tu horizonte y tu estómago.",
-      "en": "Does 5% in Bitcoin improve or worsen your portfolio? Here you can see with real data since 2014. Spoiler: the answer depends on your horizon and your stomach."
+      "es": "Esta simulación parte de una cartera diversificada (55% acciones globales, 30% bonos, 10% oro) y le añade un 5% en Bitcoin.\n\nLos datos de Bitcoin son más limitados (desde 2014) que los del resto de activos, por lo que los resultados reflejan un periodo histórico más corto.\n\nPuedes cambiar los porcentajes y el plazo para ver cómo afecta a los escenarios.",
+      "en": "This simulation starts with a diversified portfolio (55% global stocks, 30% bonds, 10% gold) and adds 5% in Bitcoin.\n\nBitcoin data is more limited (since 2014) than other assets, so results reflect a shorter historical period.\n\nYou can change the percentages and time frame to see how it affects the scenarios."
     },
     "assets": [
       {"id": "msci_world", "weight": 55},
@@ -108,27 +188,74 @@
     "horizon": 10,
     "initial": 10000,
     "monthly": 200,
-    "seo": [
-      {
-        "h2": {
-          "es": "¿Por qué solo un 5%?",
-          "en": "Why only 5%?"
-        },
-        "p": {
-          "es": "Bitcoin tiene una volatilidad histórica superior al 60% anual. Eso significa que puede caer un 70% en un año. Con un 5% de tu cartera, el impacto máximo es una caída del 3.5% — asumible. Con un 20%, estás arriesgando un 14% de tu cartera solo por Bitcoin. La mayoría de gestores profesionales que incluyen crypto lo hacen entre el 1% y el 5%.",
-          "en": "Bitcoin has historical volatility above 60% annually. That means it can drop 70% in a year. With 5% of your portfolio, the maximum impact is a 3.5% drop — manageable. With 20%, you're risking 14% of your portfolio just on Bitcoin. Most professional managers who include crypto do so between 1% and 5%."
+    "analysis": {
+      "meaning": {
+        "es": "Con un 5% en Bitcoin, la cartera ha tenido una rentabilidad esperada mayor que la misma cartera sin crypto. Pero el rango entre el escenario pesimista y el optimista se amplía de forma considerable.\n\nEsa es la trampa de Bitcoin en una cartera: mejora los números medios, pero hace que los extremos sean más extremos. Y los extremos son lo que te hacen tomar malas decisiones.",
+        "en": "With 5% in Bitcoin, the portfolio has had higher expected returns than the same portfolio without crypto. But the range between pessimistic and optimistic scenarios widens considerably.\n\nThat's Bitcoin's trap in a portfolio: it improves average numbers, but makes the extremes more extreme. And extremes are what lead to bad decisions."
+      },
+      "risk": {
+        "title": {"es": "El riesgo real de añadir Bitcoin", "en": "The real risk of adding Bitcoin"},
+        "es": "Bitcoin tiene una volatilidad histórica superior al 60% anual. Eso significa que en un mal año puede caer un 65-70%. Con un 5% de tu cartera, el impacto máximo es una caída adicional del 3-4% — asumible. Pero con un 20% en Bitcoin, una caída del 70% arrastra tu cartera un 14% extra.\n\nPor eso la mayoría de gestores que incluyen crypto lo hacen entre el 1% y el 5%. No es conservadurismo — es matemáticas.",
+        "en": "Bitcoin has historical volatility above 60% annually. That means in a bad year it can drop 65-70%. With 5% of your portfolio, the maximum impact is an additional 3-4% drop — manageable. But with 20% in Bitcoin, a 70% drop drags your portfolio down an extra 14%.\n\nThat's why most managers who include crypto do so between 1% and 5%. It's not conservatism — it's math."
+      },
+      "why": {
+        "title": {"es": "Qué aporta cada componente", "en": "What each component brings"},
+        "items": [
+          {
+            "es": "MSCI World (55%) → la base de crecimiento estable. El grueso de la cartera.",
+            "en": "MSCI World (55%) → the stable growth base. The bulk of the portfolio."
+          },
+          {
+            "es": "Bonos Global (30%) → el estabilizador. Amortigua las caídas de acciones y crypto.",
+            "en": "Global Bonds (30%) → the stabilizer. Cushions stock and crypto drops."
+          },
+          {
+            "es": "Oro (10%) → protección frente a inflación y crisis. En 2008 y 2020, el oro subió mientras casi todo caía.",
+            "en": "Gold (10%) → protection against inflation and crises. In 2008 and 2020, gold rose while almost everything else fell."
+          },
+          {
+            "es": "Bitcoin (5%) → el acelerador. Aporta rentabilidad extra, pero a un precio: volatilidad muy superior al resto.",
+            "en": "Bitcoin (5%) → the accelerator. Adds extra returns, but at a price: much higher volatility than everything else."
+          }
+        ],
+        "extra": {
+          "es": "El oro y los bonos no están ahí por rentabilidad — están para compensar los sustos que puede dar Bitcoin.",
+          "en": "Gold and bonds aren't there for returns — they're there to offset the scares Bitcoin can give."
         }
       },
-      {
-        "h2": {
-          "es": "¿Bitcoin descorrelaciona de verdad?",
-          "en": "Does Bitcoin really decorrelate?"
+      "profile": {
+        "title": {"es": "¿Para quién es esta cartera?", "en": "Who is this portfolio for?"},
+        "risk_level": {"es": "Moderado-alto", "en": "Moderate-high"},
+        "horizon": {"es": "Mínimo 10 años", "en": "Minimum 10 years"},
+        "ideal": {
+          "es": "Inversores que quieren exposición a crypto sin jugársela toda",
+          "en": "Investors who want crypto exposure without betting everything"
         },
-        "p": {
-          "es": "La teoría dice que Bitcoin no se mueve como las acciones. La realidad es más complicada: en crisis de liquidez (como marzo 2020 o 2022), Bitcoin cayó junto con todo lo demás. Donde sí aporta es en periodos de expansión monetaria. El oro sigue siendo mejor diversificador en crisis — por eso esta cartera incluye ambos.",
-          "en": "Theory says Bitcoin doesn't move like stocks. Reality is more complicated: in liquidity crises (like March 2020 or 2022), Bitcoin fell along with everything else. Where it does add value is during monetary expansion periods. Gold remains a better crisis diversifier — that's why this portfolio includes both."
+        "note": {
+          "es": "Si ves una caída del 20% en tu cartera y tu primer impulso es vender, el 5% en Bitcoin ya es demasiado para ti. Si lo ves como una oportunidad para comprar más barato, esta cartera puede encajarte.",
+          "en": "If you see a 20% drop in your portfolio and your first impulse is to sell, 5% in Bitcoin is already too much for you. If you see it as an opportunity to buy cheaper, this portfolio might suit you."
         }
+      },
+      "conclusion": {
+        "expect": {"es": "Mayor rentabilidad esperada que sin crypto, pero con un rango de resultados más amplio", "en": "Higher expected returns than without crypto, but with a wider range of outcomes"},
+        "risk": {"es": "Bitcoin puede caer un 60-70% en un mal año. Con un 5%, el impacto es limitado. Con más peso, el riesgo crece rápidamente", "en": "Bitcoin can drop 60-70% in a bad year. At 5%, the impact is limited. With more weight, risk grows quickly"},
+        "target": {"es": "Un poco de Bitcoin puede sumar. Demasiado puede destrozar tu estrategia", "en": "A little Bitcoin can add up. Too much can destroy your strategy"}
       }
-    ]
+    },
+    "faq": [
+      {
+        "q": {"es": "¿Por qué solo un 5% en Bitcoin?", "en": "Why only 5% in Bitcoin?"},
+        "a": {"es": "Porque el impacto de Bitcoin en una cartera no es lineal. Del 0% al 5%, añade rentabilidad con un coste de riesgo moderado. Del 5% al 20%, la rentabilidad extra se frena pero la volatilidad se dispara. El punto óptimo según la mayoría de análisis está entre el 1% y el 5%.", "en": "Because Bitcoin's impact on a portfolio isn't linear. From 0% to 5%, it adds returns at a moderate risk cost. From 5% to 20%, the extra return slows but volatility spikes. The sweet spot according to most analyses is between 1% and 5%."}
+      },
+      {
+        "q": {"es": "¿Merece la pena añadir Ethereum también?", "en": "Is it worth adding Ethereum too?"},
+        "a": {"es": "Ethereum tiene aún más volatilidad que Bitcoin y menos historial. Si quieres exposición a crypto, Bitcoin es la opción más conservadora dentro de un activo que ya es agresivo. Puedes probar diferentes combinaciones en el simulador cambiando los activos.", "en": "Ethereum has even more volatility than Bitcoin and less track record. If you want crypto exposure, Bitcoin is the most conservative option within an already aggressive asset class. You can try different combinations in the simulator by changing the assets."}
+      },
+      {
+        "q": {"es": "¿Y si Bitcoin sigue subiendo como hasta ahora?", "en": "What if Bitcoin keeps rising like it has?"},
+        "a": {"es": "Puede pasar. Pero también puede no pasar. Los retornos pasados de Bitcoin incluyen una fase de adopción inicial que probablemente no se repetirá. El simulador ya comprime los retornos extremos de Bitcoin para no generar expectativas irreales. Aun así, las proyecciones pueden ser optimistas comparadas con el futuro real.", "en": "It could happen. But it also might not. Bitcoin's past returns include an initial adoption phase that likely won't repeat. The simulator already compresses Bitcoin's extreme returns to avoid unrealistic expectations. Even so, projections may be optimistic compared to the actual future."}
+      }
+    ],
+    "related": ["cartera-60-40", "sp500-vs-msci-world"]
   }
 ]
