@@ -566,21 +566,67 @@ function PortfolioSim({t,lang,cfg}){
    ══════════════════════════════════════════════ */
 function SimulationPage({sim,t,lang,go}){
   const cdS={background:"#fff",borderRadius:12,padding:14,marginBottom:14,border:"1.5px solid #f0f0f0"};
+  const h3s={fontSize:17,fontWeight:700,marginBottom:8,marginTop:0};
+  const ps={fontSize:14,color:"#555",lineHeight:1.7,margin:0,whiteSpace:"pre-line"};
+  const a=sim.analysis;
   return(<div>
-    <h2 style={{fontSize:22,fontWeight:800,lineHeight:1.3,marginBottom:8,marginTop:0}}>{sim.title[lang]}</h2>
-    <p style={{fontSize:14,color:"#666",lineHeight:1.6,marginBottom:18}}>{sim.intro[lang]}</p>
+    {/* BLOQUE 1 — Título + gancho */}
+    <h2 style={{fontSize:22,fontWeight:800,lineHeight:1.3,marginBottom:10,marginTop:0}}>{sim.title[lang]}</h2>
+    {sim.hook&&<div style={{fontSize:14,color:"#444",lineHeight:1.7,marginBottom:18,whiteSpace:"pre-line"}}>{sim.hook[lang]}</div>}
+    {/* BLOQUE 2 — Qué es esta simulación */}
+    <div style={{background:"#f8fafc",borderRadius:10,padding:14,marginBottom:18,border:"1px solid #e2e8f0"}}>
+      <p style={{fontSize:13,color:"#555",lineHeight:1.7,margin:0,whiteSpace:"pre-line"}}>{sim.intro[lang]}</p>
+    </div>
+    {/* BLOQUE 3 — Simulador */}
     <PortfolioSim t={t} lang={lang} cfg={sim}/>
-    {sim.seo&&sim.seo.length>0&&<div style={{marginTop:24}}>
-      {sim.seo.map((s,i)=><div key={i} style={{marginBottom:20}}>
-        <h3 style={{fontSize:17,fontWeight:700,marginBottom:6,marginTop:0}}>{s.h2[lang]}</h3>
-        <p style={{fontSize:14,color:"#555",lineHeight:1.7,margin:0}}>{s.p[lang]}</p>
+    {/* BLOQUE 4 — Análisis */}
+    {a&&<div style={{marginTop:24}}>
+      <div style={cdS}>
+        <h3 style={h3s}>{lang==="es"?"Qué significan estos resultados":"What these results mean"}</h3>
+        <p style={ps}>{a.meaning[lang]}</p>
+      </div>
+      <div style={cdS}>
+        <h3 style={h3s}>{a.risk.title[lang]}</h3>
+        <p style={ps}>{a.risk[lang]}</p>
+      </div>
+      <div style={cdS}>
+        <h3 style={h3s}>{a.why.title[lang]}</h3>
+        {a.why.items.map((it,i)=><p key={i} style={{fontSize:14,color:"#444",lineHeight:1.6,margin:"0 0 8px",paddingLeft:8,borderLeft:"3px solid "+(ASSETS.find(x=>sim.assets[i]&&x.id===sim.assets[i].id)?.color||"#ddd")}}>{it[lang]}</p>)}
+        {a.why.extra&&<p style={{...ps,marginTop:10}}>{a.why.extra[lang]}</p>}
+      </div>
+      <div style={cdS}>
+        <h3 style={h3s}>{a.profile.title[lang]}</h3>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:10}}>
+          <span style={{padding:"4px 12px",borderRadius:20,fontSize:12,background:"#fef3c7",color:"#92400e",fontWeight:600}}>{lang==="es"?"Riesgo":"Risk"}: {a.profile.risk_level[lang]}</span>
+          <span style={{padding:"4px 12px",borderRadius:20,fontSize:12,background:"#e0f2fe",color:"#0369a1",fontWeight:600}}>{lang==="es"?"Horizonte":"Horizon"}: {a.profile.horizon[lang]}</span>
+        </div>
+        <p style={{fontSize:13,color:"#555",lineHeight:1.6,margin:"0 0 6px"}}><strong>{lang==="es"?"Ideal para":"Ideal for"}:</strong> {a.profile.ideal[lang]}</p>
+        <p style={{fontSize:13,color:"#888",lineHeight:1.6,margin:0,fontStyle:"italic"}}>{a.profile.note[lang]}</p>
+      </div>
+      <div style={{background:"#f0fdf4",borderRadius:12,padding:14,marginBottom:14,border:"1px solid #bbf7d0"}}>
+        <h3 style={{...h3s,fontSize:15}}>{lang==="es"?"Conclusión rápida":"Quick conclusion"}</h3>
+        <p style={{fontSize:13,margin:"0 0 4px",color:"#166534"}}>✅ {a.conclusion.expect[lang]}</p>
+        <p style={{fontSize:13,margin:"0 0 4px",color:"#92400e"}}>⚠️ {a.conclusion.risk[lang]}</p>
+        <p style={{fontSize:13,margin:0,color:"#1e40af"}}>🎯 {a.conclusion.target[lang]}</p>
+      </div>
+    </div>}
+    {/* BLOQUE 5 — FAQ */}
+    {sim.faq&&<div style={{marginTop:10}}>
+      <h3 style={{...h3s,fontSize:16,marginBottom:12}}>{lang==="es"?"Preguntas frecuentes":"Frequently asked questions"}</h3>
+      {sim.faq.map((f,i)=><div key={i} style={{marginBottom:14}}>
+        <p style={{fontSize:14,fontWeight:700,color:"#333",margin:"0 0 4px"}}>{f.q[lang]}</p>
+        <p style={{fontSize:13,color:"#666",lineHeight:1.6,margin:0}}>{f.a[lang]}</p>
       </div>)}
     </div>}
-    <div style={cdS}>
-      <div style={{textAlign:"center"}}>
-        <p style={{fontSize:14,fontWeight:700,marginBottom:6,marginTop:0}}>{lang==="es"?"Crea tu propia cartera personalizada":"Create your own custom portfolio"}</p>
-        <button onClick={()=>go("/simulador-cartera")} style={{background:"#10b981",color:"#fff",border:"none",borderRadius:10,padding:"12px 28px",fontSize:14,fontWeight:700,cursor:"pointer"}}>{lang==="es"?"Ir al simulador completo":"Go to full simulator"} →</button>
-      </div>
+    {/* BLOQUE 6 — Otras simulaciones */}
+    {sim.related&&<div style={cdS}>
+      <h3 style={{...h3s,fontSize:15}}>{lang==="es"?"Otras simulaciones que pueden interesarte":"Other simulations you might find interesting"}</h3>
+      {sim.related.map(slug=>{const s=SIMS.find(x=>x.slug===slug);if(!s)return null;return<a key={slug} href={"/simulacion/"+slug} style={{display:"block",padding:"8px 0",fontSize:14,color:"#10b981",fontWeight:600,textDecoration:"none",borderBottom:"0.5px solid #f0f0f0"}}>→ {s.title[lang]}</a>;})}
+    </div>}
+    {/* BLOQUE 7 — CTA */}
+    <div style={{textAlign:"center",marginTop:20,marginBottom:10}}>
+      <p style={{fontSize:14,fontWeight:700,marginBottom:8,color:"#333"}}>{lang==="es"?"Simula tu propia cartera con tus porcentajes":"Simulate your own portfolio with your percentages"}</p>
+      <button onClick={()=>go("/simulador-cartera")} style={{background:"#10b981",color:"#fff",border:"none",borderRadius:10,padding:"12px 28px",fontSize:14,fontWeight:700,cursor:"pointer"}}>{lang==="es"?"Ir al simulador completo":"Go to full simulator"} →</button>
     </div>
   </div>);
 }
