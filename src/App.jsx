@@ -425,14 +425,6 @@ function PortfolioSim({t,lang}){
   return(<div>
     <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
-    {/* ── CARTERA SELECCIONADA ── */}
-    {sel.length>0&&<div style={{marginBottom:12}}>
-      <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.tuCartera}</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
-        {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<span key={id} style={{padding:"4px 10px",borderRadius:20,fontSize:12,background:"#ecfdf5",color:"#065f46",border:"1px solid #10b981",display:"flex",alignItems:"center",gap:5}}>{a?.name[lang]||id}<span onClick={()=>tog(id)} style={{fontSize:10,opacity:0.5,cursor:"pointer"}}>✕</span></span>;})}
-        <span style={{fontSize:11,color:"#aaa",marginLeft:"auto"}}>{t.nActivos.replace("{n}",sel.length)}</span>
-      </div>
-    </div>}
     {/* ── AÑADIR ACTIVOS ── */}
     <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.addActivos}</div>
     <input value={srcQ} onChange={e=>{setSrcQ(e.target.value);if(e.target.value)setExp(false);}} placeholder={t.buscar} style={{width:"100%",padding:"9px 12px",borderRadius:10,border:"1.5px solid #eee",fontSize:13,background:"#fff",marginBottom:8,outline:"none",boxSizing:"border-box"}}/>
