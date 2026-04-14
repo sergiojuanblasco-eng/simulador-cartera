@@ -5,14 +5,16 @@ import { useState, useMemo, useCallback, useRef } from "react";
    ══════════════════════════════════════════════ */
 function useRouter() {
   const raw = window.location.pathname;
-  const path = raw.includes("interes-compuesto") ? "/interes-compuesto"
+  const simMatch = raw.match(/\/simulacion\/(.+)/);
+  const path = simMatch ? "/simulacion"
+    : raw.includes("interes-compuesto") ? "/interes-compuesto"
     : raw.includes("simulador-cartera") ? "/simulador-cartera"
     : "/";
+  const simSlug = simMatch ? simMatch[1].replace(/\/+$/,"") : null;
   const go = useCallback((p) => {
-    const map = { "/": "/", "/interes-compuesto": "/interes-compuesto", "/simulador-cartera": "/simulador-cartera" };
-    window.location.href = map[p] || p;
+    window.location.href = p;
   }, []);
-  return { path, go };
+  return { path, go, simSlug };
 }
 
 /* ══════════════════════════════════════════════
@@ -20,6 +22,7 @@ function useRouter() {
    ══════════════════════════════════════════════ */
 import ASSETS from "./data/assets.json";
 import R from "./data/returns.json";
+import SIMS from "./data/simulations.json";
 
 const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}},{id:"etf",name:{es:"ETF Sect.",en:"Sector ETFs"}}];
 const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e",etf:"#7c3aed"};
@@ -397,11 +400,13 @@ function CompoundCalc({go,t}){
 /* ══════════════════════════════════════════════
    PORTFOLIO SIMULATOR
    ══════════════════════════════════════════════ */
-function PortfolioSim({t,lang}){
-  const[ini,sI]=useState(10000);const[mo,sM]=useState(300);const[yr,sY]=useState(15);const[freq,sF]=useState("mes");
+function PortfolioSim({t,lang,cfg}){
+  const defSel=cfg?cfg.assets.map(a=>a.id):["msci_world","sp500","us_bond","gold"];
+  const defWt=cfg?Object.fromEntries(cfg.assets.map(a=>[a.id,a.weight])):{msci_world:50,sp500:25,us_bond:20,gold:5};
+  const[ini,sI]=useState(cfg?.initial||10000);const[mo,sM]=useState(cfg?.monthly||300);const[yr,sY]=useState(cfg?.horizon||15);const[freq,sF]=useState("mes");
   const moM=freq==="ano"?mo/12:mo;
-  const[sel,sS]=useState(["msci_world","sp500","us_bond","gold"]);
-  const[wt,sW]=useState({msci_world:50,sp500:25,us_bond:20,gold:5});
+  const[sel,sS]=useState(defSel);
+  const[wt,sW]=useState(defWt);
   const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[showBk,sBk]=useState(false);
   const[srcQ,setSrcQ]=useState("");const[expanded,setExp]=useState(false);
   const tW=sel.reduce((s,id)=>s+(wt[id]||0),0);
@@ -423,7 +428,7 @@ function PortfolioSim({t,lang}){
   const showShortTermWarning = pS && yr < 5 && pS.probLossNum > 25;
 
   return(<div>
-    <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
+    {!cfg&&<div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>}
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     {/* ── AÑADIR ACTIVOS ── */}
     <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.addActivos}</div>
@@ -557,31 +562,58 @@ function PortfolioSim({t,lang}){
 }
 
 /* ══════════════════════════════════════════════
+   SIMULATION PAGE — preconfigured portfolio pages
+   ══════════════════════════════════════════════ */
+function SimulationPage({sim,t,lang,go}){
+  const cdS={background:"#fff",borderRadius:12,padding:14,marginBottom:14,border:"1.5px solid #f0f0f0"};
+  return(<div>
+    <h2 style={{fontSize:22,fontWeight:800,lineHeight:1.3,marginBottom:8,marginTop:0}}>{sim.title[lang]}</h2>
+    <p style={{fontSize:14,color:"#666",lineHeight:1.6,marginBottom:18}}>{sim.intro[lang]}</p>
+    <PortfolioSim t={t} lang={lang} cfg={sim}/>
+    {sim.seo&&sim.seo.length>0&&<div style={{marginTop:24}}>
+      {sim.seo.map((s,i)=><div key={i} style={{marginBottom:20}}>
+        <h3 style={{fontSize:17,fontWeight:700,marginBottom:6,marginTop:0}}>{s.h2[lang]}</h3>
+        <p style={{fontSize:14,color:"#555",lineHeight:1.7,margin:0}}>{s.p[lang]}</p>
+      </div>)}
+    </div>}
+    <div style={cdS}>
+      <div style={{textAlign:"center"}}>
+        <p style={{fontSize:14,fontWeight:700,marginBottom:6,marginTop:0}}>{lang==="es"?"Crea tu propia cartera personalizada":"Create your own custom portfolio"}</p>
+        <button onClick={()=>go("/simulador-cartera")} style={{background:"#10b981",color:"#fff",border:"none",borderRadius:10,padding:"12px 28px",fontSize:14,fontWeight:700,cursor:"pointer"}}>{lang==="es"?"Ir al simulador completo":"Go to full simulator"} →</button>
+      </div>
+    </div>
+  </div>);
+}
+
+/* ══════════════════════════════════════════════
    APP ROOT
    ══════════════════════════════════════════════ */
 export default function App(){
-  const {path, go} = useRouter();
+  const {path, go, simSlug} = useRouter();
   const[lang,setLangState]=useState(()=>{try{return localStorage.getItem("kartera_lang")||"es";}catch(e){return "es";}});
   const setLang=(l)=>{setLangState(l);try{localStorage.setItem("kartera_lang",l);}catch(e){}};
   const t=T[lang];
-  const pageTitle = path==="/interes-compuesto" ? t.ci : path==="/simulador-cartera" ? t.sim : null;
+  const sim=simSlug?SIMS.find(s=>s.slug===simSlug):null;
+  const pageTitle = path==="/interes-compuesto" ? t.ci : path==="/simulador-cartera" ? t.sim : path==="/simulacion"&&sim ? sim.title[lang] : null;
   return(
     <div style={{fontFamily:"system-ui,sans-serif",background:"#f5f7fa",minHeight:"100vh",color:"#1f2937"}}>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <h1 onClick={()=>go("/")} style={{fontSize:24,fontWeight:800,cursor:"pointer",margin:0}}>Kartera</h1>
-            {pageTitle&&<span style={{fontSize:11,color:"#aaa",fontWeight:600}}>/ {pageTitle}</span>}
+            {pageTitle&&path!=="/simulacion"&&<span style={{fontSize:11,color:"#aaa",fontWeight:600}}>/ {pageTitle}</span>}
           </div>
           <button onClick={()=>setLang(lang==="es"?"en":"es")} style={{background:"#f3f4f6",border:"none",borderRadius:7,padding:"5px 10px",fontSize:11,color:"#888",cursor:"pointer",fontWeight:700}}>{lang==="es"?"EN":"ES"}</button>
         </div>
-        {path!=="/"&&<div style={{display:"flex",background:"#e5e7eb",borderRadius:10,padding:3,marginBottom:18}}>
+        {(path==="/interes-compuesto"||path==="/simulador-cartera")&&<div style={{display:"flex",background:"#e5e7eb",borderRadius:10,padding:3,marginBottom:18}}>
           <button onClick={()=>go("/interes-compuesto")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/interes-compuesto"?"#fff":"transparent",color:path==="/interes-compuesto"?"#111":"#999",boxShadow:path==="/interes-compuesto"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.ci}</button>
           <button onClick={()=>go("/simulador-cartera")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/simulador-cartera"?"#fff":"transparent",color:path==="/simulador-cartera"?"#111":"#999",boxShadow:path==="/simulador-cartera"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.sim}</button>
         </div>}
         {path==="/"&&<HomePage t={t} go={go}/>}
         {path==="/interes-compuesto"&&<CompoundCalc go={go} t={t}/>}
         {path==="/simulador-cartera"&&<PortfolioSim t={t} lang={lang}/>}
+        {path==="/simulacion"&&sim&&<SimulationPage sim={sim} t={t} lang={lang} go={go}/>}
+        {path==="/simulacion"&&!sim&&<div style={{textAlign:"center",padding:40}}><p style={{fontSize:16,color:"#888"}}>{lang==="es"?"Simulación no encontrada":"Simulation not found"}</p><button onClick={()=>go("/")} style={{marginTop:12,background:"#10b981",color:"#fff",border:"none",borderRadius:8,padding:"10px 20px",fontSize:13,fontWeight:700,cursor:"pointer"}}>{lang==="es"?"Volver al inicio":"Back to home"}</button></div>}
         <div style={{textAlign:"center",marginTop:24,fontSize:10,color:"#ddd"}}>kartera.pro 2026</div>
       </div>
     </div>
