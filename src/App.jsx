@@ -21,8 +21,8 @@ function useRouter() {
 import ASSETS from "./data/assets.json";
 import R from "./data/returns.json";
 
-const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}}];
-const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e"};
+const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}},{id:"etf",name:{es:"ETF Sect.",en:"Sector ETFs"}}];
+const CATCO={idx:"#3b82f6",stk:"#10b981",fi:"#1e40af",cry:"#f59e0b",alt:"#92400e",etf:"#7c3aed"};
 const COL=["#f87171","#10b981","#60a5fa"];
 
 /* ══════════════════════════════════════════════
@@ -61,7 +61,7 @@ const T={
     toolIC:"Calculadora de Interés Compuesto",
     toolICdesc:"Calcula cuánto crecería tu dinero con un interés fijo. Ideal para entender el efecto del tiempo.",
     toolSim:"Simulador de Cartera",
-    toolSimDesc:"Proyección realista con datos de 20+ activos, escenarios y probabilidades de pérdida.",
+    toolSimDesc:"Proyección realista con datos de 30+ activos, escenarios y probabilidades de pérdida.",
     toolSimBadge:"PRO",
     irA:"Ir a la herramienta",
     homeWhy:"¿Por qué Kartera?",
@@ -70,10 +70,12 @@ const T={
     homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educación financiera.",
     proximamente:"Próximamente",proxItems:"Optimización de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
     intEsp:"Interés esperado",yearN:"Año",
+    buscar:"Buscar activo...",tuCartera:"Tu cartera",addActivos:"Añadir activos",
+    verN:"Ver los {n}",cerrar:"Cerrar",nActivos:"{n} activos",
     seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
     seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
     seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
-    seoCta:"¿Quieres ver datos reales?",seoCtaDesc:"Nuestro simulador de cartera usa 35 años de retornos históricos de 20+ activos para mostrarte escenarios pesimista, esperado y optimista.",seoCtaBtn:"Ver simulación realista de cartera",
+    seoCta:"¿Quieres ver datos reales?",seoCtaDesc:"Nuestro simulador de cartera usa 35 años de retornos históricos de 30+ activos para mostrarte escenarios pesimista, esperado y optimista.",seoCtaBtn:"Ver simulación realista de cartera",
   },
   en:{
     ci:"Compound Interest",sim:"Portfolio Simulator",
@@ -107,7 +109,7 @@ const T={
     toolIC:"Compound Interest Calculator",
     toolICdesc:"Calculate how your money would grow at a fixed rate. Great for understanding the effect of time.",
     toolSim:"Portfolio Simulator",
-    toolSimDesc:"Realistic projection with 20+ assets, scenarios, and loss probabilities.",
+    toolSimDesc:"Realistic projection with 30+ assets, scenarios, and loss probabilities.",
     toolSimBadge:"PRO",
     irA:"Go to tool",
     homeWhy:"Why Kartera?",
@@ -116,10 +118,12 @@ const T={
     homeW3t:"No conflict",homeW3d:"We don't sell funds or charge commissions. Just financial education.",
     proximamente:"Coming soon",proxItems:"AI portfolio optimization | Crisis scenario (stress test) | Broker comparison",
     intEsp:"Expected interest",yearN:"Year",
+    buscar:"Search asset...",tuCartera:"Your portfolio",addActivos:"Add assets",
+    verN:"See all {n}",cerrar:"Close",nActivos:"{n} assets",
     seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
     seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
     seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
-    seoCta:"Want to see real data?",seoCtaDesc:"Our portfolio simulator uses 35 years of historical returns from 20+ assets to show you pessimistic, expected and optimistic scenarios.",seoCtaBtn:"See realistic portfolio simulation",
+    seoCta:"Want to see real data?",seoCtaDesc:"Our portfolio simulator uses 35 years of historical returns from 30+ assets to show you pessimistic, expected and optimistic scenarios.",seoCtaBtn:"See realistic portfolio simulation",
   }
 };
 
@@ -399,6 +403,7 @@ function PortfolioSim({t,lang}){
   const[sel,sS]=useState(["msci_world","sp500","us_bond","gold"]);
   const[wt,sW]=useState({msci_world:50,sp500:25,us_bond:20,gold:5});
   const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[showBk,sBk]=useState(false);
+  const[srcQ,setSrcQ]=useState("");const[expanded,setExp]=useState(false);
   const tW=sel.reduce((s,id)=>s+(wt[id]||0),0);
   const nW=useMemo(()=>{if(tW===0)return{};const n={};sel.forEach(id=>{n[id]=((wt[id]||0)/tW)*100;});return n;},[sel,wt,tW]);
   const tog=id=>{if(sel.includes(id)){sS(sel.filter(a=>a!==id));const w={...wt};delete w[id];sW(w);}else{sS([...sel,id]);sW({...wt,[id]:0});}};
@@ -410,7 +415,7 @@ function PortfolioSim({t,lang}){
 
   const scs=useMemo(()=>{if(!pS)return null;return[{l:t.pess,r:pS.p,d:cP(ini,moM,yr,pS.p),prob:pS.probPess},{l:t.esp,r:pS.e,d:cP(ini,moM,yr,pS.e),prob:pS.probEsp},{l:t.opt,r:pS.o,d:cP(ini,moM,yr,pS.o),prob:pS.probOpt}];},[pS,ini,moM,yr,t]);
   const tI=ini+moM*12*yr;
-  const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
+  const rL=useMemo(()=>{if(!tW)return 0;let rs=0;const cr={idx:2,stk:3,fi:0.5,cry:4,alt:1.5,etf:2.5};sel.forEach(id=>{const a=ASSETS.find(x=>x.id===id);rs+=((nW[id]||0)/100)*(cr[a?.cat]||1);});return rs<1?0:rs<2?1:rs<3?2:3;},[sel,nW,tW]);
   const cC=useMemo(()=>CATS.map(c=>({id:c.id,name:c.name[lang],w:sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).reduce((s,id)=>s+(nW[id]||0),0)})).filter(c=>c.w>0),[sel,nW,lang]);
   const assetBreakdown=useMemo(()=>{if(!pS)return[];return sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);const sc=gS(id,yr);const w=(nW[id]||0)/100;return{name:a.name[lang],weight:nW[id]||0,expRet:sc.e,contrib:w*sc.e};}).sort((a,b)=>b.contrib-a.contrib);},[sel,nW,yr,pS,lang]);
   const donutItems=useMemo(()=>sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);return{name:a?.name[lang]||id,w:nW[id]||0,c:a?.color||"#999"};}),[sel,nW,lang]);
@@ -420,8 +425,32 @@ function PortfolioSim({t,lang}){
   return(<div>
     <div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
-    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const n=sel.filter(id=>ASSETS.find(a=>a.id===id)?.cat===c.id).length;return<button key={c.id} onClick={()=>sT(c.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>{ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name[lang]}{on?" ✓":""}</button>;})}</div>
+    {/* ── CARTERA SELECCIONADA ── */}
+    {sel.length>0&&<div style={{marginBottom:12}}>
+      <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.tuCartera}</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
+        {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<span key={id} style={{padding:"4px 10px",borderRadius:20,fontSize:12,background:"#ecfdf5",color:"#065f46",border:"1px solid #10b981",display:"flex",alignItems:"center",gap:5}}>{a?.name[lang]||id}<span onClick={()=>tog(id)} style={{fontSize:10,opacity:0.5,cursor:"pointer"}}>✕</span></span>;})}
+        <span style={{fontSize:11,color:"#aaa",marginLeft:"auto"}}>{t.nActivos.replace("{n}",sel.length)}</span>
+      </div>
+    </div>}
+    {/* ── AÑADIR ACTIVOS ── */}
+    <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.addActivos}</div>
+    <input value={srcQ} onChange={e=>{setSrcQ(e.target.value);if(e.target.value)setExp(false);}} placeholder={t.buscar} style={{width:"100%",padding:"9px 12px",borderRadius:10,border:"1.5px solid #eee",fontSize:13,background:"#fff",marginBottom:8,outline:"none",boxSizing:"border-box"}}/>
+    {srcQ?<div style={{background:"#fff",border:"1.5px solid #eee",borderRadius:10,maxHeight:220,overflowY:"auto",marginBottom:14}}>
+      {(()=>{const q=srcQ.toLowerCase();const res=ASSETS.filter(a=>a.name.es.toLowerCase().includes(q)||a.name.en.toLowerCase().includes(q)||(a.desc.es+" "+a.desc.en).toLowerCase().includes(q)||a.id.includes(q));if(!res.length)return<div style={{textAlign:"center",padding:20,color:"#aaa",fontSize:13}}>No se encontró "{srcQ}"</div>;return res.map(a=>{const on=sel.includes(a.id);const cat=CATS.find(c=>c.id===a.cat);const yrs=Object.keys(R[a.id]||{}).length;return<div key={a.id} onClick={()=>{tog(a.id);setSrcQ("");}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",cursor:"pointer",fontSize:13,borderBottom:"0.5px solid #f3f4f6",background:on?"#f0fdf8":"transparent"}}><div style={{width:8,height:8,borderRadius:2,background:a.color,flexShrink:0}}/><span style={{fontWeight:600,flex:1}}>{a.name[lang]}</span><span style={{fontSize:11,color:"#aaa"}}>{cat?.name[lang]} · {yrs}a</span><div style={{width:18,height:18,borderRadius:4,border:on?"1.5px solid #10b981":"1.5px solid #ddd",background:on?"#10b981":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#fff",flexShrink:0}}>{on?"✓":""}</div></div>;});})()}
+    </div>:<>
+    <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>{CATS.map(c=>{const catAssets=ASSETS.filter(a=>a.cat===c.id);const n=sel.filter(id=>catAssets.find(a=>a.id===id)).length;return<button key={c.id} onClick={()=>{sT(c.id);setExp(false);}} style={{padding:"5px 12px",borderRadius:8,border:"none",fontSize:12,fontWeight:700,cursor:"pointer",background:tab===c.id?"#fff":"transparent",color:tab===c.id?"#111":"#aaa",boxShadow:tab===c.id?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{c.name[lang]}{n>0?" ("+n+")":""}</button>;})}</div>
+    {!expanded?<>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{ASSETS.filter(a=>a.cat===tab).slice(0,4).map(a=>{const on=sel.includes(a.id);return<button key={a.id} onClick={()=>tog(a.id)} style={{padding:"6px 14px",borderRadius:20,border:on?"2px solid #10b981":"2px solid #e5e7eb",background:on?"#ecfdf5":"#fff",color:on?"#065f46":"#555",fontSize:13,fontWeight:600,cursor:"pointer"}}>{a.name[lang]}{on?" ✓":""}</button>;})}</div>
+      {ASSETS.filter(a=>a.cat===tab).length>4&&<button onClick={()=>setExp(true)} style={{width:"100%",padding:8,borderRadius:8,border:"1.5px dashed #ddd",background:"transparent",fontSize:12,color:"#888",cursor:"pointer",marginBottom:14}}>{t.verN.replace("{n}",ASSETS.filter(a=>a.cat===tab).length+" "+CATS.find(c=>c.id===tab)?.name[lang])} ▼</button>}
+      {ASSETS.filter(a=>a.cat===tab).length<=4&&<div style={{marginBottom:14}}/>}
+    </>:<>
+      <div style={{background:"#fff",border:"1.5px solid #eee",borderRadius:10,maxHeight:260,overflowY:"auto",marginBottom:0}}>
+        {ASSETS.filter(a=>a.cat===tab).map(a=>{const on=sel.includes(a.id);const yrs=Object.keys(R[a.id]||{}).length;return<div key={a.id} onClick={()=>tog(a.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",cursor:"pointer",fontSize:13,borderBottom:"0.5px solid #f3f4f6",background:on?"#f0fdf8":"transparent"}}><div style={{width:8,height:8,borderRadius:2,background:a.color,flexShrink:0}}/><span style={{fontWeight:600,flex:1}}>{a.name[lang]}</span><span style={{fontSize:11,color:"#aaa"}}>{yrs} {t.anos}</span><div style={{width:18,height:18,borderRadius:4,border:on?"1.5px solid #10b981":"1.5px solid #ddd",background:on?"#10b981":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#fff",flexShrink:0}}>{on?"✓":""}</div></div>;})}
+      </div>
+      <button onClick={()=>setExp(false)} style={{width:"100%",padding:8,borderRadius:"0 0 10px 10px",border:"1.5px solid #eee",borderTop:"none",background:"#fafafa",fontSize:12,color:"#888",cursor:"pointer",marginBottom:14}}>{t.cerrar} ▲</button>
+    </>}
+    </>}
     {sel.length>0&&<div style={cdS}>
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:13,fontWeight:700}}>{t.pesos}: <span style={{color:Math.abs(tW-100)<1?"#10b981":"#f59e0b",fontFamily:"monospace"}}>{tW}%</span> / 100%</span><button onClick={()=>{const w=Math.floor(100/sel.length);const rem=100-w*sel.length;const n={};sel.forEach((id,i)=>{n[id]=w+(i<rem?1:0);});sW(n);}} style={{fontSize:11,background:"#f3f4f6",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontWeight:600}}>{t.equi}</button></div>
       {sel.map(id=>{const a=ASSETS.find(x=>x.id===id);return<div key={id} style={{marginBottom:8}}>
