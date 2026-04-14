@@ -1,0 +1,134 @@
+[
+  {
+    "slug": "cartera-60-40",
+    "title": {
+      "es": "¿Qué hubiera pasado con una cartera 60/40?",
+      "en": "What would have happened with a 60/40 portfolio?"
+    },
+    "intro": {
+      "es": "La cartera 60/40 (60% renta variable, 40% renta fija) es la estrategia más clásica de inversión. Aquí puedes ver qué habría pasado históricamente — y ajustar los porcentajes a tu gusto.",
+      "en": "The 60/40 portfolio (60% equities, 40% bonds) is the most classic investment strategy. Here you can see what would have happened historically — and adjust the percentages to your liking."
+    },
+    "assets": [
+      {"id": "msci_world", "weight": 60},
+      {"id": "bond_global", "weight": 40}
+    ],
+    "horizon": 10,
+    "initial": 10000,
+    "monthly": 200,
+    "seo": [
+      {
+        "h2": {
+          "es": "¿Por qué la cartera 60/40 es tan popular?",
+          "en": "Why is the 60/40 portfolio so popular?"
+        },
+        "p": {
+          "es": "La idea es simple: la renta variable (acciones) aporta crecimiento a largo plazo, y la renta fija (bonos) amortigua las caídas. Durante décadas, esta combinación ha ofrecido un equilibrio entre rentabilidad y riesgo que funciona para la mayoría de inversores. No es la cartera más rentable ni la más segura — es la más equilibrada.",
+          "en": "The idea is simple: equities provide long-term growth, and bonds cushion the falls. For decades, this combination has offered a balance between returns and risk that works for most investors. It's not the most profitable or the safest portfolio — it's the most balanced."
+        }
+      },
+      {
+        "h2": {
+          "es": "¿Funciona todavía en 2025?",
+          "en": "Does it still work in 2025?"
+        },
+        "p": {
+          "es": "2022 fue el peor año de la historia para la cartera 60/40: tanto acciones como bonos cayeron a la vez. Muchos declararon su muerte. Pero los datos históricos muestran que esto ha pasado pocas veces, y que a horizontes de 10+ años la estrategia sigue siendo sólida. La simulación de arriba te muestra exactamente las probabilidades.",
+          "en": "2022 was the worst year in history for the 60/40 portfolio: both stocks and bonds fell simultaneously. Many declared it dead. But historical data shows this has rarely happened, and at 10+ year horizons the strategy remains solid. The simulation above shows you the exact probabilities."
+        }
+      },
+      {
+        "h2": {
+          "es": "¿Qué alternativas existen?",
+          "en": "What alternatives exist?"
+        },
+        "p": {
+          "es": "Puedes ajustar los porcentajes: 80/20 si eres más agresivo, 40/60 si eres conservador. También puedes añadir oro, REITs o materias primas para diversificar más. Prueba diferentes combinaciones con el simulador de arriba — los datos son reales.",
+          "en": "You can adjust the percentages: 80/20 if you're more aggressive, 40/60 if you're conservative. You can also add gold, REITs or commodities for more diversification. Try different combinations with the simulator above — the data is real."
+        }
+      }
+    ]
+  },
+  {
+    "slug": "sp500-vs-msci-world",
+    "title": {
+      "es": "S&P 500 vs MSCI World: ¿cuál es mejor?",
+      "en": "S&P 500 vs MSCI World: which is better?"
+    },
+    "intro": {
+      "es": "El eterno debate: ¿invertir solo en EE.UU. (S&P 500) o diversificar globalmente (MSCI World)? Aquí tienes los datos reales de 35 años. Cambia los pesos y decide por ti mismo.",
+      "en": "The eternal debate: invest only in the US (S&P 500) or diversify globally (MSCI World)? Here you have 35 years of real data. Change the weights and decide for yourself."
+    },
+    "assets": [
+      {"id": "sp500", "weight": 50},
+      {"id": "msci_world", "weight": 50}
+    ],
+    "horizon": 15,
+    "initial": 10000,
+    "monthly": 300,
+    "seo": [
+      {
+        "h2": {
+          "es": "¿Por qué el S&P 500 ha ganado casi siempre?",
+          "en": "Why has the S&P 500 won almost always?"
+        },
+        "p": {
+          "es": "En los últimos 15 años, el S&P 500 ha superado al MSCI World consistentemente. La razón: EE.UU. representa ~70% del MSCI World, así que cuando EE.UU. va bien, ambos van bien — pero el S&P 500 va mejor porque no tiene el lastre de mercados más lentos como Europa o Japón. Pero cuidado: esto no garantiza que siga siendo así.",
+          "en": "Over the last 15 years, the S&P 500 has consistently outperformed the MSCI World. The reason: the US represents ~70% of MSCI World, so when the US does well, both do well — but the S&P 500 does better because it doesn't carry the drag of slower markets like Europe or Japan. But beware: this doesn't guarantee it will continue."
+        }
+      },
+      {
+        "h2": {
+          "es": "¿Cuándo conviene diversificar con MSCI World?",
+          "en": "When does diversifying with MSCI World make sense?"
+        },
+        "p": {
+          "es": "Si miras los datos de 2000-2010 (la 'década perdida' de EE.UU.), el MSCI World cayó menos gracias a la diversificación. El problema es que nadie sabe cuándo vendrá la próxima década perdida. Diversificar es aceptar un poco menos de rentabilidad esperada a cambio de menos riesgo de concentración.",
+          "en": "If you look at 2000-2010 data (the US 'lost decade'), MSCI World fell less thanks to diversification. The problem is nobody knows when the next lost decade will come. Diversifying means accepting slightly lower expected returns in exchange for less concentration risk."
+        }
+      }
+    ]
+  },
+  {
+    "slug": "bitcoin-en-cartera",
+    "title": {
+      "es": "¿Qué pasa si metes Bitcoin en tu cartera?",
+      "en": "What happens if you add Bitcoin to your portfolio?"
+    },
+    "intro": {
+      "es": "¿Un 5% en Bitcoin mejora o empeora tu cartera? Aquí lo puedes ver con datos reales desde 2014. Spoiler: la respuesta depende de tu horizonte y tu estómago.",
+      "en": "Does 5% in Bitcoin improve or worsen your portfolio? Here you can see with real data since 2014. Spoiler: the answer depends on your horizon and your stomach."
+    },
+    "assets": [
+      {"id": "msci_world", "weight": 55},
+      {"id": "bond_global", "weight": 30},
+      {"id": "gold", "weight": 10},
+      {"id": "btc", "weight": 5}
+    ],
+    "horizon": 10,
+    "initial": 10000,
+    "monthly": 200,
+    "seo": [
+      {
+        "h2": {
+          "es": "¿Por qué solo un 5%?",
+          "en": "Why only 5%?"
+        },
+        "p": {
+          "es": "Bitcoin tiene una volatilidad histórica superior al 60% anual. Eso significa que puede caer un 70% en un año. Con un 5% de tu cartera, el impacto máximo es una caída del 3.5% — asumible. Con un 20%, estás arriesgando un 14% de tu cartera solo por Bitcoin. La mayoría de gestores profesionales que incluyen crypto lo hacen entre el 1% y el 5%.",
+          "en": "Bitcoin has historical volatility above 60% annually. That means it can drop 70% in a year. With 5% of your portfolio, the maximum impact is a 3.5% drop — manageable. With 20%, you're risking 14% of your portfolio just on Bitcoin. Most professional managers who include crypto do so between 1% and 5%."
+        }
+      },
+      {
+        "h2": {
+          "es": "¿Bitcoin descorrelaciona de verdad?",
+          "en": "Does Bitcoin really decorrelate?"
+        },
+        "p": {
+          "es": "La teoría dice que Bitcoin no se mueve como las acciones. La realidad es más complicada: en crisis de liquidez (como marzo 2020 o 2022), Bitcoin cayó junto con todo lo demás. Donde sí aporta es en periodos de expansión monetaria. El oro sigue siendo mejor diversificador en crisis — por eso esta cartera incluye ambos.",
+          "en": "Theory says Bitcoin doesn't move like stocks. Reality is more complicated: in liquidity crises (like March 2020 or 2022), Bitcoin fell along with everything else. Where it does add value is during monetary expansion periods. Gold remains a better crisis diversifier — that's why this portfolio includes both."
+        }
+      }
+    ]
+  }
+]
