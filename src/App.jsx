@@ -79,6 +79,9 @@ const T={
     perfil:"Tu perfil de inversor",
     perfilOps:["Conservador","Moderado","Agresivo","Muy agresivo"],
     catRiesgo:"Riesgo",catDiversi:"Diversificación",catCoher:"Coherencia",
+    nota:"Nota de tu cartera",
+    notaLabels:["Crítica","Débil","Mejorable","Buena","Excelente"],
+    inspirar:"Este análisis es orientativo. Ninguna herramienta sustituye tu criterio: tú conoces tu situación, tus objetivos y lo que te deja dormir tranquilo. La mejor cartera no es la perfecta — es la que puedes mantener.",
     seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
     seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
     seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
@@ -131,6 +134,9 @@ const T={
     perfil:"Your investor profile",
     perfilOps:["Conservative","Moderate","Aggressive","Very aggressive"],
     catRiesgo:"Risk",catDiversi:"Diversification",catCoher:"Coherence",
+    nota:"Portfolio score",
+    notaLabels:["Critical","Weak","Needs improvement","Good","Excellent"],
+    inspirar:"This analysis is for guidance only. No tool replaces your judgment: you know your situation, your goals and what lets you sleep at night. The best portfolio isn't the perfect one — it's the one you can stick with.",
     seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
     seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
     seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
@@ -177,14 +183,16 @@ function analyzePortfolio(sel, nW, yr, profile) {
   const riskThresh=[2.5,3.5,4.2,99];
   if(avgRisk>riskThresh[profile])
     risk.push({type:"warn",msg:{
-      es:`Tu nivel de riesgo medio (${avgRisk.toFixed(1)}) es alto para tu perfil. Considera reducir activos volátiles o ampliar el horizonte.`,
-      en:`Your average risk level (${avgRisk.toFixed(1)}) is high for your profile. Consider reducing volatile assets or extending the horizon.`}});
+      es:"Tu cartera tiene un nivel de riesgo alto para tu perfil. Considera reducir activos volátiles o ampliar el horizonte.",
+      en:"Your portfolio has a high risk level for your profile. Consider reducing volatile assets or extending the horizon."}});
 
   // R2: Too conservative for profile
-  if(avgRisk<2&&yr>10&&profile>=1)
-    risk.push({type:"info",msg:{
+  if(avgRisk<2&&yr>10&&profile>=1){
+    const severe=avgRisk<1.5&&profile>=2;
+    risk.push({type:severe?"warn":"info",msg:{
       es:"Tu cartera es muy conservadora para tu perfil y horizonte. Podrías estar perdiendo potencial de crecimiento a largo plazo.",
       en:"Your portfolio is very conservative for your profile and horizon. You may be missing long-term growth potential."}});
+  };
 
   // R3: Extreme risk assets + short horizon
   if(risk5W>10&&yr<5)
@@ -337,6 +345,27 @@ function analyzePortfolio(sel, nW, yr, profile) {
       en:"Your portfolio is coherent: no significant overlaps or internal contradictions."}});
 
   return {risk,diversification,coherence};
+}
+
+function scorePortfolio(alerts){
+  const calc=arr=>{
+    let s=10;
+    let hasOk=false;
+    arr.forEach(a=>{
+      if(a.type==="warn") s-=3;
+      else if(a.type==="info") s-=1.5;
+      else if(a.type==="ok") hasOk=true;
+    });
+    s=Math.max(0,s);
+    if(hasOk&&s<7) s=7;
+    return Math.round(s*10)/10;
+  };
+  const r=calc(alerts.risk);
+  const d=calc(alerts.diversification);
+  const c=calc(alerts.coherence);
+  const g=Math.round((r*0.40+d*0.35+c*0.25)*10)/10;
+  const label=g>=9?4:g>=7?3:g>=5?2:g>=3?1:0;
+  return {risk:r,diversification:d,coherence:c,global:g,label};
 }
 
 /* ══════════════════════════════════════════════
@@ -628,6 +657,7 @@ function PortfolioSim({t,lang,cfg}){
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
   const showShortTermWarning = pS && yr < 5 && pS.probLossNum > 25;
   const portfolioAlerts = useMemo(() => sel.length > 0 && tW > 0 ? analyzePortfolio(sel, nW, yr, profile) : {risk:[],diversification:[],coherence:[]}, [sel, nW, yr, tW, profile]);
+  const score = useMemo(() => scorePortfolio(portfolioAlerts), [portfolioAlerts]);
 
   return(<div>
     {!cfg&&<div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>}
@@ -757,32 +787,53 @@ function PortfolioSim({t,lang,cfg}){
 
       {/* PORTFOLIO ANALYSIS */}
       <div style={cdS}>
-        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.analisis}</div>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:12}}>{t.analisis}</div>
+        {/* SCORE */}
         {(()=>{
+          const sCol=["#ef4444","#f97316","#f59e0b","#10b981","#059669"][score.label];
           const pa=portfolioAlerts;
           const all=[...pa.risk,...pa.diversification,...pa.coherence];
-          if(!all.length) return <div style={{fontSize:12,color:"#10b981",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:16}}>✓</span>{t.sinProblemas}</div>;
-          const renderAlerts=(alerts,title,color)=>{
-            if(!alerts.length) return null;
+          const renderBar=(label,val,cat)=>{
+            const bCol=val>=7?"#10b981":val>=5?"#f59e0b":"#ef4444";
+            const alerts=pa[cat]||[];
             const warns=alerts.filter(a=>a.type==="warn");
             const infos=alerts.filter(a=>a.type==="info");
             const oks=alerts.filter(a=>a.type==="ok");
             const sorted=[...warns,...infos,...oks];
-            return <div style={{marginBottom:12}}>
-              <div style={{fontSize:11,fontWeight:700,color,marginBottom:6,textTransform:"uppercase",letterSpacing:0.5}}>{title}</div>
-              {sorted.map((a,i)=><div key={i} style={{
-                padding:"8px 12px",borderRadius:8,marginBottom:4,fontSize:12,lineHeight:1.5,display:"flex",gap:8,alignItems:"flex-start",
+            return <div style={{marginBottom:10}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
+                <span style={{fontSize:11,fontWeight:700,color:"#555"}}>{label}</span>
+                <span style={{fontSize:12,fontWeight:800,fontFamily:"monospace",color:bCol}}>{val}/10</span>
+              </div>
+              <div style={{height:5,background:"#f0f0f0",borderRadius:3,overflow:"hidden",marginBottom:sorted.length?6:0}}>
+                <div style={{height:"100%",width:(val/10*100)+"%",background:bCol,borderRadius:3}}/>
+              </div>
+              {sorted.map((a,j)=><div key={j} style={{
+                padding:"6px 10px",borderRadius:6,marginBottom:3,fontSize:11,lineHeight:1.5,display:"flex",gap:6,alignItems:"flex-start",
                 background:a.type==="warn"?"#fef2f2":a.type==="ok"?"#f0fdf4":"#eff6ff",
                 border:a.type==="warn"?"1px solid #fecaca":a.type==="ok"?"1px solid #bbf7d0":"1px solid #bfdbfe",
                 color:a.type==="warn"?"#991b1b":a.type==="ok"?"#166534":"#1e40af"
               }}>
-                <span style={{fontSize:14,flexShrink:0,marginTop:1}}>{a.type==="warn"?"⚠️":a.type==="ok"?"✅":"💡"}</span>
+                <span style={{fontSize:12,flexShrink:0}}>{a.type==="warn"?"⚠️":a.type==="ok"?"✅":"💡"}</span>
                 <span>{a.msg[lang]}</span>
               </div>)}
             </div>;
           };
-          return <>{renderAlerts(pa.risk,t.catRiesgo,"#991b1b")}{renderAlerts(pa.diversification,t.catDiversi,"#1e40af")}{renderAlerts(pa.coherence,t.catCoher,"#92400e")}</>;
+          return <>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16,padding:"12px 16px",background:"#f8fafc",borderRadius:10}}>
+              <div style={{fontSize:32,fontWeight:800,fontFamily:"monospace",color:sCol,lineHeight:1}}>{score.global}</div>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:sCol}}>{t.notaLabels[score.label]}</div>
+                <div style={{fontSize:11,color:"#999"}}>/ 10</div>
+              </div>
+            </div>
+            {renderBar(t.catRiesgo,score.risk,"risk")}
+            {renderBar(t.catDiversi,score.diversification,"diversification")}
+            {renderBar(t.catCoher,score.coherence,"coherence")}
+            {!all.length&&<div style={{fontSize:12,color:"#10b981",display:"flex",alignItems:"center",gap:6,marginBottom:8}}><span style={{fontSize:16}}>✓</span>{t.sinProblemas}</div>}
+          </>;
         })()}
+        <div style={{fontSize:11,color:"#888",lineHeight:1.6,fontStyle:"italic",borderTop:"1px solid #f0f0f0",paddingTop:10,marginTop:4}}>{t.inspirar}</div>
       </div>
 
       {/* METHODOLOGY */}
