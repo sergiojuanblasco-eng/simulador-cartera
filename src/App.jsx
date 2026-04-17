@@ -75,6 +75,10 @@ const T={
     intEsp:"Interés esperado",yearN:"Año",
     buscar:"Buscar activo...",tuCartera:"Tu cartera",addActivos:"Añadir activos",
     verN:"Ver los {n}",cerrar:"Cerrar",nActivos:"{n} activos",
+    analisis:"Análisis de tu cartera",sinProblemas:"Tu cartera no presenta problemas evidentes.",
+    perfil:"Tu perfil de inversor",
+    perfilOps:["Conservador","Moderado","Agresivo","Muy agresivo"],
+    catRiesgo:"Riesgo",catDiversi:"Diversificación",catCoher:"Coherencia",
     seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
     seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
     seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
@@ -123,6 +127,10 @@ const T={
     intEsp:"Expected interest",yearN:"Year",
     buscar:"Search asset...",tuCartera:"Your portfolio",addActivos:"Add assets",
     verN:"See all {n}",cerrar:"Close",nActivos:"{n} assets",
+    analisis:"Portfolio analysis",sinProblemas:"Your portfolio shows no obvious issues.",
+    perfil:"Your investor profile",
+    perfilOps:["Conservative","Moderate","Aggressive","Very aggressive"],
+    catRiesgo:"Risk",catDiversi:"Diversification",catCoher:"Coherence",
     seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
     seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
     seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
@@ -138,6 +146,198 @@ function pc(a,p){if(!a.length)return null;const i=(p/100)*(a.length-1);const l=M
 function cP(ini,mo,yrs,rate){const mr=rate/100/12;const d=[{y:0,v:ini,inv:ini}];let v=ini,inv=ini;for(let y=1;y<=yrs;y++){for(let m=0;m<12;m++){v=v*(1+mr)+mo;inv+=mo;}d.push({y,v,inv});}return d;}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
+
+/* ══════════════════════════════════════════════
+   PORTFOLIO ANALYSIS RULES (property-based)
+   ══════════════════════════════════════════════ */
+function analyzePortfolio(sel, nW, yr, profile) {
+  const risk=[], diversification=[], coherence=[];
+  const g=id=>ASSETS.find(a=>a.id===id);
+  const w=id=>nW[id]||0;
+  const active=sel.filter(id=>w(id)>0);
+  if(!active.length) return {risk,diversification,coherence};
+
+  // Helpers: weighted sums over properties
+  const avgRisk=active.reduce((s,id)=>s+(w(id)/100)*g(id).risk,0);
+  const classW={};active.forEach(id=>{const c=g(id).class;classW[c]=(classW[c]||0)+w(id);});
+  const regW={};active.forEach(id=>{const a=g(id);Object.entries(a.regions).forEach(([r,p])=>{regW[r]=(regW[r]||0)+w(id)*(p/100);});});
+  const secW={};active.forEach(id=>{const a=g(id);Object.entries(a.sectors).forEach(([s,p])=>{secW[s]=(secW[s]||0)+w(id)*(p/100);});});
+  const roleW={};active.forEach(id=>{g(id).role.forEach(r=>{roleW[r]=(roleW[r]||0)+w(id);});});
+  const clusterW={};active.forEach(id=>{g(id).correlation_cluster.forEach(c=>{clusterW[c]=(clusterW[c]||0)+w(id);});});
+  const noCfW=active.filter(id=>!g(id).cashflow).reduce((s,id)=>s+w(id),0);
+  const risk5W=active.filter(id=>g(id).risk>=5).reduce((s,id)=>s+w(id),0);
+  const risk4W=active.filter(id=>g(id).risk>=4).reduce((s,id)=>s+w(id),0);
+  const topReg=Object.entries(regW).sort((a,b)=>b[1]-a[1])[0]||["",0];
+  const topSec=Object.entries(secW).sort((a,b)=>b[1]-a[1])[0]||["",0];
+  const topCluster=Object.entries(clusterW).sort((a,b)=>b[1]-a[1])[0]||["",0];
+  const uClasses=new Set(active.map(id=>g(id).class));
+
+  // ══ RIESGO ══
+  // R1: Risk vs profile (too high)
+  const riskThresh=[2.5,3.5,4.2,99];
+  if(avgRisk>riskThresh[profile])
+    risk.push({type:"warn",msg:{
+      es:`Tu nivel de riesgo medio (${avgRisk.toFixed(1)}) es alto para tu perfil. Considera reducir activos volátiles o ampliar el horizonte.`,
+      en:`Your average risk level (${avgRisk.toFixed(1)}) is high for your profile. Consider reducing volatile assets or extending the horizon.`}});
+
+  // R2: Too conservative for profile
+  if(avgRisk<2&&yr>10&&profile>=1)
+    risk.push({type:"info",msg:{
+      es:"Tu cartera es muy conservadora para tu perfil y horizonte. Podrías estar perdiendo potencial de crecimiento a largo plazo.",
+      en:"Your portfolio is very conservative for your profile and horizon. You may be missing long-term growth potential."}});
+
+  // R3: Extreme risk assets + short horizon
+  if(risk5W>10&&yr<5)
+    risk.push({type:"warn",msg:{
+      es:`Tienes un ${Math.round(risk5W)}% en activos de riesgo muy alto con un horizonte de ${yr} años. El riesgo de pérdida a corto plazo es elevado.`,
+      en:`You have ${Math.round(risk5W)}% in very high risk assets with a ${yr}-year horizon. Short-term loss risk is high.`}});
+
+  // R4: No stabilizers
+  if(!roleW.stability&&!roleW.hedge)
+    risk.push({type:"info",msg:{
+      es:"No tienes activos estabilizadores ni de cobertura. En una crisis, nada amortigua la caída de tu cartera.",
+      en:"You have no stability or hedge assets. In a crisis, nothing cushions your portfolio's fall."}});
+
+  // R5: Excess speculative
+  const specLim=[20,30,50,100];
+  if((roleW.speculative||0)>specLim[profile])
+    risk.push({type:"warn",msg:{
+      es:`Tienes un ${Math.round(roleW.speculative)}% en activos especulativos. Es excesivo para tu perfil.`,
+      en:`You have ${Math.round(roleW.speculative)}% in speculative assets. This is excessive for your profile.`}});
+
+  // R6: Short horizon + high equity
+  if(yr<3&&(classW.equity||0)>50)
+    risk.push({type:"warn",msg:{
+      es:`Con un horizonte de solo ${yr} años y más del 50% en renta variable, la probabilidad de pérdida es alta.`,
+      en:`With only a ${yr}-year horizon and over 50% in equities, the probability of loss is high.`}});
+
+  // R7: No growth engine
+  if(!roleW.growth)
+    risk.push({type:"info",msg:{
+      es:"Tu cartera no tiene motor de crecimiento. A largo plazo, puede no superar la inflación.",
+      en:"Your portfolio has no growth engine. Long-term, it may not beat inflation."}});
+
+  // R8: Too much non-cashflow
+  if(noCfW>50)
+    risk.push({type:"warn",msg:{
+      es:`Un ${Math.round(noCfW)}% de tu cartera no genera rentas (oro, crypto, materias primas). Esto aumenta la dependencia de la revalorización del precio.`,
+      en:`${Math.round(noCfW)}% of your portfolio generates no income (gold, crypto, commodities). This increases dependence on price appreciation.`}});
+
+  // R9: Concentration in volatile assets
+  if(risk4W>60)
+    risk.push({type:"warn",msg:{
+      es:`Un ${Math.round(risk4W)}% de tu cartera está en activos de riesgo alto o muy alto. Considera equilibrar con activos más estables.`,
+      en:`${Math.round(risk4W)}% of your portfolio is in high or very high risk assets. Consider balancing with more stable assets.`}});
+
+  // ══ DIVERSIFICACIÓN ══
+  // D1: Only 1 asset
+  if(active.length===1)
+    diversification.push({type:"warn",msg:{
+      es:"Solo tienes un activo. Diversificar entre varios reduce el riesgo sin necesariamente reducir la rentabilidad.",
+      en:"You only have one asset. Diversifying across several reduces risk without necessarily reducing returns."}});
+
+  // D2: Very few assets
+  if(active.length===2)
+    diversification.push({type:"info",msg:{
+      es:"Solo tienes 2 activos. Añadir más mejoraría la diversificación de tu cartera.",
+      en:"You only have 2 assets. Adding more would improve your portfolio's diversification."}});
+
+  // D3: Only 1 class
+  if(uClasses.size===1)
+    diversification.push({type:"warn",msg:{
+      es:`Todos tus activos son del mismo tipo (${[...uClasses][0]}). Combinar distintas clases reduce el riesgo.`,
+      en:`All your assets are the same type (${[...uClasses][0]}). Combining different classes reduces risk.`}});
+
+  // D4: Single asset > 60%
+  active.forEach(id=>{if(w(id)>60){
+    diversification.push({type:"warn",msg:{
+      es:`${g(id).name.es} pesa más del 60% de tu cartera. Esto supone un riesgo de concentración alto.`,
+      en:`${g(id).name.en} is over 60% of your portfolio. This means high concentration risk.`}});}});
+
+  // D5: Geographic concentration >80%
+  if(topReg[1]>=80&&topReg[0]!=="global")
+    diversification.push({type:"info",msg:{
+      es:`Un ${Math.round(topReg[1])}% de tu cartera depende de una sola región (${topReg[0].toUpperCase()}). Considera diversificar geográficamente.`,
+      en:`${Math.round(topReg[1])}% of your portfolio depends on a single region (${topReg[0].toUpperCase()}). Consider geographic diversification.`}});
+
+  // D6: Sector concentration >50%
+  if(topSec[1]>50&&topSec[0]!=="mix"&&topSec[0]!=="bond")
+    diversification.push({type:"info",msg:{
+      es:`Un ${Math.round(topSec[1])}% de tu cartera está concentrada en el sector ${topSec[0]}. Si ese sector cae, tu cartera sufrirá de forma desproporcionada.`,
+      en:`${Math.round(topSec[1])}% of your portfolio is concentrated in the ${topSec[0]} sector. If that sector drops, your portfolio will suffer disproportionately.`}});
+
+  // D7: No defensive coverage
+  if(!classW.bond&&!classW.commodity&&!classW.cash)
+    diversification.push({type:"info",msg:{
+      es:"No tienes activos defensivos (bonos, materias primas o liquidez). Añadirlos puede proteger tu cartera en momentos de crisis.",
+      en:"You have no defensive assets (bonds, commodities or cash). Adding them can protect your portfolio during crises."}});
+
+  // D8: Good diversification
+  if(active.length>=4&&uClasses.size>=3&&topReg[1]<70)
+    diversification.push({type:"ok",msg:{
+      es:"Tu cartera tiene buena diversificación: varios activos, múltiples clases y cobertura geográfica.",
+      en:"Your portfolio has good diversification: multiple assets, several classes and geographic coverage."}});
+
+  // ══ COHERENCIA ══
+  // C1: Overlap detection (dynamic, based on regions + sectors similarity)
+  for(let i=0;i<active.length;i++){
+    for(let j=i+1;j<active.length;j++){
+      const a1=g(active[i]),a2=g(active[j]);
+      if(w(active[i])<5||w(active[j])<5) continue;
+      let simR=0,simS=0;
+      Object.keys(a1.regions).forEach(r=>{if(a2.regions[r])simR+=Math.min(a1.regions[r],a2.regions[r]);});
+      Object.keys(a1.sectors).forEach(s=>{if(s!=="mix"&&a2.sectors[s])simS+=Math.min(a1.sectors[s],a2.sectors[s]);});
+      if(simR>60&&simS>40)
+        coherence.push({type:"info",msg:{
+          es:`${a1.name.es} y ${a2.name.es} se solapan significativamente (regiones y sectores similares). Esto reduce la diversificación real.`,
+          en:`${a1.name.en} and ${a2.name.en} overlap significantly (similar regions and sectors). This reduces real diversification.`}});
+    }
+  }
+
+  // C3: Hierarchy incoherence (single > global)
+  active.forEach(id=>{
+    const a=g(id);
+    if(a.scope==="single"&&w(id)>15){
+      active.forEach(gid=>{
+        const ga=g(gid);
+        if(ga.scope==="global"&&ga.class==="equity"&&w(gid)<w(id)){
+          coherence.push({type:"info",msg:{
+            es:`${a.name.es} (${Math.round(w(id))}%) pesa más que ${ga.name.es} (${Math.round(w(gid))}%) que ya lo contiene. Esto puede ser incoherente.`,
+            en:`${a.name.en} (${Math.round(w(id))}%) weighs more than ${ga.name.en} (${Math.round(w(gid))}%) which already contains it. This may be incoherent.`}});
+        }
+      });
+    }
+  });
+
+  // C4: Dominant cluster >80%
+  if(topCluster[1]>80)
+    coherence.push({type:"info",msg:{
+      es:`Un ${Math.round(topCluster[1])}% de tu cartera se mueve en el mismo grupo de correlación. Puedes creer que diversificas, pero en la práctica se comportan de forma similar.`,
+      en:`${Math.round(topCluster[1])}% of your portfolio moves in the same correlation group. You may think you're diversified, but in practice they behave similarly.`}});
+
+  // C5: Contradictory mix
+  if((roleW.stability||0)>30&&(roleW.speculative||0)>30)
+    coherence.push({type:"info",msg:{
+      es:`Tienes más del 30% en estabilidad y más del 30% en especulación. Tu cartera intenta ser conservadora y agresiva a la vez — esto reduce la eficiencia.`,
+      en:`You have over 30% in stability and over 30% in speculation. Your portfolio tries to be conservative and aggressive at the same time — this reduces efficiency.`}});
+
+  // C6: Bond redundancy
+  const bondAssets=active.filter(id=>g(id).class==="bond");
+  if(bondAssets.length>=2){
+    const bNames=bondAssets.map(id=>g(id).name);
+    coherence.push({type:"info",msg:{
+      es:`Tienes ${bondAssets.length} activos de renta fija (${bNames.map(n=>n.es).join(", ")}). Puede haber redundancia parcial entre ellos.`,
+      en:`You have ${bondAssets.length} fixed income assets (${bNames.map(n=>n.en).join(", ")}). There may be partial redundancy between them.`}});
+  }
+
+  // C7: Coherent portfolio
+  if(!coherence.length&&active.length>=3)
+    coherence.push({type:"ok",msg:{
+      es:"Tu cartera es coherente: sin solapamientos significativos ni contradicciones internas.",
+      en:"Your portfolio is coherent: no significant overlaps or internal contradictions."}});
+
+  return {risk,diversification,coherence};
+}
 
 /* ══════════════════════════════════════════════
    SIMULATION ENGINE
@@ -409,6 +609,7 @@ function PortfolioSim({t,lang,cfg}){
   const[wt,sW]=useState(defWt);
   const[tab,sT]=useState("idx");const[sm,sMt]=useState(false);const[showBk,sBk]=useState(false);
   const[srcQ,setSrcQ]=useState("");const[expanded,setExp]=useState(false);
+  const[profile,setProfile]=useState(1);
   const tW=sel.reduce((s,id)=>s+(wt[id]||0),0);
   const nW=useMemo(()=>{if(tW===0)return{};const n={};sel.forEach(id=>{n[id]=((wt[id]||0)/tW)*100;});return n;},[sel,wt,tW]);
   const tog=id=>{if(sel.includes(id)){sS(sel.filter(a=>a!==id));const w={...wt};delete w[id];sW(w);}else{sS([...sel,id]);sW({...wt,[id]:0});}};
@@ -426,9 +627,15 @@ function PortfolioSim({t,lang,cfg}){
   const donutItems=useMemo(()=>sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);return{name:a?.name[lang]||id,w:nW[id]||0,c:a?.color||"#999"};}),[sel,nW,lang]);
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
   const showShortTermWarning = pS && yr < 5 && pS.probLossNum > 25;
+  const portfolioAlerts = useMemo(() => sel.length > 0 && tW > 0 ? analyzePortfolio(sel, nW, yr, profile) : {risk:[],diversification:[],coherence:[]}, [sel, nW, yr, tW, profile]);
 
   return(<div>
     {!cfg&&<div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>}
+    {/* PROFILE SELECTOR */}
+    <div style={{background:"#fff",borderRadius:12,padding:14,border:"1.5px solid #f0f0f0",marginBottom:14}}>
+      <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:8}}>{t.perfil}</div>
+      <div style={{display:"flex",gap:4}}>{t.perfilOps.map((label,i)=><button key={i} onClick={()=>setProfile(i)} style={{flex:1,padding:"7px 4px",borderRadius:8,border:"none",fontSize:11,fontWeight:700,cursor:"pointer",background:profile===i?"#111":"#f3f4f6",color:profile===i?"#fff":"#888"}}>{label}</button>)}</div>
+    </div>
     <Inputs params={[{l:t.capIni,v:ini,fn:sI,mx:5e6,st:500,u:"EUR"},{l:t.aport,v:mo,fn:sM,mx:freq==="ano"?600000:50000,st:freq==="ano"?100:25,tog:true,freq,sF,lMes:t.eurMes,lAno:t.eurAno},{l:t.horiz,v:yr,fn:sY,mx:50,st:1,u:t.anos}]}/>
     {/* ── AÑADIR ACTIVOS ── */}
     <div style={{fontSize:11,color:"#888",fontWeight:700,marginBottom:5}}>{t.addActivos}</div>
@@ -548,6 +755,36 @@ function PortfolioSim({t,lang,cfg}){
         </div>}
       </div>
 
+      {/* PORTFOLIO ANALYSIS */}
+      <div style={cdS}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{t.analisis}</div>
+        {(()=>{
+          const pa=portfolioAlerts;
+          const all=[...pa.risk,...pa.diversification,...pa.coherence];
+          if(!all.length) return <div style={{fontSize:12,color:"#10b981",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:16}}>✓</span>{t.sinProblemas}</div>;
+          const renderAlerts=(alerts,title,color)=>{
+            if(!alerts.length) return null;
+            const warns=alerts.filter(a=>a.type==="warn");
+            const infos=alerts.filter(a=>a.type==="info");
+            const oks=alerts.filter(a=>a.type==="ok");
+            const sorted=[...warns,...infos,...oks];
+            return <div style={{marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:700,color,marginBottom:6,textTransform:"uppercase",letterSpacing:0.5}}>{title}</div>
+              {sorted.map((a,i)=><div key={i} style={{
+                padding:"8px 12px",borderRadius:8,marginBottom:4,fontSize:12,lineHeight:1.5,display:"flex",gap:8,alignItems:"flex-start",
+                background:a.type==="warn"?"#fef2f2":a.type==="ok"?"#f0fdf4":"#eff6ff",
+                border:a.type==="warn"?"1px solid #fecaca":a.type==="ok"?"1px solid #bbf7d0":"1px solid #bfdbfe",
+                color:a.type==="warn"?"#991b1b":a.type==="ok"?"#166534":"#1e40af"
+              }}>
+                <span style={{fontSize:14,flexShrink:0,marginTop:1}}>{a.type==="warn"?"⚠️":a.type==="ok"?"✅":"💡"}</span>
+                <span>{a.msg[lang]}</span>
+              </div>)}
+            </div>;
+          };
+          return <>{renderAlerts(pa.risk,t.catRiesgo,"#991b1b")}{renderAlerts(pa.diversification,t.catDiversi,"#1e40af")}{renderAlerts(pa.coherence,t.catCoher,"#92400e")}</>;
+        })()}
+      </div>
+
       {/* METHODOLOGY */}
       <div style={{...cdS,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#777",lineHeight:1.8,whiteSpace:"pre-line"}}>{t.metodo}</div>}</div>
       <div style={{fontSize:11,color:"#92400e",background:"#fffbeb",padding:12,borderRadius:10,textAlign:"center",border:"1px solid #fef3c7",marginBottom:12}}>{t.warn}</div>
@@ -641,6 +878,31 @@ export default function App(){
   const t=T[lang];
   const sim=simSlug?SIMS.find(s=>s.slug===simSlug):null;
   const pageTitle = path==="/interes-compuesto" ? t.ci : path==="/simulador-cartera" ? t.sim : path==="/simulacion"&&sim ? sim.title[lang] : null;
+
+  /* Dynamic SEO */
+  const seoMap={
+    "/":{
+      es:["Kartera — Simulador de cartera de inversión con datos reales","Herramientas gratuitas para simular tu cartera de inversión con 36 años de datos históricos. Escenarios realistas, probabilidad de pérdida y más."],
+      en:["Kartera — Investment portfolio simulator with real data","Free tools to simulate your investment portfolio with 36 years of historical data. Realistic scenarios, loss probability and more."]
+    },
+    "/interes-compuesto":{
+      es:["Calculadora de Interés Compuesto — Kartera","Calcula cuánto crecerá tu dinero con el interés compuesto. Ajusta capital, aportaciones y plazo."],
+      en:["Compound Interest Calculator — Kartera","Calculate how your money will grow with compound interest. Adjust capital, contributions and time frame."]
+    },
+    "/simulador-cartera":{
+      es:["Simulador de Cartera de Inversión — Kartera","Simula tu cartera con 31 activos reales: índices, acciones, bonos, crypto y ETFs. Escenarios pesimista, esperado y optimista con datos de 36 años."],
+      en:["Investment Portfolio Simulator — Kartera","Simulate your portfolio with 31 real assets: indices, stocks, bonds, crypto and ETFs. Pessimistic, expected and optimistic scenarios with 36 years of data."]
+    }
+  };
+  const seoSim=sim?{es:[sim.title.es+" — Kartera",sim.hook.es.split("\n")[0]],en:[sim.title.en+" — Kartera",sim.hook.en.split("\n")[0]]}:null;
+  const seo=seoSim||seoMap[path]||seoMap["/"];
+  const[seoTitle,seoDesc]=seo[lang];
+  if(typeof document!=="undefined"){
+    document.title=seoTitle;
+    let m=document.querySelector('meta[name="description"]');
+    if(!m){m=document.createElement("meta");m.name="description";document.head.appendChild(m);}
+    m.content=seoDesc;
+  }
   return(
     <div style={{fontFamily:"system-ui,sans-serif",background:"#f5f7fa",minHeight:"100vh",color:"#1f2937"}}>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
