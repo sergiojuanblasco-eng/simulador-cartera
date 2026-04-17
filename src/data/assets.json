@@ -1,33 +1,281 @@
 [
-  {"id":"sp500","name":{"es":"S&P 500","en":"S&P 500"},"cat":"idx","color":"#3b82f6","f":5,"s":15,"uf":false,"desc":{"es":"Las 500 mayores empresas de EE.UU.","en":"Top 500 US companies."}},
-  {"id":"nasdaq","name":{"es":"Nasdaq 100","en":"Nasdaq 100"},"cat":"idx","color":"#6366f1","f":7,"s":20,"uf":false,"desc":{"es":"100 mayores tecnológicas.","en":"Top 100 tech companies."}},
-  {"id":"msci_world","name":{"es":"MSCI World","en":"MSCI World"},"cat":"idx","color":"#0ea5e9","f":6,"s":15,"uf":false,"desc":{"es":"1.500 empresas de 23 países desarrollados.","en":"1,500 companies from 23 developed countries."}},
-  {"id":"msci_em","name":{"es":"MSCI Emerging Markets","en":"MSCI Emerging Markets"},"cat":"idx","color":"#14b8a6","f":7.5,"s":20,"uf":false,"desc":{"es":"Mercados emergentes (China, India, Brasil).","en":"Emerging markets (China, India, Brazil)."}},
-  {"id":"stoxx600","name":{"es":"STOXX Europe 600","en":"STOXX Europe 600"},"cat":"idx","color":"#2563eb","f":5.5,"s":15,"uf":false,"desc":{"es":"600 empresas europeas.","en":"600 European companies."}},
-  {"id":"msci_acwi","name":{"es":"MSCI ACWI","en":"MSCI ACWI"},"cat":"idx","color":"#0284c7","f":6,"s":15,"uf":false,"desc":{"es":"Todo el mundo en un índice.","en":"The whole world in one index."}},
-  {"id":"small_caps","name":{"es":"MSCI World Small Cap","en":"MSCI World Small Cap"},"cat":"idx","color":"#7c3aed","f":8,"s":22,"uf":false,"desc":{"es":"Pequeñas empresas de mercados desarrollados.","en":"Small companies from developed markets."}},
-  {"id":"tech_global","name":{"es":"MSCI World IT","en":"MSCI World IT"},"cat":"idx","color":"#d946ef","f":10,"s":25,"uf":false,"desc":{"es":"Sector tecnológico de mercados desarrollados.","en":"Technology sector from developed markets."}},
-  {"id":"japan","name":{"es":"Japón (MSCI Japan)","en":"Japan (MSCI Japan)"},"cat":"idx","color":"#e11d48","f":5,"s":18,"uf":false,"desc":{"es":"Grandes y medianas empresas japonesas en USD.","en":"Japanese large and mid caps in USD."}},
-  {"id":"china","name":{"es":"China (MSCI China)","en":"China (MSCI China)"},"cat":"idx","color":"#dc2626","f":7,"s":25,"uf":false,"desc":{"es":"Renta variable china en USD. Alta volatilidad.","en":"Chinese equities in USD. High volatility."}},
-  {"id":"india","name":{"es":"India (MSCI India)","en":"India (MSCI India)"},"cat":"idx","color":"#ea580c","f":8,"s":20,"uf":false,"desc":{"es":"Renta variable india en USD. Mercado en crecimiento.","en":"Indian equities in USD. Growing market."}},
-  {"id":"apple","name":{"es":"Apple","en":"Apple"},"cat":"stk","color":"#10b981","f":10,"s":30,"uf":true,"desc":{"es":"Ecosistema tech, valor refugio tecnológico.","en":"Tech ecosystem, tech safe haven."}},
-  {"id":"nvidia","name":{"es":"NVIDIA","en":"NVIDIA"},"cat":"stk","color":"#34d399","f":13,"s":35,"uf":true,"desc":{"es":"Líder en chips para IA. Muy volátil.","en":"AI chip leader. Very volatile."}},
-  {"id":"microsoft","name":{"es":"Microsoft","en":"Microsoft"},"cat":"stk","color":"#059669","f":10,"s":28,"uf":true,"desc":{"es":"Cloud + IA + software empresarial.","en":"Cloud + AI + enterprise software."}},
-  {"id":"tesla","name":{"es":"Tesla","en":"Tesla"},"cat":"stk","color":"#f97316","f":12,"s":40,"uf":true,"desc":{"es":"Vehículos eléctricos + energía. Muy volátil.","en":"Electric vehicles + energy. Very volatile."}},
-  {"id":"amazon","name":{"es":"Amazon","en":"Amazon"},"cat":"stk","color":"#f59e0b","f":11,"s":30,"uf":true,"desc":{"es":"E-commerce + AWS cloud.","en":"E-commerce + AWS cloud."}},
-  {"id":"google","name":{"es":"Alphabet","en":"Alphabet"},"cat":"stk","color":"#eab308","f":10,"s":28,"uf":true,"desc":{"es":"Publicidad digital + cloud + IA.","en":"Digital ads + cloud + AI."}},
-  {"id":"coca_cola","name":{"es":"Coca-Cola","en":"Coca-Cola"},"cat":"stk","color":"#84cc16","f":7,"s":15,"uf":true,"desc":{"es":"Valor defensivo, dividendo estable.","en":"Defensive stock, stable dividend."}},
-  {"id":"meta","name":{"es":"Meta","en":"Meta"},"cat":"stk","color":"#22d3ee","f":11,"s":35,"uf":true,"desc":{"es":"Facebook, Instagram, WhatsApp.","en":"Facebook, Instagram, WhatsApp."}},
-  {"id":"us_bond","name":{"es":"Bonos US Treasury 10Y","en":"US Bonds Treasury 10Y"},"cat":"fi","color":"#1e40af","f":4.5,"s":8,"uf":false,"desc":{"es":"Deuda del gobierno de EE.UU.","en":"US government debt."}},
-  {"id":"bond_global","name":{"es":"Bonos Global (Bloomberg Agg)","en":"Global Bonds (Bloomberg Agg)"},"cat":"fi","color":"#3b82f6","f":4,"s":8,"uf":false,"desc":{"es":"Bonos agregados globales. Diversificación en renta fija mundial.","en":"Global aggregate bonds. Worldwide fixed income diversification."}},
-  {"id":"cash","name":{"es":"Monetario","en":"Money Market"},"cat":"fi","color":"#60a5fa","f":3,"s":2,"uf":false,"desc":{"es":"Liquidez con rendimiento mínimo.","en":"Liquidity with minimal return."}},
-  {"id":"btc","name":{"es":"Bitcoin","en":"Bitcoin"},"cat":"cry","color":"#f59e0b","f":15,"s":60,"uf":true,"desc":{"es":"Oro digital. Alta volatilidad.","en":"Digital gold. High volatility."}},
-  {"id":"eth","name":{"es":"Ethereum","en":"Ethereum"},"cat":"cry","color":"#8b5cf6","f":12,"s":65,"uf":true,"desc":{"es":"Contratos inteligentes. Más riesgo que BTC.","en":"Smart contracts. Higher risk than BTC."}},
-  {"id":"gold","name":{"es":"Oro","en":"Gold"},"cat":"alt","color":"#92400e","f":5,"s":15,"uf":false,"desc":{"es":"Protección contra inflación y crisis.","en":"Inflation and crisis protection."}},
-  {"id":"reits","name":{"es":"REITs USA (FTSE Nareit)","en":"US REITs (FTSE Nareit)"},"cat":"alt","color":"#a16207","f":6.5,"s":15,"uf":false,"desc":{"es":"Inmobiliario cotizado en EE.UU.","en":"US listed real estate."}},
-  {"id":"commodities","name":{"es":"Materias Primas (S&P GSCI)","en":"Commodities (S&P GSCI)"},"cat":"alt","color":"#78716c","f":2,"s":22,"uf":false,"desc":{"es":"Petróleo, metales, agricultura. Descorrelacionado.","en":"Oil, metals, agriculture. Uncorrelated."}},
-  {"id":"healthcare","name":{"es":"Salud Global (iShares IXJ)","en":"Global Healthcare (iShares IXJ)"},"cat":"etf","color":"#06b6d4","f":7,"s":14,"uf":false,"desc":{"es":"Sector salud de mercados desarrollados.","en":"Healthcare sector from developed markets."}},
-  {"id":"energy","name":{"es":"Energía Global (iShares IXC)","en":"Global Energy (iShares IXC)"},"cat":"etf","color":"#b45309","f":5,"s":25,"uf":false,"desc":{"es":"Sector energético global. Petróleo y gas.","en":"Global energy sector. Oil and gas."}},
-  {"id":"clean_energy","name":{"es":"Energía Limpia (iShares ICLN)","en":"Clean Energy (iShares ICLN)"},"cat":"etf","color":"#16a34a","f":6,"s":35,"uf":false,"desc":{"es":"Energías renovables. Muy volátil.","en":"Renewable energy. Very volatile."}},
-  {"id":"ai_tech","name":{"es":"IA y Tecnología (Global X AIQ)","en":"AI & Technology (Global X AIQ)"},"cat":"etf","color":"#7c3aed","f":12,"s":30,"uf":true,"desc":{"es":"Empresas de inteligencia artificial. Pocos datos.","en":"Artificial intelligence companies. Limited data."}}
+  {
+    "id":"sp500","name":{"es":"S&P 500","en":"S&P 500"},"cat":"idx","color":"#3b82f6","f":5,"s":15,"uf":false,
+    "desc":{"es":"Las 500 mayores empresas de EE.UU.","en":"Top 500 US companies."},
+    "risk":3,"class":"equity","scope":"country","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":35,"health":13,"finance":12,"mix":40},
+    "role":["growth"],
+    "correlation_cluster":["equity_us"]
+  },
+  {
+    "id":"nasdaq","name":{"es":"Nasdaq 100","en":"Nasdaq 100"},"cat":"idx","color":"#6366f1","f":7,"s":20,"uf":false,
+    "desc":{"es":"100 mayores tecnológicas.","en":"Top 100 tech companies."},
+    "risk":4,"class":"equity","scope":"country","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":60,"consumer":20,"mix":20},
+    "role":["growth"],
+    "correlation_cluster":["equity_us","equity_us_tech"]
+  },
+  {
+    "id":"msci_world","name":{"es":"MSCI World","en":"MSCI World"},"cat":"idx","color":"#0ea5e9","f":6,"s":15,"uf":false,
+    "desc":{"es":"1.500 empresas de 23 países desarrollados.","en":"1,500 companies from 23 developed countries."},
+    "risk":3,"class":"equity","scope":"global","cashflow":true,
+    "regions":{"us":70,"eu":18,"jp":6},
+    "sectors":{"tech":25,"finance":15,"health":12,"mix":48},
+    "role":["growth"],
+    "correlation_cluster":["equity_global","equity_us"]
+  },
+  {
+    "id":"msci_em","name":{"es":"MSCI Emerging Markets","en":"MSCI Emerging Markets"},"cat":"idx","color":"#14b8a6","f":7.5,"s":20,"uf":false,
+    "desc":{"es":"Mercados emergentes (China, India, Brasil).","en":"Emerging markets (China, India, Brazil)."},
+    "risk":4,"class":"equity","scope":"regional","cashflow":true,
+    "regions":{"cn":25,"in":20,"em":55},
+    "sectors":{"tech":22,"finance":20,"consumer":12,"mix":46},
+    "role":["growth"],
+    "correlation_cluster":["equity_em"]
+  },
+  {
+    "id":"stoxx600","name":{"es":"STOXX Europe 600","en":"STOXX Europe 600"},"cat":"idx","color":"#2563eb","f":5.5,"s":15,"uf":false,
+    "desc":{"es":"600 empresas europeas.","en":"600 European companies."},
+    "risk":3,"class":"equity","scope":"regional","cashflow":true,
+    "regions":{"eu":75,"uk":25},
+    "sectors":{"finance":18,"health":15,"industrial":14,"mix":53},
+    "role":["growth"],
+    "correlation_cluster":["equity_eu"]
+  },
+  {
+    "id":"msci_acwi","name":{"es":"MSCI ACWI","en":"MSCI ACWI"},"cat":"idx","color":"#0284c7","f":6,"s":15,"uf":false,
+    "desc":{"es":"Todo el mundo en un índice.","en":"The whole world in one index."},
+    "risk":3,"class":"equity","scope":"global","cashflow":true,
+    "regions":{"us":63,"eu":16,"jp":5,"em":10},
+    "sectors":{"tech":24,"finance":15,"health":11,"mix":50},
+    "role":["growth"],
+    "correlation_cluster":["equity_global","equity_us"]
+  },
+  {
+    "id":"small_caps","name":{"es":"MSCI World Small Cap","en":"MSCI World Small Cap"},"cat":"idx","color":"#7c3aed","f":8,"s":22,"uf":false,
+    "desc":{"es":"Pequeñas empresas de mercados desarrollados.","en":"Small companies from developed markets."},
+    "risk":4,"class":"equity","scope":"global","cashflow":true,
+    "regions":{"us":55,"eu":20,"jp":10,"other":15},
+    "sectors":{"industrial":18,"finance":15,"consumer":14,"mix":53},
+    "role":["growth"],
+    "correlation_cluster":["equity_global"]
+  },
+  {
+    "id":"tech_global","name":{"es":"MSCI World IT","en":"MSCI World IT"},"cat":"idx","color":"#d946ef","f":10,"s":25,"uf":false,
+    "desc":{"es":"Sector tecnológico de mercados desarrollados.","en":"Technology sector from developed markets."},
+    "risk":4,"class":"equity","scope":"sector","cashflow":true,
+    "regions":{"us":90,"other":10},
+    "sectors":{"tech":100},
+    "role":["growth"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"japan","name":{"es":"Japón (MSCI Japan)","en":"Japan (MSCI Japan)"},"cat":"idx","color":"#e11d48","f":5,"s":18,"uf":false,
+    "desc":{"es":"Grandes y medianas empresas japonesas en USD.","en":"Japanese large and mid caps in USD."},
+    "risk":3,"class":"equity","scope":"country","cashflow":true,
+    "regions":{"jp":100},
+    "sectors":{"industrial":22,"consumer":18,"tech":15,"mix":45},
+    "role":["growth"],
+    "correlation_cluster":["equity_jp"]
+  },
+  {
+    "id":"china","name":{"es":"China (MSCI China)","en":"China (MSCI China)"},"cat":"idx","color":"#dc2626","f":7,"s":25,"uf":false,
+    "desc":{"es":"Renta variable china en USD. Alta volatilidad.","en":"Chinese equities in USD. High volatility."},
+    "risk":4,"class":"equity","scope":"country","cashflow":true,
+    "regions":{"cn":100},
+    "sectors":{"tech":30,"consumer":25,"finance":15,"mix":30},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_cn","equity_em"]
+  },
+  {
+    "id":"india","name":{"es":"India (MSCI India)","en":"India (MSCI India)"},"cat":"idx","color":"#ea580c","f":8,"s":20,"uf":false,
+    "desc":{"es":"Renta variable india en USD. Mercado en crecimiento.","en":"Indian equities in USD. Growing market."},
+    "risk":4,"class":"equity","scope":"country","cashflow":true,
+    "regions":{"in":100},
+    "sectors":{"finance":25,"tech":18,"energy":12,"mix":45},
+    "role":["growth"],
+    "correlation_cluster":["equity_in","equity_em"]
+  },
+  {
+    "id":"apple","name":{"es":"Apple","en":"Apple"},"cat":"stk","color":"#10b981","f":10,"s":30,"uf":true,
+    "desc":{"es":"Ecosistema tech, valor refugio tecnológico.","en":"Tech ecosystem, tech safe haven."},
+    "risk":4,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":100},
+    "role":["growth"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"nvidia","name":{"es":"NVIDIA","en":"NVIDIA"},"cat":"stk","color":"#34d399","f":13,"s":35,"uf":true,
+    "desc":{"es":"Líder en chips para IA. Muy volátil.","en":"AI chip leader. Very volatile."},
+    "risk":5,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":100},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"microsoft","name":{"es":"Microsoft","en":"Microsoft"},"cat":"stk","color":"#059669","f":10,"s":28,"uf":true,
+    "desc":{"es":"Cloud + IA + software empresarial.","en":"Cloud + AI + enterprise software."},
+    "risk":4,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":100},
+    "role":["growth"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"tesla","name":{"es":"Tesla","en":"Tesla"},"cat":"stk","color":"#f97316","f":12,"s":40,"uf":true,
+    "desc":{"es":"Vehículos eléctricos + energía. Muy volátil.","en":"Electric vehicles + energy. Very volatile."},
+    "risk":5,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"consumer":60,"tech":40},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"amazon","name":{"es":"Amazon","en":"Amazon"},"cat":"stk","color":"#f59e0b","f":11,"s":30,"uf":true,
+    "desc":{"es":"E-commerce + AWS cloud.","en":"E-commerce + AWS cloud."},
+    "risk":4,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":50,"consumer":50},
+    "role":["growth"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"google","name":{"es":"Alphabet","en":"Alphabet"},"cat":"stk","color":"#eab308","f":10,"s":28,"uf":true,
+    "desc":{"es":"Publicidad digital + cloud + IA.","en":"Digital ads + cloud + AI."},
+    "risk":4,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":100},
+    "role":["growth"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"coca_cola","name":{"es":"Coca-Cola","en":"Coca-Cola"},"cat":"stk","color":"#84cc16","f":7,"s":15,"uf":true,
+    "desc":{"es":"Valor defensivo, dividendo estable.","en":"Defensive stock, stable dividend."},
+    "risk":3,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"consumer":100},
+    "role":["growth","income"],
+    "correlation_cluster":["equity_us"]
+  },
+  {
+    "id":"meta","name":{"es":"Meta","en":"Meta"},"cat":"stk","color":"#22d3ee","f":11,"s":35,"uf":true,
+    "desc":{"es":"Facebook, Instagram, WhatsApp.","en":"Facebook, Instagram, WhatsApp."},
+    "risk":4,"class":"equity","scope":"single","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"tech":100},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_us_tech"]
+  },
+  {
+    "id":"us_bond","name":{"es":"Bonos US Treasury 10Y","en":"US Bonds Treasury 10Y"},"cat":"fi","color":"#1e40af","f":4.5,"s":8,"uf":false,
+    "desc":{"es":"Deuda del gobierno de EE.UU.","en":"US government debt."},
+    "risk":2,"class":"bond","scope":"country","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"bond":100},
+    "role":["stability"],
+    "correlation_cluster":["bonds_us"]
+  },
+  {
+    "id":"bond_global","name":{"es":"Bonos Global (Bloomberg Agg)","en":"Global Bonds (Bloomberg Agg)"},"cat":"fi","color":"#3b82f6","f":4,"s":8,"uf":false,
+    "desc":{"es":"Bonos agregados globales. Diversificación en renta fija mundial.","en":"Global aggregate bonds. Worldwide fixed income diversification."},
+    "risk":2,"class":"bond","scope":"global","cashflow":true,
+    "regions":{"us":40,"eu":35,"jp":10,"other":15},
+    "sectors":{"bond":100},
+    "role":["stability"],
+    "correlation_cluster":["bonds"]
+  },
+  {
+    "id":"cash","name":{"es":"Monetario","en":"Money Market"},"cat":"fi","color":"#60a5fa","f":3,"s":2,"uf":false,
+    "desc":{"es":"Liquidez con rendimiento mínimo.","en":"Liquidity with minimal return."},
+    "risk":1,"class":"cash","scope":"global","cashflow":true,
+    "regions":{"global":100},
+    "sectors":{"bond":100},
+    "role":["stability"],
+    "correlation_cluster":["cash"]
+  },
+  {
+    "id":"btc","name":{"es":"Bitcoin","en":"Bitcoin"},"cat":"cry","color":"#f59e0b","f":15,"s":60,"uf":true,
+    "desc":{"es":"Oro digital. Alta volatilidad.","en":"Digital gold. High volatility."},
+    "risk":5,"class":"crypto","scope":"global","cashflow":false,
+    "regions":{"global":100},
+    "sectors":{"crypto":100},
+    "role":["speculative","inflation_hedge"],
+    "correlation_cluster":["crypto"]
+  },
+  {
+    "id":"eth","name":{"es":"Ethereum","en":"Ethereum"},"cat":"cry","color":"#8b5cf6","f":12,"s":65,"uf":true,
+    "desc":{"es":"Contratos inteligentes. Más riesgo que BTC.","en":"Smart contracts. Higher risk than BTC."},
+    "risk":5,"class":"crypto","scope":"global","cashflow":false,
+    "regions":{"global":100},
+    "sectors":{"crypto":100},
+    "role":["speculative"],
+    "correlation_cluster":["crypto"]
+  },
+  {
+    "id":"gold","name":{"es":"Oro","en":"Gold"},"cat":"alt","color":"#92400e","f":5,"s":15,"uf":false,
+    "desc":{"es":"Protección contra inflación y crisis.","en":"Inflation and crisis protection."},
+    "risk":2,"class":"commodity","scope":"global","cashflow":false,
+    "regions":{"global":100},
+    "sectors":{"commodity":100},
+    "role":["hedge","inflation_hedge"],
+    "correlation_cluster":["commodities"]
+  },
+  {
+    "id":"reits","name":{"es":"REITs USA (FTSE Nareit)","en":"US REITs (FTSE Nareit)"},"cat":"alt","color":"#a16207","f":6.5,"s":15,"uf":false,
+    "desc":{"es":"Inmobiliario cotizado en EE.UU.","en":"US listed real estate."},
+    "risk":3,"class":"realestate","scope":"country","cashflow":true,
+    "regions":{"us":100},
+    "sectors":{"realestate":100},
+    "role":["income","growth"],
+    "correlation_cluster":["realestate_us"]
+  },
+  {
+    "id":"commodities","name":{"es":"Materias Primas (S&P GSCI)","en":"Commodities (S&P GSCI)"},"cat":"alt","color":"#78716c","f":2,"s":22,"uf":false,
+    "desc":{"es":"Petróleo, metales, agricultura. Descorrelacionado.","en":"Oil, metals, agriculture. Uncorrelated."},
+    "risk":4,"class":"commodity","scope":"global","cashflow":false,
+    "regions":{"global":100},
+    "sectors":{"energy":55,"materials":25,"commodity":20},
+    "role":["hedge","inflation_hedge"],
+    "correlation_cluster":["commodities"]
+  },
+  {
+    "id":"healthcare","name":{"es":"Salud Global (iShares IXJ)","en":"Global Healthcare (iShares IXJ)"},"cat":"etf","color":"#06b6d4","f":7,"s":14,"uf":false,
+    "desc":{"es":"Sector salud de mercados desarrollados.","en":"Healthcare sector from developed markets."},
+    "risk":3,"class":"equity","scope":"sector","cashflow":true,
+    "regions":{"us":70,"eu":15,"other":15},
+    "sectors":{"health":100},
+    "role":["growth"],
+    "correlation_cluster":["equity_health"]
+  },
+  {
+    "id":"energy","name":{"es":"Energía Global (iShares IXC)","en":"Global Energy (iShares IXC)"},"cat":"etf","color":"#b45309","f":5,"s":25,"uf":false,
+    "desc":{"es":"Sector energético global. Petróleo y gas.","en":"Global energy sector. Oil and gas."},
+    "risk":4,"class":"equity","scope":"sector","cashflow":true,
+    "regions":{"us":55,"eu":25,"other":20},
+    "sectors":{"energy":100},
+    "role":["growth","inflation_hedge"],
+    "correlation_cluster":["equity_energy"]
+  },
+  {
+    "id":"clean_energy","name":{"es":"Energía Limpia (iShares ICLN)","en":"Clean Energy (iShares ICLN)"},"cat":"etf","color":"#16a34a","f":6,"s":35,"uf":false,
+    "desc":{"es":"Energías renovables. Muy volátil.","en":"Renewable energy. Very volatile."},
+    "risk":5,"class":"equity","scope":"sector","cashflow":true,
+    "regions":{"us":40,"eu":30,"cn":15,"other":15},
+    "sectors":{"energy":100},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_clean"]
+  },
+  {
+    "id":"ai_tech","name":{"es":"IA y Tecnología (Global X AIQ)","en":"AI & Technology (Global X AIQ)"},"cat":"etf","color":"#7c3aed","f":12,"s":30,"uf":true,
+    "desc":{"es":"Empresas de inteligencia artificial. Pocos datos.","en":"Artificial intelligence companies. Limited data."},
+    "risk":4,"class":"equity","scope":"sector","cashflow":true,
+    "regions":{"us":75,"other":25},
+    "sectors":{"tech":100},
+    "role":["growth","speculative"],
+    "correlation_cluster":["equity_us_tech"]
+  }
 ]
