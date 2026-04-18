@@ -793,7 +793,7 @@ function PortfolioSim({t,lang,cfg}){
             {renderCat(pa.coherence,t.catCoher)}
           </>;
         })()}
-        <div style={{fontSize:11,color:"#888",lineHeight:1.6,fontStyle:"italic",borderTop:"1px solid #f0f0f0",paddingTop:10,marginTop:4}}>{t.inspirar}</div>
+        <div style={{fontSize:14,color:"#555",lineHeight:1.7,fontStyle:"italic",borderTop:"1px solid #f0f0f0",paddingTop:14,marginTop:8,textAlign:"center"}}>"{t.inspirar}"</div>
       </div>
 
       {/* METHODOLOGY */}
