@@ -47,7 +47,7 @@ const T={
     riskL:["Bajo","Moderado","Alto","Muy alto"],mktGen:"Mercado genera",
     desglose:"Desglose por activo",activo:"Activo",peso:"Peso",rendEsp:"Rend. esperado",contrib:"Contribución",
     como:"¿Cómo se calcula?",
-    metodo:"1. Para cada año histórico se calcula el retorno de la cartera completa. Si un activo no existía ese año (ej. Bitcoin antes de 2014), se redistribuye su peso entre los demás activos proporcionalmente. Esto permite usar hasta 35 años de datos sin descartar información.\n\n2. Con esos retornos anuales, se generan ventanas rolling del horizonte elegido (ej. todas las ventanas de 10 años: 1990-1999, 1991-2000...) y se calcula el CAGR (rentabilidad anualizada compuesta) de cada una.\n\n3. Los escenarios salen de percentiles reales de esa distribución: P10 = pesimista, P50 (mediana) = esperado, P75 = optimista. No se usa P90 para evitar expectativas irreales.\n\n4. La probabilidad de pérdida es el % de ventanas que terminaron en negativo. Si es 0 en la muestra, se muestra '< 1%' porque el riesgo cero no existe.\n\n5. Para activos con retornos extremos (crypto, growth stocks), se comprime la parte que supera el +50% anual para evitar que un año excepcional distorsione las proyecciones a futuro.\n\n6. Si el horizonte elegido supera los datos disponibles, se usan las tasas del horizonte máximo calculable y se proyectan al plazo deseado, indicándolo claramente.",
+    metodo:"1. Para cada año histórico se calcula el retorno de la cartera completa. Si un activo no existía ese año (ej. Bitcoin antes de 2014), se redistribuye su peso entre los demás activos proporcionalmente. Esto permite usar hasta 35 años de datos sin descartar información.\n\n2. Con esos retornos anuales, se generan ventanas rolling del horizonte elegido (ej. todas las ventanas de 10 años: 1990-1999, 1991-2000...) y se calcula el CAGR (rentabilidad anualizada compuesta) de cada una.\n\n3. Los escenarios salen de percentiles reales de esa distribución: P10 = pesimista, P50 (mediana) = esperado, P90 = optimista.\n\n4. La probabilidad de pérdida es el % de ventanas que terminaron en negativo. Si es 0 en la muestra, se muestra '< 1%' porque el riesgo cero no existe.\n\n5. Para activos con retornos extremos (crypto, growth stocks), se comprime la parte que supera el +50% anual para evitar que un año excepcional distorsione las proyecciones a futuro.\n\n6. Si el horizonte elegido supera los datos disponibles, se usan las tasas del horizonte máximo calculable y se proyectan al plazo deseado, indicándolo claramente.",
     warn:"Rentabilidades pasadas no garantizan resultados futuros. Simulación educativa.",
     optim:"Acceso anticipado al análisis con IA",
     prox:"Los primeros usuarios tendrán acceso gratuito",
@@ -102,7 +102,7 @@ const T={
     riskL:["Low","Moderate","High","Very high"],mktGen:"Market generates",
     desglose:"Breakdown by asset",activo:"Asset",peso:"Weight",rendEsp:"Exp. return",contrib:"Contribution",
     como:"How is this calculated?",
-    metodo:"1. For each historical year, the full portfolio return is computed. If an asset didn't exist that year (e.g. Bitcoin before 2014), its weight is redistributed proportionally among available assets. This lets us use up to 35 years of data without discarding information.\n\n2. Using those annual returns, rolling windows of the chosen horizon are generated (e.g. all 10-year windows: 1990-1999, 1991-2000...) and the CAGR (compound annual growth rate) of each is calculated.\n\n3. Scenarios come from real percentiles of that distribution: P10 = pessimistic, P50 (median) = expected, P75 = optimistic. P90 is not used to avoid unrealistic expectations.\n\n4. Loss probability is the % of windows that ended negative. If 0 in the sample, we show '< 1%' because zero risk doesn't exist.\n\n5. For assets with extreme returns (crypto, growth stocks), returns above +50% annually are compressed so that one exceptional year doesn't distort future projections.\n\n6. If the chosen horizon exceeds available data, rates from the longest calculable horizon are used and projected to the desired term, clearly indicated.",
+    metodo:"1. For each historical year, the full portfolio return is computed. If an asset didn't exist that year (e.g. Bitcoin before 2014), its weight is redistributed proportionally among available assets. This lets us use up to 35 years of data without discarding information.\n\n2. Using those annual returns, rolling windows of the chosen horizon are generated (e.g. all 10-year windows: 1990-1999, 1991-2000...) and the CAGR (compound annual growth rate) of each is calculated.\n\n3. Scenarios come from real percentiles of that distribution: P10 = pessimistic, P50 (median) = expected, P90 = optimistic.\n\n4. Loss probability is the % of windows that ended negative. If 0 in the sample, we show '< 1%' because zero risk doesn't exist.\n\n5. For assets with extreme returns (crypto, growth stocks), returns above +50% annually are compressed so that one exceptional year doesn't distort future projections.\n\n6. If the chosen horizon exceeds available data, rates from the longest calculable horizon are used and projected to the desired term, clearly indicated.",
     warn:"Past performance does not guarantee future results. Educational simulation.",
     optim:"Early access to AI-powered analysis",
     prox:"First users will get free access",
@@ -347,27 +347,6 @@ function analyzePortfolio(sel, nW, yr, profile) {
   return {risk,diversification,coherence};
 }
 
-function scorePortfolio(alerts){
-  const calc=arr=>{
-    let s=10;
-    let hasOk=false;
-    arr.forEach(a=>{
-      if(a.type==="warn") s-=3;
-      else if(a.type==="info") s-=1.5;
-      else if(a.type==="ok") hasOk=true;
-    });
-    s=Math.max(0,s);
-    if(hasOk&&s<7) s=7;
-    return Math.round(s*10)/10;
-  };
-  const r=calc(alerts.risk);
-  const d=calc(alerts.diversification);
-  const c=calc(alerts.coherence);
-  const g=Math.round((r*0.40+d*0.35+c*0.25)*10)/10;
-  const label=g>=9?4:g>=7?3:g>=5?2:g>=3?1:0;
-  return {risk:r,diversification:d,coherence:c,global:g,label};
-}
-
 /* ══════════════════════════════════════════════
    SIMULATION ENGINE
    ══════════════════════════════════════════════ */
@@ -433,15 +412,15 @@ function computePortfolioScenarios(selectedIds, normalizedWeights, horizon) {
     if (rollingCAGRs.length === 0) return null;
   }
 
-  const rawP = pc(rollingCAGRs, 10), rawE = pc(rollingCAGRs, 50), rawO = pc(rollingCAGRs, 75);
+  const rawP = pc(rollingCAGRs, 10), rawE = pc(rollingCAGRs, 50), rawO = pc(rollingCAGRs, 90);
   const negCount = rollingCAGRs.filter(c => c < 0).length;
   const rawProbLoss = negCount / rollingCAGRs.length;
   const probLossDisplay = rawProbLoss === 0 ? "< 1%" : Math.round(rawProbLoss * 100) + "%";
   const probLossNum = Math.round(rawProbLoss * 100);
 
-  const p10val = pc(rollingCAGRs, 10), p75val = pc(rollingCAGRs, 75);
+  const p10val = pc(rollingCAGRs, 10), p90val = pc(rollingCAGRs, 90);
   const pessCount = rollingCAGRs.filter(c => c <= p10val).length;
-  const optCount = rollingCAGRs.filter(c => c >= p75val).length;
+  const optCount = rollingCAGRs.filter(c => c >= p90val).length;
   const probPess = Math.round((pessCount / rollingCAGRs.length) * 100);
   const probOpt = Math.round((optCount / rollingCAGRs.length) * 100);
 
@@ -507,6 +486,7 @@ function SvgChart({lines,years,labels,colors,fill,yearLabel}){
     </svg>
     {hover!==null?<div style={{background:"#111",color:"#fff",borderRadius:8,padding:"6px 10px",fontSize:11,display:"flex",gap:12,justifyContent:"center",marginTop:2,flexWrap:"wrap"}}>
       <span style={{fontWeight:700}}>{(yearLabel||"Año")+" "+hover}</span>
+      {lines[0].find(p=>p.y===hover)?.inv!==undefined&&<span style={{color:"#d1d5db"}}>Aportado: <b>{fm(Math.round(lines[0].find(p=>p.y===hover).inv))}</b></span>}
       {lines.map((d,i)=>{const pt=d.find(p=>p.y===hover);if(!pt)return null;return<span key={i} style={{color:colors[i]}}>{labels[i]}: <b>{fm(Math.round(pt.v))}</b></span>;})}
     </div>
     :<div style={{display:"flex",justifyContent:"center",gap:16,marginTop:4,fontSize:11,color:"#aaa"}}>
@@ -657,7 +637,6 @@ function PortfolioSim({t,lang,cfg}){
   const rlC=["#10b981","#f59e0b","#f97316","#ef4444"];
   const showShortTermWarning = pS && yr < 5 && pS.probLossNum > 25;
   const portfolioAlerts = useMemo(() => sel.length > 0 && tW > 0 ? analyzePortfolio(sel, nW, yr, profile) : {risk:[],diversification:[],coherence:[]}, [sel, nW, yr, tW, profile]);
-  const score = useMemo(() => scorePortfolio(portfolioAlerts), [portfolioAlerts]);
 
   return(<div>
     {!cfg&&<div style={{background:"#ecfdf5",borderRadius:10,padding:"7px 14px",marginBottom:14,fontSize:12,color:"#065f46"}}>{t.preset}</div>}
@@ -788,49 +767,30 @@ function PortfolioSim({t,lang,cfg}){
       {/* PORTFOLIO ANALYSIS */}
       <div style={cdS}>
         <div style={{fontSize:13,fontWeight:700,marginBottom:12}}>{t.analisis}</div>
-        {/* SCORE */}
         {(()=>{
-          const sCol=["#ef4444","#f97316","#f59e0b","#10b981","#059669"][score.label];
           const pa=portfolioAlerts;
           const all=[...pa.risk,...pa.diversification,...pa.coherence];
-          const renderBar=(label,val,cat)=>{
-            const bCol=val>=7?"#10b981":val>=5?"#f59e0b":"#ef4444";
-            const alerts=pa[cat]||[];
-            const warns=alerts.filter(a=>a.type==="warn");
-            const infos=alerts.filter(a=>a.type==="info");
-            const oks=alerts.filter(a=>a.type==="ok");
-            const sorted=[...warns,...infos,...oks];
+          const renderCat=(alerts,title)=>{
+            if(!alerts.length) return null;
+            const sorted=[...alerts.filter(a=>a.type==="warn"),...alerts.filter(a=>a.type==="info"),...alerts.filter(a=>a.type==="ok")];
             return <div style={{marginBottom:10}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
-                <span style={{fontSize:11,fontWeight:700,color:"#555"}}>{label}</span>
-                <span style={{fontSize:12,fontWeight:800,fontFamily:"monospace",color:bCol}}>{val}/10</span>
-              </div>
-              <div style={{height:5,background:"#f0f0f0",borderRadius:3,overflow:"hidden",marginBottom:sorted.length?6:0}}>
-                <div style={{height:"100%",width:(val/10*100)+"%",background:bCol,borderRadius:3}}/>
-              </div>
-              {sorted.map((a,j)=><div key={j} style={{
-                padding:"6px 10px",borderRadius:6,marginBottom:3,fontSize:11,lineHeight:1.5,display:"flex",gap:6,alignItems:"flex-start",
+              <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:5,textTransform:"uppercase",letterSpacing:0.5}}>{title}</div>
+              {sorted.map((a,i)=><div key={i} style={{
+                padding:"7px 10px",borderRadius:6,marginBottom:3,fontSize:12,lineHeight:1.5,display:"flex",gap:6,alignItems:"flex-start",
                 background:a.type==="warn"?"#fef2f2":a.type==="ok"?"#f0fdf4":"#eff6ff",
                 border:a.type==="warn"?"1px solid #fecaca":a.type==="ok"?"1px solid #bbf7d0":"1px solid #bfdbfe",
                 color:a.type==="warn"?"#991b1b":a.type==="ok"?"#166534":"#1e40af"
               }}>
-                <span style={{fontSize:12,flexShrink:0}}>{a.type==="warn"?"⚠️":a.type==="ok"?"✅":"💡"}</span>
+                <span style={{fontSize:13,flexShrink:0}}>{a.type==="warn"?"⚠️":a.type==="ok"?"✅":"💡"}</span>
                 <span>{a.msg[lang]}</span>
               </div>)}
             </div>;
           };
           return <>
-            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16,padding:"12px 16px",background:"#f8fafc",borderRadius:10}}>
-              <div style={{fontSize:32,fontWeight:800,fontFamily:"monospace",color:sCol,lineHeight:1}}>{score.global}</div>
-              <div>
-                <div style={{fontSize:14,fontWeight:700,color:sCol}}>{t.notaLabels[score.label]}</div>
-                <div style={{fontSize:11,color:"#999"}}>/ 10</div>
-              </div>
-            </div>
-            {renderBar(t.catRiesgo,score.risk,"risk")}
-            {renderBar(t.catDiversi,score.diversification,"diversification")}
-            {renderBar(t.catCoher,score.coherence,"coherence")}
             {!all.length&&<div style={{fontSize:12,color:"#10b981",display:"flex",alignItems:"center",gap:6,marginBottom:8}}><span style={{fontSize:16}}>✓</span>{t.sinProblemas}</div>}
+            {renderCat(pa.risk,t.catRiesgo)}
+            {renderCat(pa.diversification,t.catDiversi)}
+            {renderCat(pa.coherence,t.catCoher)}
           </>;
         })()}
         <div style={{fontSize:11,color:"#888",lineHeight:1.6,fontStyle:"italic",borderTop:"1px solid #f0f0f0",paddingTop:10,marginTop:4}}>{t.inspirar}</div>
