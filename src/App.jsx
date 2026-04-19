@@ -82,6 +82,7 @@ const T={
     nota:"Nota de tu cartera",
     notaLabels:["Crítica","Débil","Mejorable","Buena","Excelente"],
     inspirar:"Este análisis es orientativo. Ninguna herramienta sustituye tu criterio: tú conoces tu situación, tus objetivos y lo que te deja dormir tranquilo. La mejor cartera no es la perfecta — es la que puedes mantener.",
+    compartir:"Compartir mi cartera",descargado:"Imagen descargada",
     seoH1:"¿Qué es el interés compuesto?",seoP1:"El interés compuesto es el proceso por el cual una inversión genera ganancias que se reinvierten, generando a su vez nuevas ganancias. A largo plazo, este efecto permite que el dinero crezca de forma exponencial. Albert Einstein lo llamó \"la fuerza más poderosa del universo\" — y con razón: la diferencia entre invertir a los 25 o a los 35 puede ser de cientos de miles de euros al jubilarte.",
     seoH2:"Cómo usar la calculadora de interés compuesto",seoP2:"Introduce tu inversión inicial, las aportaciones periódicas (mensuales o anuales), el interés estimado y el número de años. La calculadora te mostrará cómo crecería tu dinero con el paso del tiempo, separando lo que aportas de lo que genera el mercado por ti.",
     seoH3:"¿Qué rentabilidad usar?",seoP3:"Elegir un porcentaje fijo puede ser engañoso. En la realidad, los mercados fluctúan constantemente: un año pueden subir un 30% y al siguiente caer un 20%. La media histórica del S&P 500 ronda el 7-10% anual, pero tu experiencia real dependerá de cuándo inviertas y en qué activos.",
@@ -137,6 +138,7 @@ const T={
     nota:"Portfolio score",
     notaLabels:["Critical","Weak","Needs improvement","Good","Excellent"],
     inspirar:"This analysis is for guidance only. No tool replaces your judgment: you know your situation, your goals and what lets you sleep at night. The best portfolio isn't the perfect one — it's the one you can stick with.",
+    compartir:"Share my portfolio",descargado:"Image downloaded",
     seoH1:"What is compound interest?",seoP1:"Compound interest is the process by which an investment generates earnings that are reinvested, which in turn generate their own earnings. Over the long term, this effect allows money to grow exponentially. Albert Einstein called it \"the most powerful force in the universe\" — and with good reason: the difference between starting to invest at 25 vs 35 can be hundreds of thousands of euros by retirement.",
     seoH2:"How to use the compound interest calculator",seoP2:"Enter your initial investment, periodic contributions (monthly or annual), the estimated interest rate and the number of years. The calculator will show you how your money would grow over time, separating what you contribute from what the market generates for you.",
     seoH3:"What return rate should you use?",seoP3:"Choosing a fixed percentage can be misleading. In reality, markets fluctuate constantly: one year they might rise 30% and the next fall 20%. The historical average of the S&P 500 is around 7-10% annually, but your actual experience will depend on when you invest and in which assets.",
@@ -152,6 +154,145 @@ function pc(a,p){if(!a.length)return null;const i=(p/100)*(a.length-1);const l=M
 function cP(ini,mo,yrs,rate){const mr=rate/100/12;const d=[{y:0,v:ini,inv:ini}];let v=ini,inv=ini;for(let y=1;y<=yrs;y++){for(let m=0;m<12;m++){v=v*(1+mr)+mo;inv+=mo;}d.push({y,v,inv});}return d;}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
+
+/* ══════════════════════════════════════════════
+   SHARE IMAGE GENERATOR (Canvas)
+   ══════════════════════════════════════════════ */
+function generateShareImage({profileLabel,horizon,initial,monthly,freq,assets,scenarios,probLoss,lang}){
+  const W=750,H=880;
+  const c=document.createElement("canvas");c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  const fmE=n=>n>=1e6?(n/1e6).toFixed(1)+"M€":n.toLocaleString("es-ES",{maximumFractionDigits:0})+"€";
+
+  // Background
+  x.fillStyle="#fff";x.beginPath();x.roundRect(0,0,W,H,24);x.fill();
+  // Top accent bar
+  x.fillStyle="#10b981";x.fillRect(0,0,W,5);
+
+  // Logo
+  x.font="700 30px system-ui,sans-serif";x.fillStyle="#0f172a";x.fillText("Kartera",40,52);
+  x.fillStyle="#10b981";x.fillText(".",145,52);
+
+  // Profile grid background
+  x.fillStyle="#f8fafc";x.beginPath();x.roundRect(40,75,W-80,90,16);x.fill();
+
+  const profileItems=[
+    [lang==="es"?"PERFIL":"PROFILE",profileLabel],
+    [lang==="es"?"HORIZONTE":"HORIZON",horizon+" "+(lang==="es"?"años":"years")],
+    [lang==="es"?"CAPITAL INICIAL":"INITIAL CAPITAL",fmE(initial)],
+    [lang==="es"?"APORTACIÓN":"CONTRIBUTION",fmE(monthly)+"/"+(freq==="ano"?(lang==="es"?"año":"year"):(lang==="es"?"mes":"month"))]
+  ];
+  const colW=(W-80)/4;
+  profileItems.forEach(([label,val],i)=>{
+    const cx=40+i*colW+colW/2;
+    x.font="600 11px system-ui,sans-serif";x.fillStyle="#94a3b8";x.textAlign="center";
+    x.fillText(label,cx,103);
+    x.font="700 17px monospace";x.fillStyle="#0f172a";
+    x.fillText(val,cx,126);
+  });
+  x.textAlign="left";
+
+  // Main metric - circle + capital
+  const circleY=215,circleR=52;
+  x.beginPath();x.arc(100,circleY,circleR,0,Math.PI*2);x.strokeStyle="#10b981";x.lineWidth=5;x.stroke();
+  x.font="800 28px monospace";x.fillStyle="#10b981";x.textAlign="center";
+  x.fillText(fp(scenarios[1].r),100,circleY-2);
+  x.font="600 11px system-ui,sans-serif";x.fillStyle="#94a3b8";
+  x.fillText(lang==="es"?"ANUAL":"ANNUAL",100,circleY+16);
+  x.textAlign="left";
+
+  const capFinal=Math.round(scenarios[1].d[scenarios[1].d.length-1].v);
+  const totalInvested=initial+(monthly*(freq==="ano"?1:12))*horizon;
+  const gained=capFinal-totalInvested;
+  x.font="800 34px monospace";x.fillStyle="#0f172a";x.fillText(fmE(capFinal),175,208);
+  x.font="400 15px system-ui,sans-serif";x.fillStyle="#94a3b8";
+  x.fillText(lang==="es"?"Capital esperado a "+horizon+" años":"Expected capital at "+horizon+" years",175,232);
+  x.font="700 16px system-ui,sans-serif";x.fillStyle="#10b981";
+  x.fillText("+"+(fmE(Math.max(0,gained)))+" "+(lang==="es"?"generados por el mercado":"generated by the market"),175,255);
+
+  // Separator
+  x.fillStyle="#f1f5f9";x.fillRect(40,285,W-80,1);
+
+  // Composition section
+  x.font="600 12px system-ui,sans-serif";x.fillStyle="#94a3b8";
+  x.fillText(lang==="es"?"COMPOSICIÓN":"COMPOSITION",40,315);
+
+  let compY=340;
+  assets.forEach(a=>{
+    // Dot
+    x.fillStyle=a.color;x.beginPath();x.arc(50,compY,5,0,Math.PI*2);x.fill();
+    // Name
+    x.font="400 15px system-ui,sans-serif";x.fillStyle="#475569";x.fillText(a.name,66,compY+5);
+    // Bar background
+    x.fillStyle="#f1f5f9";x.beginPath();x.roundRect(380,compY-5,220,10,5);x.fill();
+    // Bar fill
+    x.fillStyle=a.color;x.beginPath();x.roundRect(380,compY-5,220*(a.weight/100),10,5);x.fill();
+    // Percentage
+    x.font="700 14px monospace";x.fillStyle="#0f172a";x.textAlign="right";
+    x.fillText(Math.round(a.weight)+"%",W-40,compY+5);
+    x.textAlign="left";
+    compY+=32;
+  });
+
+  // Separator
+  const sepY=compY+10;
+  x.fillStyle="#f1f5f9";x.fillRect(40,sepY,W-80,1);
+
+  // Scenarios section
+  const scY=sepY+25;
+  x.font="600 12px system-ui,sans-serif";x.fillStyle="#94a3b8";
+  x.fillText(lang==="es"?"ESCENARIOS":"SCENARIOS",40,scY);
+
+  const scBoxW=(W-100)/3;
+  const scColors=[{bg:"#fff",border:"#e2e8f0",labelC:"#991b1b",pctC:"#ef4444",eurC:"#991b1b"},
+                  {bg:"#f0fdf4",border:"#bbf7d0",labelC:"#166534",pctC:"#10b981",eurC:"#166534"},
+                  {bg:"#eff6ff",border:"#bfdbfe",labelC:"#1e40af",pctC:"#2563eb",eurC:"#1e40af"}];
+  const scLabels=lang==="es"?["PESIMISTA","ESPERADO","OPTIMISTA"]:["PESSIMISTIC","EXPECTED","OPTIMISTIC"];
+
+  scenarios.forEach((sc,i)=>{
+    const bx=40+i*(scBoxW+10);
+    const by=scY+16;
+    const col=scColors[i];
+    x.fillStyle=col.bg;x.beginPath();x.roundRect(bx,by,scBoxW,80,12);x.fill();
+    x.strokeStyle=col.border;x.lineWidth=1.5;x.beginPath();x.roundRect(bx,by,scBoxW,80,12);x.stroke();
+
+    x.textAlign="center";
+    const cx=bx+scBoxW/2;
+    x.font="600 10px system-ui,sans-serif";x.fillStyle=col.labelC;x.fillText(scLabels[i],cx,by+22);
+    x.font="800 20px monospace";x.fillStyle=col.pctC;x.fillText(fp(sc.r),cx,by+48);
+    const scFinal=Math.round(sc.d[sc.d.length-1].v);
+    x.font="400 13px monospace";x.fillStyle=col.eurC;x.fillText(fmE(scFinal),cx,by+68);
+    x.textAlign="left";
+  });
+
+  // Probability
+  const probY=scY+120;
+  x.textAlign="center";
+  x.font="400 15px system-ui,sans-serif";x.fillStyle="#64748b";
+  const probText=lang==="es"?"Probabilidad de pérdida a "+horizon+" años: ":"Probability of loss at "+horizon+" years: ";
+  x.fillText(probText,W/2-20,probY);
+  x.font="800 16px system-ui,sans-serif";x.fillStyle="#f59e0b";
+  const probW=x.measureText(probText).width;
+  x.fillText(probLoss,W/2-20+probW/2+4,probY);
+  x.textAlign="left";
+
+  // Footer separator
+  const footSepY=probY+20;
+  x.fillStyle="#f1f5f9";x.fillRect(40,footSepY,W-80,1);
+
+  // Footer
+  x.font="400 12px system-ui,sans-serif";x.fillStyle="#cbd5e1";
+  x.fillText(lang==="es"?"Simulación con datos históricos reales":"Simulation with real historical data",40,footSepY+25);
+  x.font="800 17px system-ui,sans-serif";x.fillStyle="#10b981";x.textAlign="right";
+  x.fillText("kartera.pro",W-40,footSepY+25);
+  x.textAlign="left";
+
+  // Download
+  const link=document.createElement("a");
+  link.download="mi-cartera-kartera.png";
+  link.href=c.toDataURL("image/png");
+  link.click();
+}
 
 /* ══════════════════════════════════════════════
    PORTFOLIO ANALYSIS RULES (property-based)
@@ -795,6 +936,22 @@ function PortfolioSim({t,lang,cfg}){
         })()}
         <div style={{fontSize:14,color:"#555",lineHeight:1.7,fontStyle:"italic",borderTop:"1px solid #f0f0f0",paddingTop:14,marginTop:8,textAlign:"center"}}>"{t.inspirar}"</div>
       </div>
+
+      {/* SHARE BUTTON */}
+      {scs&&<button onClick={()=>{
+        const activeAssets=sel.filter(id=>(nW[id]||0)>0).map(id=>{const a=ASSETS.find(x=>x.id===id);return{name:a.name[lang],weight:nW[id]||0,color:a.color};});
+        generateShareImage({
+          profileLabel:t.perfilOps[profile],
+          horizon:yr,initial:ini,monthly:mo,freq,
+          assets:activeAssets,
+          scenarios:scs,
+          probLoss:pS.probLossDisplay,
+          lang
+        });
+      }} style={{width:"100%",padding:"14px 0",borderRadius:12,border:"2px solid #10b981",background:"#f0fdf4",color:"#065f46",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065f46" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        {t.compartir}
+      </button>}
 
       {/* METHODOLOGY */}
       <div style={{...cdS,padding:0}}><button onClick={()=>sMt(!sm)} style={{width:"100%",padding:"12px 16px",border:"none",background:"transparent",display:"flex",justifyContent:"space-between",cursor:"pointer",fontSize:12,fontWeight:600,color:"#999"}}><span>{t.como}</span><span>{sm?"▲":"▼"}</span></button>{sm&&<div style={{padding:"0 16px 14px",fontSize:11,color:"#777",lineHeight:1.8,whiteSpace:"pre-line"}}>{t.metodo}</div>}</div>
