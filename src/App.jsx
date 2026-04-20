@@ -72,6 +72,8 @@ const T={
     homeW2t:"Riesgo honesto",homeW2d:"No solo cuánto puedes ganar — cuánto puedes perder y con qué probabilidad.",
     homeW3t:"Sin conflicto",homeW3d:"No vendemos fondos ni cobramos comisiones. Solo educación financiera.",
     proximamente:"Próximamente",proxItems:"Optimización de cartera con IA | Escenario de crisis (stress test) | Comparador de brokers",
+    homeSims:"Simulaciones populares",homeSimsCta:"Explora cómo se comportan las carteras más buscadas con datos reales.",
+    homeCtaTitle:"¿Tienes una cartera en mente?",homeCtaBig:"Simula tu propia cartera con tus porcentajes",homeCtaBtn:"Ir al simulador →",
     intEsp:"Interés esperado",yearN:"Año",
     buscar:"Buscar activo...",tuCartera:"Tu cartera",addActivos:"Añadir activos",
     verN:"Ver los {n}",cerrar:"Cerrar",nActivos:"{n} activos",
@@ -128,6 +130,8 @@ const T={
     homeW2t:"Honest risk",homeW2d:"Not just how much you can earn — how much you can lose and how likely.",
     homeW3t:"No conflict",homeW3d:"We don't sell funds or charge commissions. Just financial education.",
     proximamente:"Coming soon",proxItems:"AI portfolio optimization | Crisis scenario (stress test) | Broker comparison",
+    homeSims:"Popular simulations",homeSimsCta:"Explore how the most searched portfolios perform with real data.",
+    homeCtaTitle:"Have a portfolio in mind?",homeCtaBig:"Simulate your own portfolio with your percentages",homeCtaBtn:"Go to simulator →",
     intEsp:"Expected interest",yearN:"Year",
     buscar:"Search asset...",tuCartera:"Your portfolio",addActivos:"Add assets",
     verN:"See all {n}",cerrar:"Close",nActivos:"{n} assets",
@@ -654,32 +658,62 @@ function Inputs({params}){return(
 /* ══════════════════════════════════════════════
    HOME
    ══════════════════════════════════════════════ */
-function HomePage({t, go}) {
+function HomePage({t, go, lang}) {
   const whyItems=[{icon:"📊",t:t.homeW1t,d:t.homeW1d},{icon:"⚖️",t:t.homeW2t,d:t.homeW2d},{icon:"🛡️",t:t.homeW3t,d:t.homeW3d}];
+  const simIcons={"cartera-60-40":"⚖️","sp500-vs-msci-world":"🇺🇸","bitcoin-en-cartera":"₿"};
   return(<div>
     <div style={{textAlign:"center",padding:"28px 0 24px"}}>
       <h2 style={{fontSize:22,fontWeight:800,color:"#111",marginBottom:8,lineHeight:1.3}}>{t.heroTitle}</h2>
       <p style={{fontSize:13,color:"#888",maxWidth:440,margin:"0 auto",lineHeight:1.6}}>{t.heroSub}</p>
     </div>
-    <div style={{display:"grid",gap:12,marginBottom:24}}>
-      <div onClick={()=>go("/interes-compuesto")} style={{...cdS,cursor:"pointer",padding:20,marginBottom:0,borderLeft:"4px solid #6366f1"}}>
-        <div style={{fontSize:15,fontWeight:800,color:"#111",marginBottom:4}}>{t.toolIC}</div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10,lineHeight:1.5}}>{t.toolICdesc}</p>
+
+    {/* CTA PRINCIPAL */}
+    <div onClick={()=>go("/simulador-cartera")} style={{cursor:"pointer",padding:22,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"2px solid #10b981",marginBottom:20,textAlign:"center"}}>
+      <div style={{fontSize:11,color:"#10b981",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{t.homeCtaTitle}</div>
+      <div style={{fontSize:17,fontWeight:800,color:"#065f46",marginBottom:8}}>{t.homeCtaBig}</div>
+      <div style={{display:"inline-block",padding:"10px 24px",background:"#10b981",color:"#fff",borderRadius:10,fontSize:14,fontWeight:700}}>{t.homeCtaBtn}</div>
+    </div>
+
+    {/* HERRAMIENTAS */}
+    <div style={{display:"grid",gap:10,marginBottom:24}}>
+      <div onClick={()=>go("/interes-compuesto")} style={{...cdS,cursor:"pointer",padding:16,marginBottom:0,borderLeft:"4px solid #6366f1"}}>
+        <div style={{fontSize:14,fontWeight:800,color:"#111",marginBottom:3}}>{t.toolIC}</div>
+        <p style={{fontSize:12,color:"#888",marginBottom:8,lineHeight:1.5,margin:0}}>{t.toolICdesc}</p>
         <span style={{fontSize:12,fontWeight:700,color:"#6366f1"}}>{t.irA} →</span>
       </div>
-      <div onClick={()=>go("/simulador-cartera")} style={{...cdS,cursor:"pointer",padding:20,marginBottom:0,borderLeft:"4px solid #10b981",background:"#f0fdf8"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-          <span style={{fontSize:15,fontWeight:800,color:"#111"}}>{t.toolSim}</span>
+      <div onClick={()=>go("/simulador-cartera")} style={{...cdS,cursor:"pointer",padding:16,marginBottom:0,borderLeft:"4px solid #10b981"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+          <span style={{fontSize:14,fontWeight:800,color:"#111"}}>{t.toolSim}</span>
           <span style={{fontSize:9,fontWeight:800,background:"#10b981",color:"#fff",padding:"2px 7px",borderRadius:4}}>{t.toolSimBadge}</span>
         </div>
-        <p style={{fontSize:12,color:"#888",marginBottom:10,lineHeight:1.5}}>{t.toolSimDesc}</p>
+        <p style={{fontSize:12,color:"#888",marginBottom:8,lineHeight:1.5,margin:0}}>{t.toolSimDesc}</p>
         <span style={{fontSize:12,fontWeight:700,color:"#10b981"}}>{t.irA} →</span>
       </div>
     </div>
+
+    {/* SIMULACIONES POPULARES */}
+    <div style={{marginBottom:24}}>
+      <h3 style={{fontSize:14,fontWeight:800,color:"#111",marginBottom:4}}>{t.homeSims}</h3>
+      <p style={{fontSize:12,color:"#888",marginBottom:12,lineHeight:1.5}}>{t.homeSimsCta}</p>
+      <div style={{display:"grid",gap:10}}>
+        {SIMS.map(sim=><div key={sim.slug} onClick={()=>go("/simulacion/"+sim.slug)} style={{...cdS,cursor:"pointer",padding:16,marginBottom:0,display:"flex",gap:14,alignItems:"flex-start",borderLeft:"4px solid #f59e0b"}}>
+          <span style={{fontSize:24,lineHeight:1}}>{simIcons[sim.slug]||"📈"}</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#111",marginBottom:3}}>{sim.title[lang]}</div>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.5}}>{sim.hook[lang].split("\n")[0].substring(0,120)}...</div>
+            <span style={{fontSize:12,fontWeight:700,color:"#f59e0b",display:"inline-block",marginTop:6}}>{lang==="es"?"Ver simulación":"View simulation"} →</span>
+          </div>
+        </div>)}
+      </div>
+    </div>
+
+    {/* POR QUÉ KARTERA */}
     <div style={{marginBottom:24}}>
       <h3 style={{fontSize:14,fontWeight:800,color:"#111",marginBottom:12}}>{t.homeWhy}</h3>
       <div style={{display:"grid",gap:10}}>{whyItems.map((w,i)=>(<div key={i} style={{...cdS,marginBottom:0,display:"flex",gap:12,alignItems:"flex-start",padding:14}}><span style={{fontSize:22}}>{w.icon}</span><div><div style={{fontSize:13,fontWeight:700,color:"#111",marginBottom:2}}>{w.t}</div><div style={{fontSize:11,color:"#888",lineHeight:1.5}}>{w.d}</div></div></div>))}</div>
     </div>
+
+    {/* PRÓXIMAMENTE */}
     <div style={{padding:18,borderRadius:14,background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)",border:"1px solid #bbf7d0",textAlign:"center"}}>
       <div style={{fontSize:14,fontWeight:800,color:"#065f46",marginBottom:6}}>{t.proximamente}</div>
       <div style={{fontSize:11,color:"#666",lineHeight:1.7}}>{t.proxItems.split("|").map((s,i)=><span key={i}>{i>0?" · ":""}{s.trim()}</span>)}</div>
@@ -1075,7 +1109,7 @@ export default function App(){
           <button onClick={()=>go("/interes-compuesto")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/interes-compuesto"?"#fff":"transparent",color:path==="/interes-compuesto"?"#111":"#999",boxShadow:path==="/interes-compuesto"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.ci}</button>
           <button onClick={()=>go("/simulador-cartera")} style={{flex:1,padding:"10px 0",borderRadius:8,border:"none",fontSize:13,fontWeight:700,cursor:"pointer",background:path==="/simulador-cartera"?"#fff":"transparent",color:path==="/simulador-cartera"?"#111":"#999",boxShadow:path==="/simulador-cartera"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.sim}</button>
         </div>}
-        {path==="/"&&<HomePage t={t} go={go}/>}
+        {path==="/"&&<HomePage t={t} go={go} lang={lang}/>}
         {path==="/interes-compuesto"&&<CompoundCalc go={go} t={t}/>}
         {path==="/simulador-cartera"&&<PortfolioSim t={t} lang={lang}/>}
         {path==="/simulacion"&&sim&&<SimulationPage sim={sim} t={t} lang={lang} go={go}/>}
