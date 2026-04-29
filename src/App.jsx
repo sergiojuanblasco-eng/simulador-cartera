@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { supabase } from "./lib/supabase";
 
 /* ══════════════════════════════════════════════
    ROUTING — pathname-based, multi-HTML
@@ -9,10 +10,14 @@ function useRouter() {
   const path = simMatch ? "/simulacion"
     : raw.includes("interes-compuesto") ? "/interes-compuesto"
     : raw.includes("simulador-cartera") ? "/simulador-cartera"
+    : raw.includes("login") ? "/login"
+    : raw.includes("onboarding") ? "/onboarding"
+    : raw.includes("dashboard") ? "/dashboard"
     : "/";
   const simSlug = simMatch ? simMatch[1].replace(/\/+$/,"") : null;
   const go = useCallback((p) => {
-    window.location.href = p;
+    window.history.pushState({},"",p);
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
   return { path, go, simSlug };
 }
@@ -1076,6 +1081,457 @@ function SimulationPage({sim,t,lang,go}){
 /* ══════════════════════════════════════════════
    APP ROOT
    ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   AUTH — Login / Register Page
+   ══════════════════════════════════════════════ */
+function LoginPage({go,lang}){
+  const t=lang==="es"?{
+    title:"Crea tu cuenta gratis",sub:"Empieza a controlar tus inversiones en un solo sitio",
+    google:"Continuar con Google",or:"o",email:"Email",pass:"Contraseña",
+    create:"Crear cuenta",have:"¿Ya tienes cuenta?",enter:"Entrar",
+    noHave:"¿No tienes cuenta?",createFree:"Crear cuenta gratis",
+    legal:"Al continuar aceptas nuestros Términos y Política de Privacidad",
+    titleLogin:"Entra en tu cuenta",subLogin:"Accede a tu cartera"
+  }:{
+    title:"Create your free account",sub:"Start tracking your investments in one place",
+    google:"Continue with Google",or:"or",email:"Email",pass:"Password",
+    create:"Create account",have:"Already have an account?",enter:"Sign in",
+    noHave:"Don't have an account?",createFree:"Create free account",
+    legal:"By continuing you accept our Terms and Privacy Policy",
+    titleLogin:"Sign in to your account",subLogin:"Access your portfolio"
+  };
+  const[mode,setMode]=useState("register");
+  const[email,setEmail]=useState("");
+  const[pass,setPass]=useState("");
+  const[loading,setLoading]=useState(false);
+  const[error,setError]=useState("");
+
+  const handleGoogle=async()=>{
+    setLoading(true);
+    const{error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/onboarding"}});
+    if(error)setError(error.message);
+    setLoading(false);
+  };
+  const handleEmail=async(e)=>{
+    e.preventDefault();setLoading(true);setError("");
+    if(mode==="register"){
+      const{error}=await supabase.auth.signUp({email,password:pass});
+      if(error)setError(error.message);
+      else go("/onboarding");
+    }else{
+      const{error}=await supabase.auth.signInWithPassword({email,password:pass});
+      if(error)setError(error.message);
+      else go("/dashboard");
+    }
+    setLoading(false);
+  };
+
+  const isLogin=mode==="login";
+  return(<div style={{maxWidth:380,margin:"0 auto",padding:"60px 20px",textAlign:"center"}}>
+    <div style={{fontFamily:TH.serif,fontSize:28,color:TH.dark,marginBottom:8}}>{isLogin?t.titleLogin:t.title}</div>
+    <p style={{fontSize:14,color:TH.muted,marginBottom:32}}>{isLogin?t.subLogin:t.sub}</p>
+
+    <button onClick={handleGoogle} disabled={loading} style={{width:"100%",padding:"12px 20px",borderRadius:10,border:`1.5px solid ${TH.border}`,background:TH.card,fontSize:14,fontWeight:600,color:TH.dark,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,fontFamily:TH.sans,marginBottom:20}}>
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      {t.google}
+    </button>
+
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+      <div style={{flex:1,height:1,background:TH.border}}/>
+      <span style={{fontSize:12,color:TH.light}}>{t.or}</span>
+      <div style={{flex:1,height:1,background:TH.border}}/>
+    </div>
+
+    <form onSubmit={handleEmail}>
+      <input type="email" placeholder={t.email} value={email} onChange={e=>setEmail(e.target.value)} required style={{width:"100%",padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,marginBottom:10,outline:"none",background:TH.card,color:TH.dark}}/>
+      <input type="password" placeholder={t.pass} value={pass} onChange={e=>setPass(e.target.value)} required minLength={6} style={{width:"100%",padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,marginBottom:14,outline:"none",background:TH.card,color:TH.dark}}/>
+      {error&&<div style={{fontSize:12,color:TH.red,marginBottom:10}}>{error}</div>}
+      <button type="submit" disabled={loading} style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{isLogin?t.enter:t.create}</button>
+    </form>
+
+    <p style={{fontSize:13,color:TH.muted,marginTop:20}}>
+      {isLogin?t.noHave:t.have}{" "}
+      <span onClick={()=>{setMode(isLogin?"register":"login");setError("");}} style={{color:TH.green,fontWeight:600,cursor:"pointer"}}>{isLogin?t.createFree:t.enter}</span>
+    </p>
+    <p style={{fontSize:11,color:TH.light,marginTop:16}}>{t.legal}</p>
+  </div>);
+}
+
+/* ══════════════════════════════════════════════
+   ONBOARDING — 3-step setup
+   ══════════════════════════════════════════════ */
+const TEMPLATES={
+  conservadora:[{id:"bond_global",w:60},{id:"msci_world",w:30},{id:"gold",w:10}],
+  equilibrada:[{id:"msci_world",w:60},{id:"bond_global",w:30},{id:"gold",w:10}],
+  agresiva:[{id:"msci_world",w:80},{id:"btc",w:10},{id:"gold",w:10}]
+};
+
+function OnboardingPage({go,lang,session}){
+  const t=lang==="es"?{
+    step:"Paso",of:"de",next:"Siguiente",prev:"Anterior",skip:"Saltar este paso",finish:"Ir al dashboard",
+    t1:"¿Cómo te defines como inversor?",s1:"Esto nos ayuda a personalizar tu análisis. Puedes cambiarlo después.",
+    profiles:["Conservador","Moderado","Agresivo","Muy agresivo"],
+    profileDesc:["Prefiero ganar poco pero no perder casi nunca","Acepto caídas temporales a cambio de crecimiento","Busco máxima rentabilidad, tolero caídas fuertes","Acepto riesgo extremo por oportunidad de altos retornos"],
+    t2:"¿Cómo quieres distribuir tu cartera?",s2:"Esto nos permite avisarte cuándo rebalancear.",
+    templates:["Conservadora","Equilibrada","Agresiva","Personalizada"],
+    t3:"Registra tu primera inversión",s3:"Mira tu app del broker y copia los datos. 10 segundos.",
+    asset:"Activo",broker:"Broker",invested:"Total invertido (€)",value:"Valor actual (€)",
+    gain:"Ganancia",add:"Añadir posición",another:"Añadir otra",goDash:"Ir al dashboard"
+  }:{
+    step:"Step",of:"of",next:"Next",prev:"Back",skip:"Skip this step",finish:"Go to dashboard",
+    t1:"How do you define yourself as an investor?",s1:"This helps us personalize your analysis. You can change it later.",
+    profiles:["Conservative","Moderate","Aggressive","Very aggressive"],
+    profileDesc:["I prefer earning little but almost never losing","I accept temporary drops for growth","I seek maximum returns, I tolerate strong drops","I accept extreme risk for high return opportunities"],
+    t2:"How do you want to distribute your portfolio?",s2:"This lets us alert you when to rebalance.",
+    templates:["Conservative","Balanced","Aggressive","Custom"],
+    t3:"Register your first investment",s3:"Check your broker app and copy the data. 10 seconds.",
+    asset:"Asset",broker:"Broker",invested:"Total invested (€)",value:"Current value (€)",
+    gain:"Gain",add:"Add position",another:"Add another",goDash:"Go to dashboard"
+  };
+
+  const[step,setStep]=useState(1);
+  const[profile,setProfile]=useState(-1);
+  const[tpl,setTpl]=useState(-1);
+  const[targets,setTargets]=useState([]);
+  const[positions,setPositions]=useState([]);
+  const[pos,setPos]=useState({asset_id:"",broker:"",invested:"",value:""});
+  const[saving,setSaving]=useState(false);
+
+  const selectTpl=(i)=>{
+    setTpl(i);
+    if(i<3){
+      const key=["conservadora","equilibrada","agresiva"][i];
+      setTargets(TEMPLATES[key].map(t=>({...t})));
+    }else{
+      setTargets([]);
+    }
+  };
+
+  const addPos=()=>{
+    if(!pos.asset_id||!pos.invested||!pos.value)return;
+    setPositions([...positions,{...pos,invested:Number(pos.invested),value:Number(pos.value)}]);
+    setPos({asset_id:"",broker:"",invested:"",value:""});
+  };
+
+  const saveAll=async()=>{
+    if(!session?.user)return;
+    setSaving(true);
+    const uid=session.user.id;
+    // Save profile
+    await supabase.from("profiles").update({risk_profile:profile}).eq("id",uid);
+    // Save targets
+    if(targets.length>0){
+      const rows=targets.map(t=>({user_id:uid,asset_id:t.id,weight:t.w}));
+      await supabase.from("target_portfolio").upsert(rows,{onConflict:"user_id,asset_id"});
+    }
+    // Save positions
+    for(const p of positions){
+      await supabase.from("positions").upsert({
+        user_id:uid,asset_id:p.asset_id,broker:p.broker||null,
+        total_invested:p.invested,current_value:p.value
+      },{onConflict:"user_id,asset_id,broker"});
+    }
+    // Create first snapshot
+    if(positions.length>0){
+      const totalInv=positions.reduce((s,p)=>s+p.invested,0);
+      const totalVal=positions.reduce((s,p)=>s+p.value,0);
+      const month=new Date().toISOString().slice(0,7)+"-01";
+      await supabase.from("history").upsert({user_id:uid,month,total_invested:totalInv,total_value:totalVal},{onConflict:"user_id,month"});
+    }
+    setSaving(false);
+    go("/dashboard");
+  };
+
+  const pBar=<div style={{display:"flex",gap:6,marginBottom:28}}>
+    {[1,2,3].map(i=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=step?TH.green:TH.border}}/>)}
+  </div>;
+
+  const posGain=pos.invested&&pos.value?(Number(pos.value)-Number(pos.invested)):null;
+  const posPct=posGain!==null&&Number(pos.invested)>0?(posGain/Number(pos.invested)*100):null;
+
+  return(<div style={{maxWidth:440,margin:"0 auto",padding:"32px 20px"}}>
+    {pBar}
+    <div style={{fontSize:11,color:TH.light,marginBottom:8}}>{t.step} {step} {t.of} 3</div>
+
+    {step===1&&<div>
+      <h2 style={{fontFamily:TH.serif,fontSize:24,color:TH.dark,marginBottom:8}}>{t.t1}</h2>
+      <p style={{fontSize:14,color:TH.muted,marginBottom:24}}>{t.s1}</p>
+      <div style={{display:"grid",gap:10}}>
+        {t.profiles.map((label,i)=><div key={i} onClick={()=>setProfile(i)} style={{padding:"16px 18px",borderRadius:TH.r2,border:`1.5px solid ${profile===i?TH.green:TH.border}`,background:profile===i?TH.greenLight:TH.card,cursor:"pointer"}}>
+          <div style={{fontSize:14,fontWeight:600,color:profile===i?TH.greenText:TH.dark,marginBottom:3}}>{label}</div>
+          <div style={{fontSize:12,color:profile===i?TH.greenText:TH.muted}}>{t.profileDesc[i]}</div>
+        </div>)}
+      </div>
+      <button onClick={()=>setStep(2)} disabled={profile<0} style={{width:"100%",marginTop:24,padding:"14px",borderRadius:10,border:"none",background:profile>=0?TH.green:TH.border,color:profile>=0?"#fff":TH.muted,fontSize:15,fontWeight:600,cursor:profile>=0?"pointer":"default",fontFamily:TH.sans}}>{t.next}</button>
+    </div>}
+
+    {step===2&&<div>
+      <h2 style={{fontFamily:TH.serif,fontSize:24,color:TH.dark,marginBottom:8}}>{t.t2}</h2>
+      <p style={{fontSize:14,color:TH.muted,marginBottom:24}}>{t.s2}</p>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+        {t.templates.map((label,i)=><div key={i} onClick={()=>selectTpl(i)} style={{padding:"14px",borderRadius:TH.r2,border:`1.5px solid ${tpl===i?TH.green:TH.border}`,background:tpl===i?TH.greenLight:TH.card,cursor:"pointer",textAlign:"center"}}>
+          <div style={{fontSize:13,fontWeight:600,color:tpl===i?TH.greenText:TH.dark}}>{label}</div>
+        </div>)}
+      </div>
+      {targets.length>0&&<div style={{background:TH.bg2,borderRadius:TH.r,padding:14,marginBottom:16}}>
+        {targets.map((t2,i)=>{const a=ASSETS.find(a=>a.id===t2.id);return<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:i<targets.length-1?`1px solid ${TH.border}`:"none"}}>
+          <span style={{fontSize:13,fontWeight:500,color:TH.dark}}>{a?.name[lang]||t2.id}</span>
+          <span style={{fontSize:14,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{t2.w}%</span>
+        </div>;})}
+      </div>}
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={()=>setStep(1)} style={{flex:1,padding:"14px",borderRadius:10,border:`1.5px solid ${TH.border}`,background:"transparent",fontSize:14,fontWeight:600,color:TH.muted,cursor:"pointer",fontFamily:TH.sans}}>{t.prev}</button>
+        <button onClick={()=>setStep(3)} style={{flex:2,padding:"14px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{t.next}</button>
+      </div>
+      <div onClick={()=>setStep(3)} style={{textAlign:"center",marginTop:12,fontSize:13,color:TH.green,cursor:"pointer",fontWeight:500}}>{t.skip} →</div>
+    </div>}
+
+    {step===3&&<div>
+      <h2 style={{fontFamily:TH.serif,fontSize:24,color:TH.dark,marginBottom:8}}>{t.t3}</h2>
+      <p style={{fontSize:14,color:TH.muted,marginBottom:24}}>{t.s3}</p>
+
+      {positions.length>0&&<div style={{background:TH.bg2,borderRadius:TH.r,padding:14,marginBottom:16}}>
+        {positions.map((p,i)=>{const a=ASSETS.find(a=>a.id===p.asset_id);const g=p.value-p.invested;return<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:i<positions.length-1?`1px solid ${TH.border}`:"none",fontSize:13}}>
+          <span style={{fontWeight:500,color:TH.dark}}>{a?.name[lang]||p.asset_id}</span>
+          <span style={{fontWeight:600,color:g>=0?TH.green:TH.red}}>{g>=0?"+":""}€{Math.round(g)} ({(g/p.invested*100).toFixed(1)}%)</span>
+        </div>;})}
+      </div>}
+
+      <div style={{display:"grid",gap:10}}>
+        <select value={pos.asset_id} onChange={e=>setPos({...pos,asset_id:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}>
+          <option value="">{t.asset}...</option>
+          {ASSETS.map(a=><option key={a.id} value={a.id}>{a.name[lang]}</option>)}
+        </select>
+        <input placeholder={t.broker+" (MyInvestor, Degiro...)"} value={pos.broker} onChange={e=>setPos({...pos,broker:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <input type="number" placeholder={t.invested} value={pos.invested} onChange={e=>setPos({...pos,invested:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+          <input type="number" placeholder={t.value} value={pos.value} onChange={e=>setPos({...pos,value:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+        </div>
+        {posGain!==null&&<div style={{fontSize:13,color:posGain>=0?TH.green:TH.red,fontWeight:600,textAlign:"center"}}>{t.gain}: {posGain>=0?"+":""}€{Math.round(posGain)} ({posPct.toFixed(1)}%)</div>}
+        <button onClick={addPos} disabled={!pos.asset_id||!pos.invested||!pos.value} style={{padding:"12px",borderRadius:10,border:`1.5px solid ${TH.green}`,background:TH.greenLight,color:TH.greenText,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{positions.length>0?t.another:t.add}</button>
+      </div>
+
+      <div style={{display:"flex",gap:10,marginTop:20}}>
+        <button onClick={()=>setStep(2)} style={{flex:1,padding:"14px",borderRadius:10,border:`1.5px solid ${TH.border}`,background:"transparent",fontSize:14,fontWeight:600,color:TH.muted,cursor:"pointer",fontFamily:TH.sans}}>{t.prev}</button>
+        <button onClick={saveAll} disabled={saving||positions.length===0} style={{flex:2,padding:"14px",borderRadius:10,border:"none",background:positions.length>0?TH.green:TH.border,color:positions.length>0?"#fff":TH.muted,fontSize:14,fontWeight:600,cursor:positions.length>0?"pointer":"default",fontFamily:TH.sans}}>{saving?"...":(t.finish+" →")}</button>
+      </div>
+    </div>}
+  </div>);
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD — Main portfolio view
+   ══════════════════════════════════════════════ */
+function DashboardPage({go,lang,session}){
+  const t=lang==="es"?{
+    hi:"Buenos días",value:"Valor total",invested:"Aportado",gain:"Ganancia",
+    positions:"Mis posiciones",asset:"Activo",target:"Objetivo",broker:"Broker",
+    val:"Valor",real:"% Real",addMov:"Registrar movimiento",
+    rebalTitle:"Próxima aportación sugerida",
+    rebalDesc:"Destina tu próxima aportación a",
+    devLabel:"Desviación",loading:"Cargando...",noPos:"No tienes posiciones registradas",
+    addFirst:"Añadir primera posición",logout:"Cerrar sesión",
+    objective:"Obj",realW:"Real"
+  }:{
+    hi:"Good morning",value:"Total value",invested:"Invested",gain:"Gain",
+    positions:"My positions",asset:"Asset",target:"Target",broker:"Broker",
+    val:"Value",real:"% Real",addMov:"Record movement",
+    rebalTitle:"Suggested next contribution",
+    rebalDesc:"Allocate your next contribution to",
+    devLabel:"Deviation",loading:"Loading...",noPos:"No positions registered",
+    addFirst:"Add first position",logout:"Sign out",
+    objective:"Obj",realW:"Real"
+  };
+
+  const[positions,setPositions]=useState([]);
+  const[targets,setTargets]=useState([]);
+  const[profileData,setProfileData]=useState(null);
+  const[historyData,setSnapshots]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[showMov,setShowMov]=useState(false);
+  const[mov,setMov]=useState({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:""});
+  const[movSaving,setMovSaving]=useState(false);
+
+  const uid=session?.user?.id;
+  const userName=session?.user?.user_metadata?.full_name||session?.user?.user_metadata?.name||session?.user?.email?.split("@")[0]||"";
+
+  useEffect(()=>{
+    if(!uid)return;
+    const load=async()=>{
+      const[{data:pos},{data:tgt},{data:prof},{data:snap}]=await Promise.all([
+        supabase.from("positions").select("*").eq("user_id",uid),
+        supabase.from("target_portfolio").select("*").eq("user_id",uid),
+        supabase.from("profiles").select("*").eq("id",uid).single(),
+        supabase.from("history").select("*").eq("user_id",uid).order("month")
+      ]);
+      setPositions(pos||[]);setTargets(tgt||[]);setProfileData(prof);setSnapshots(snap||[]);
+      setLoading(false);
+    };
+    load();
+  },[uid]);
+
+  if(loading)return<div style={{textAlign:"center",padding:60,color:TH.muted}}>{t.loading}</div>;
+
+  const totalValue=positions.reduce((s,p)=>s+Number(p.current_value),0);
+  const totalInvested=positions.reduce((s,p)=>s+Number(p.total_invested),0);
+  const totalGain=totalValue-totalInvested;
+  const totalPct=totalInvested>0?(totalGain/totalInvested*100):0;
+
+  // Rebalance calculation
+  const targetMap={};targets.forEach(t=>{targetMap[t.asset_id]=Number(t.weight);});
+  let worstDev=null;
+  positions.forEach(p=>{
+    const realW=totalValue>0?(Number(p.current_value)/totalValue*100):0;
+    const tgtW=targetMap[p.asset_id]||0;
+    const dev=realW-tgtW;
+    if(tgtW>0&&(worstDev===null||dev<worstDev.dev)){
+      worstDev={asset_id:p.asset_id,dev,tgtW,realW};
+    }
+  });
+
+  const saveMov=async()=>{
+    if(!mov.asset_id||!mov.amount)return;
+    setMovSaving(true);
+    const amt=Number(mov.amount);
+    // Insert movement
+    await supabase.from("movements").insert({user_id:uid,asset_id:mov.asset_id,broker:mov.broker||null,type:mov.type,amount:amt,date:mov.date});
+    // Update position
+    const existing=positions.find(p=>p.asset_id===mov.asset_id&&(p.broker||"")===(mov.broker||""));
+    if(existing){
+      const newInv=mov.type==="sell"?Number(existing.total_invested)-amt:Number(existing.total_invested)+amt;
+      const newVal=mov.type==="sell"?Number(existing.current_value)-amt:Number(existing.current_value)+amt;
+      await supabase.from("positions").update({total_invested:Math.max(0,newInv),current_value:Math.max(0,newVal),updated_at:new Date().toISOString()}).eq("id",existing.id);
+    }else if(mov.type==="buy"){
+      await supabase.from("positions").insert({user_id:uid,asset_id:mov.asset_id,broker:mov.broker||null,total_invested:amt,current_value:amt});
+    }
+    // Refresh
+    const{data:pos}=await supabase.from("positions").select("*").eq("user_id",uid);
+    setPositions(pos||[]);
+    setShowMov(false);setMov({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:""});
+    setMovSaving(false);
+  };
+
+  const handleLogout=async()=>{await supabase.auth.signOut();go("/");};
+
+  if(positions.length===0&&!showMov)return<div style={{textAlign:"center",padding:60}}>
+    <div style={{fontFamily:TH.serif,fontSize:24,color:TH.dark,marginBottom:12}}>{t.noPos}</div>
+    <button onClick={()=>setShowMov(true)} style={{padding:"14px 28px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{t.addFirst}</button>
+  </div>;
+
+  return(<div>
+    {/* HEADER */}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+      <div style={{fontSize:15,color:TH.muted}}>{t.hi}, <span style={{fontWeight:600,color:TH.dark}}>{userName}</span></div>
+      <button onClick={handleLogout} style={{fontSize:11,color:TH.light,background:"none",border:"none",cursor:"pointer",fontFamily:TH.sans}}>{t.logout}</button>
+    </div>
+
+    {/* METRICS */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
+      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
+        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.value}</div>
+        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{fm(Math.round(totalValue))}€</div>
+      </div>
+      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
+        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.invested}</div>
+        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:TH.muted}}>{fm(Math.round(totalInvested))}€</div>
+      </div>
+      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
+        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.gain}</div>
+        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:totalGain>=0?TH.green:TH.red}}>{totalGain>=0?"+":""}{fm(Math.round(totalGain))}€</div>
+        <div style={{fontSize:11,fontWeight:600,color:totalGain>=0?TH.green:TH.red}}>{totalPct>=0?"+":""}{totalPct.toFixed(1)}%</div>
+      </div>
+    </div>
+
+    {/* CHART */}
+    {historyData.length>1&&<div style={{background:TH.card,borderRadius:TH.r2,padding:16,border:`1.5px solid ${TH.border}`,marginBottom:20}}>
+      <SvgChart lines={[historyData.map((s,i)=>({y:i,v:Number(s.total_value),inv:Number(s.total_invested)}))]} years={historyData.map((_,i)=>i)} labels={[t.value]} colors={[TH.green]} fill={true} yearLabel=""/>
+    </div>}
+
+    {/* POSITIONS */}
+    <div style={{background:TH.card,borderRadius:TH.r2,border:`1.5px solid ${TH.border}`,marginBottom:20,overflow:"hidden"}}>
+      <div style={{padding:"14px 16px",borderBottom:`1px solid ${TH.border}`,fontSize:13,fontWeight:700,color:TH.dark}}>{t.positions}</div>
+      {positions.map((p,i)=>{
+        const a=ASSETS.find(a=>a.id===p.asset_id);
+        const val=Number(p.current_value);const inv=Number(p.total_invested);
+        const gain=val-inv;const pct=inv>0?(gain/inv*100):0;
+        const realW=totalValue>0?(val/totalValue*100):0;
+        const tgtW=targetMap[p.asset_id]||0;
+        return<div key={i} style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:8,alignItems:"center",padding:"12px 16px",borderBottom:i<positions.length-1?`1px solid ${TH.border}`:"none"}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:600,color:TH.dark}}>{a?.name[lang]||p.asset_id}</div>
+            <div style={{fontSize:11,color:TH.light}}>{p.broker||""}{tgtW>0?` · ${t.objective} ${tgtW.toFixed(0)}%`:""}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,fontWeight:600,fontFamily:"monospace",color:TH.dark}}>{fm(Math.round(val))}€</div>
+            <div style={{fontSize:11,fontWeight:600,color:gain>=0?TH.green:TH.red}}>{gain>=0?"+":""}{pct.toFixed(1)}%</div>
+          </div>
+          <div style={{textAlign:"right",minWidth:44}}>
+            <div style={{fontSize:12,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{realW.toFixed(1)}%</div>
+          </div>
+        </div>;
+      })}
+    </div>
+
+    {/* DONUT + REBALANCE */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <div style={{background:TH.card,borderRadius:TH.r2,padding:16,border:`1.5px solid ${TH.border}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Donut items={positions.map(p=>{const a=ASSETS.find(a=>a.id===p.asset_id);return{name:a?.name[lang]||p.asset_id,w:totalValue>0?(Number(p.current_value)/totalValue*100):0,c:a?.color||"#999"};})} size={100}/>
+      </div>
+      {worstDev&&worstDev.dev<-2&&<div style={{background:TH.greenLight,borderRadius:TH.r2,padding:16,border:`1.5px solid #C6E6D5`,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+        <div style={{fontSize:11,fontWeight:700,color:TH.greenText,marginBottom:6}}>{t.rebalTitle}</div>
+        <div style={{fontSize:13,color:TH.greenText,lineHeight:1.5}}>{t.rebalDesc} <strong>{ASSETS.find(a=>a.id===worstDev.asset_id)?.name[lang]||worstDev.asset_id}</strong></div>
+        <div style={{fontSize:11,color:TH.green,marginTop:6}}>{t.objective}: {worstDev.tgtW.toFixed(0)}% → {t.realW}: {worstDev.realW.toFixed(1)}%</div>
+      </div>}
+    </div>
+
+    {/* ADD MOVEMENT BUTTON */}
+    <button onClick={()=>setShowMov(!showMov)} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:TH.green,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:TH.sans,marginBottom:16}}>+ {t.addMov}</button>
+
+    {/* MOVEMENT FORM */}
+    {showMov&&<div style={{background:TH.card,borderRadius:TH.r2,padding:18,border:`1.5px solid ${TH.border}`,marginBottom:20}}>
+      <div style={{display:"flex",gap:6,marginBottom:14}}>
+        {["buy","sell","dividend"].map(tp=><button key={tp} onClick={()=>setMov({...mov,type:tp})} style={{flex:1,padding:"8px",borderRadius:8,border:`1.5px solid ${mov.type===tp?TH.green:TH.border}`,background:mov.type===tp?TH.greenLight:TH.card,color:mov.type===tp?TH.greenText:TH.muted,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{tp==="buy"?(lang==="es"?"Compra":"Buy"):tp==="sell"?(lang==="es"?"Venta":"Sell"):(lang==="es"?"Dividendo":"Dividend")}</button>)}
+      </div>
+      <div style={{display:"grid",gap:10}}>
+        <input type="date" value={mov.date} onChange={e=>setMov({...mov,date:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+        <select value={mov.asset_id} onChange={e=>setMov({...mov,asset_id:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}>
+          <option value="">{lang==="es"?"Activo":"Asset"}...</option>
+          {positions.map(p=>{const a=ASSETS.find(a=>a.id===p.asset_id);return<option key={p.id} value={p.asset_id}>{a?.name[lang]||p.asset_id}</option>;})}
+          <option value="_new">{lang==="es"?"+ Añadir nuevo":"+ Add new"}</option>
+        </select>
+        <input placeholder="Broker" value={mov.broker} onChange={e=>setMov({...mov,broker:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+        <input type="number" placeholder={lang==="es"?"Importe (€)":"Amount (€)"} value={mov.amount} onChange={e=>setMov({...mov,amount:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
+        <button onClick={saveMov} disabled={movSaving||!mov.asset_id||!mov.amount} style={{padding:"12px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{movSaving?"...":(lang==="es"?"Registrar":"Record")}</button>
+      </div>
+    </div>}
+  </div>);
+}
+
+/* ══════════════════════════════════════════════
+   BOTTOM NAV — App navigation bar
+   ══════════════════════════════════════════════ */
+function BottomNav({go,path,lang}){
+  const items=[
+    {id:"/dashboard",icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,label:lang==="es"?"Cartera":"Portfolio"},
+    {id:"/analisis",icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>,label:lang==="es"?"Análisis":"Analysis",locked:true},
+    {id:"add",icon:null,label:""},
+    {id:"/simulador-cartera",icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,label:lang==="es"?"Simulador":"Simulator"},
+    {id:"/ajustes",icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,label:lang==="es"?"Ajustes":"Settings"}
+  ];
+  return<div style={{position:"fixed",bottom:0,left:0,right:0,background:TH.card,borderTop:`1px solid ${TH.border}`,display:"flex",justifyContent:"space-around",alignItems:"center",padding:"6px 0 env(safe-area-inset-bottom,8px)",zIndex:200}}>
+    {items.map((it,i)=>{
+      if(it.id==="add")return<div key={i} onClick={()=>go("/dashboard")} style={{width:48,height:48,borderRadius:"50%",background:TH.green,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",marginTop:-18,boxShadow:"0 2px 12px rgba(0,0,0,0.15)"}}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>;
+      const active=path===it.id;
+      return<div key={i} onClick={()=>!it.locked&&go(it.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:it.locked?"default":"pointer",opacity:it.locked?0.4:1,padding:"4px 8px"}}>
+        <div style={{color:active?TH.green:TH.muted}}>{it.icon}</div>
+        <span style={{fontSize:10,fontWeight:600,color:active?TH.green:TH.muted}}>{it.label}{it.locked?" 🔒":""}</span>
+      </div>;
+    })}
+  </div>;
+}
+
 export default function App(){
   const {path, go, simSlug} = useRouter();
   const[lang,setLangState]=useState(()=>{try{return localStorage.getItem("kartera_lang")||"es";}catch(e){return "es";}});
@@ -1083,6 +1539,15 @@ export default function App(){
   const t=T[lang];
   const sim=simSlug?SIMS.find(s=>s.slug===simSlug):null;
   const pageTitle = path==="/interes-compuesto" ? t.ci : path==="/simulador-cartera" ? t.sim : path==="/simulacion"&&sim ? sim.title[lang] : null;
+
+  /* Auth state */
+  const[session,setSession]=useState(null);
+  const[authLoading,setAuthLoading]=useState(true);
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=>{setSession(session);setAuthLoading(false);});
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((_,s)=>{setSession(s);setAuthLoading(false);});
+    return()=>subscription.unsubscribe();
+  },[]);
 
   /* Dynamic SEO */
   const seoMap={
@@ -1108,6 +1573,15 @@ export default function App(){
     if(!m){m=document.createElement("meta");m.name="description";document.head.appendChild(m);}
     m.content=seoDesc;
   }
+
+  if(authLoading&&(path==="/dashboard"||path==="/onboarding")){
+    return <div style={{fontFamily:TH.sans,background:TH.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontSize:14,color:TH.muted}}>Cargando...</div></div>;
+  }
+
+  /* Redirect logic */
+  if(path==="/dashboard"&&!session){go("/login");return null;}
+  if(path==="/onboarding"&&!session){go("/login");return null;}
+
   return(
     <div style={{fontFamily:TH.sans,background:TH.bg,minHeight:"100vh",color:TH.text,WebkitFontSmoothing:"antialiased"}}>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
@@ -1116,17 +1590,26 @@ export default function App(){
             <h1 onClick={()=>go("/")} style={{fontFamily:TH.serif,fontSize:24,fontWeight:400,cursor:"pointer",margin:0,color:TH.dark,letterSpacing:"-0.02em"}}>Kartera<span style={{color:TH.green}}>.</span></h1>
             {pageTitle&&path!=="/simulacion"&&<span style={{fontSize:11,color:TH.light,fontWeight:500}}>/ {pageTitle}</span>}
           </div>
-          <button onClick={()=>setLang(lang==="es"?"en":"es")} style={{background:TH.bg2,border:`1.5px solid ${TH.border}`,borderRadius:8,padding:"5px 12px",fontSize:11,color:TH.muted,cursor:"pointer",fontWeight:600,fontFamily:TH.sans}}>{lang==="es"?"EN":"ES"}</button>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <button onClick={()=>setLang(lang==="es"?"en":"es")} style={{background:TH.bg2,border:`1.5px solid ${TH.border}`,borderRadius:8,padding:"5px 12px",fontSize:11,color:TH.muted,cursor:"pointer",fontWeight:600,fontFamily:TH.sans}}>{lang==="es"?"EN":"ES"}</button>
+            {session?
+              <button onClick={()=>go("/dashboard")} style={{background:TH.green,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{lang==="es"?"Mi cartera":"My portfolio"}</button>
+              :<button onClick={()=>go("/login")} style={{background:TH.dark,color:TH.bg,border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{t.enter}</button>
+            }
+          </div>
         </div>
         {(path==="/interes-compuesto"||path==="/simulador-cartera")&&<div style={{display:"flex",background:TH.bg2,borderRadius:TH.r,padding:3,marginBottom:18,border:`1px solid ${TH.border}`}}>
           <button onClick={()=>go("/interes-compuesto")} style={{flex:1,padding:"10px 0",borderRadius:10,border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:TH.sans,background:path==="/interes-compuesto"?TH.card:"transparent",color:path==="/interes-compuesto"?TH.dark:TH.muted,boxShadow:path==="/interes-compuesto"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.ci}</button>
           <button onClick={()=>go("/simulador-cartera")} style={{flex:1,padding:"10px 0",borderRadius:10,border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:TH.sans,background:path==="/simulador-cartera"?TH.card:"transparent",color:path==="/simulador-cartera"?TH.dark:TH.muted,boxShadow:path==="/simulador-cartera"?"0 1px 3px rgba(0,0,0,0.06)":"none"}}>{t.sim}</button>
         </div>}
         {path==="/"&&<HomePage t={t} go={go} lang={lang}/>}
+        {path==="/login"&&<LoginPage go={go} lang={lang}/>}
+        {path==="/onboarding"&&session&&<OnboardingPage go={go} lang={lang} session={session}/>}
+        {path==="/dashboard"&&session&&<DashboardPage go={go} lang={lang} session={session}/>}
         {path==="/interes-compuesto"&&<CompoundCalc go={go} t={t}/>}
         {path==="/simulador-cartera"&&<PortfolioSim t={t} lang={lang}/>}
         {path==="/simulacion"&&sim&&<SimulationPage sim={sim} t={t} lang={lang} go={go}/>}
-        {path==="/simulacion"&&!sim&&<div style={{textAlign:"center",padding:40}}><p style={{fontSize:16,color:TH.muted}}>{ lang==="es"?"Simulación no encontrada":"Simulation not found"}</p><button onClick={()=>go("/")} style={{marginTop:12,background:TH.green,color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{lang==="es"?"Volver al inicio":"Back to home"}</button></div>}
+        {path==="/simulacion"&&!sim&&<div style={{textAlign:"center",padding:40}}><p style={{fontSize:16,color:TH.muted}}>{lang==="es"?"Simulación no encontrada":"Simulation not found"}</p><button onClick={()=>go("/")} style={{marginTop:12,background:TH.green,color:"#fff",border:"none",borderRadius:10,padding:"12px 24px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{lang==="es"?"Volver al inicio":"Back to home"}</button></div>}
         <div style={{textAlign:"center",marginTop:24,fontSize:10,color:TH.border}}>kartera.pro 2026</div>
       </div>
     </div>
