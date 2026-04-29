@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/interes-compuesto", "destination": "/" },
     { "source": "/simulador-cartera", "destination": "/" },
-    { "source": "/simulacion/:slug", "destination": "/" }
+    { "source": "/simulacion/:slug", "destination": "/" },
+    { "source": "/login", "destination": "/" },
+    { "source": "/onboarding", "destination": "/" },
+    { "source": "/dashboard", "destination": "/" }
   ]
 }
