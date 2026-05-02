@@ -1,10 +1,11 @@
 {
   "rewrites": [
-    { "source": "/interes-compuesto", "destination": "/" },
-    { "source": "/simulador-cartera", "destination": "/" },
-    { "source": "/simulacion/:slug", "destination": "/" },
-    { "source": "/login", "destination": "/" },
-    { "source": "/onboarding", "destination": "/" },
-    { "source": "/dashboard", "destination": "/" }
+    { "source": "/", "destination": "/landing.html" },
+    { "source": "/interes-compuesto", "destination": "/index.html" },
+    { "source": "/simulador-cartera", "destination": "/index.html" },
+    { "source": "/simulacion/:slug", "destination": "/index.html" },
+    { "source": "/login", "destination": "/index.html" },
+    { "source": "/onboarding", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" }
   ]
 }
