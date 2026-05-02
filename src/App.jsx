@@ -1161,9 +1161,9 @@ function LoginPage({go,lang}){
    ONBOARDING — 3-step setup
    ══════════════════════════════════════════════ */
 const TEMPLATES={
-  conservadora:[{id:"bond_global",w:60},{id:"msci_world",w:30},{id:"gold",w:10}],
-  equilibrada:[{id:"msci_world",w:60},{id:"bond_global",w:30},{id:"gold",w:10}],
-  agresiva:[{id:"msci_world",w:80},{id:"btc",w:10},{id:"gold",w:10}]
+  conservadora:[{id:"Bonos Global",w:60},{id:"MSCI World",w:30},{id:"Oro",w:10}],
+  equilibrada:[{id:"MSCI World",w:60},{id:"Bonos Global",w:30},{id:"Oro",w:10}],
+  agresiva:[{id:"MSCI World",w:80},{id:"Bitcoin",w:10},{id:"Oro",w:10}]
 };
 
 function OnboardingPage({go,lang,session}){
@@ -1227,8 +1227,8 @@ function OnboardingPage({go,lang,session}){
     // Save positions
     for(const p of positions){
       await supabase.from("positions").upsert({
-        user_id:uid,asset_id:p.asset_id,broker:p.broker||null,
-        total_invested:p.invested,current_value:p.value
+        user_id:uid,asset_id:p.asset_id,asset_name:p.asset_id,broker:p.broker||null,
+        invested:p.invested,current_value:p.value
       },{onConflict:"user_id,asset_id,broker"});
     }
     // Create first snapshot
@@ -1274,8 +1274,8 @@ function OnboardingPage({go,lang,session}){
         </div>)}
       </div>
       {targets.length>0&&<div style={{background:TH.bg2,borderRadius:TH.r,padding:14,marginBottom:16}}>
-        {targets.map((t2,i)=>{const a=ASSETS.find(a=>a.id===t2.id);return<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:i<targets.length-1?`1px solid ${TH.border}`:"none"}}>
-          <span style={{fontSize:13,fontWeight:500,color:TH.dark}}>{a?.name[lang]||t2.id}</span>
+        {targets.map((t2,i)=>{return<div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:i<targets.length-1?`1px solid ${TH.border}`:"none"}}>
+          <span style={{fontSize:13,fontWeight:500,color:TH.dark}}>{t2.id}</span>
           <span style={{fontSize:14,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{t2.w}%</span>
         </div>;})}
       </div>}
@@ -1291,17 +1291,14 @@ function OnboardingPage({go,lang,session}){
       <p style={{fontSize:14,color:TH.muted,marginBottom:24}}>{t.s3}</p>
 
       {positions.length>0&&<div style={{background:TH.bg2,borderRadius:TH.r,padding:14,marginBottom:16}}>
-        {positions.map((p,i)=>{const a=ASSETS.find(a=>a.id===p.asset_id);const g=p.value-p.invested;return<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:i<positions.length-1?`1px solid ${TH.border}`:"none",fontSize:13}}>
-          <span style={{fontWeight:500,color:TH.dark}}>{a?.name[lang]||p.asset_id}</span>
+        {positions.map((p,i)=>{const g=p.value-p.invested;return<div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:i<positions.length-1?`1px solid ${TH.border}`:"none",fontSize:13}}>
+          <span style={{fontWeight:500,color:TH.dark}}>{p.asset_id}</span>
           <span style={{fontWeight:600,color:g>=0?TH.green:TH.red}}>{g>=0?"+":""}€{Math.round(g)} ({(g/p.invested*100).toFixed(1)}%)</span>
         </div>;})}
       </div>}
 
       <div style={{display:"grid",gap:10}}>
-        <select value={pos.asset_id} onChange={e=>setPos({...pos,asset_id:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}>
-          <option value="">{t.asset}...</option>
-          {ASSETS.map(a=><option key={a.id} value={a.id}>{a.name[lang]}</option>)}
-        </select>
+        <input placeholder={lang==="es"?"Activo (ej: MSCI World, Bitcoin...)":"Asset (e.g. MSCI World, Bitcoin...)"} value={pos.asset_id} onChange={e=>setPos({...pos,asset_id:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
         <input placeholder={t.broker+" (MyInvestor, Degiro...)"} value={pos.broker} onChange={e=>setPos({...pos,broker:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <input type="number" placeholder={t.invested} value={pos.invested} onChange={e=>setPos({...pos,invested:e.target.value})} style={{padding:"12px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:14,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
@@ -1323,34 +1320,58 @@ function OnboardingPage({go,lang,session}){
    DASHBOARD — Main portfolio view
    ══════════════════════════════════════════════ */
 function DashboardPage({go,lang,session}){
+  /* ── Dark theme tokens (only for dashboard) ── */
+  const D={
+    bg:"#0d0b08",s1:"#161412",s2:"#1c1a17",s3:"#262420",
+    t1:"#eef1f8",t2:"#a8adb8",t3:"#5c6170",
+    border:"rgba(255,255,255,0.06)",
+    accent:"#b5e834",accentDim:"rgba(181,232,52,0.1)",
+    gain:"#5dca8a",gainDim:"rgba(93,202,138,0.12)",
+    loss:"#e86060",lossDim:"rgba(232,96,96,0.12)",
+    amber:"#fbbf24",
+    sans:"'Plus Jakarta Sans','Space Grotesk',system-ui,sans-serif",
+  };
+  const fmtD=n=>new Intl.NumberFormat("es-ES",{minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+  const fmtP=n=>`${n>=0?"+":""}${n.toFixed(1)}%`;
+  const COLORS=["#b5e834","#4d9eff","#f7931a","#c084fc","#fb923c","#e86060","#5dca8a","#60a5fa"];
+
   const t=lang==="es"?{
-    hi:"Buenos días",value:"Valor total",invested:"Aportado",gain:"Ganancia",
-    positions:"Mis posiciones",asset:"Activo",target:"Objetivo",broker:"Broker",
-    val:"Valor",real:"% Real",addMov:"Registrar movimiento",
-    rebalTitle:"Próxima aportación sugerida",
-    rebalDesc:"Destina tu próxima aportación a",
-    devLabel:"Desviación",loading:"Cargando...",noPos:"No tienes posiciones registradas",
-    addFirst:"Añadir primera posición",logout:"Cerrar sesión",
-    objective:"Obj",realW:"Real"
+    patrimonio:"Patrimonio total",desde:"desde el inicio",esteMes:"Este mes",
+    aportado:"Aportado total",rentabilidad:"Rentabilidad",aportMes:"Aportación/mes",mejorActivo:"Mejor activo",
+    evolucion:"Evolución",distribucion:"Distribución",actualVsObj:"Actual vs objetivo",
+    posiciones:"Posiciones",añadir:"+ Añadir",
+    rebalPendiente:"Rebalanceo pendiente",sobreObj:"sobre objetivo",bajoObj:"bajo objetivo",
+    proxAport:"Próxima aportación",loading:"Cargando...",
+    noPos:"No tienes posiciones registradas",addFirst:"Añadir primera posición",logout:"Cerrar sesión",
+    obj:"Obj",compra:"Compra",venta:"Venta",dividendo:"Dividendo",registrar:"Guardar movimiento",
+    activo:"Activo",broker:"Dónde lo tienes",importe:"Importe (€)",fecha:"Fecha",
+    participaciones:"Participaciones",precio:"Precio (€)",comision:"Comisión",notas:"Notas",masDetalles:"Más detalles",
+    registrarMov:"Registrar movimiento",escribeActivo:"Escribe el activo como tú lo llamas",
+    noConecta:"Kartera no se conecta a ningún banco. Solo tú introduces tus datos.",guardado:"✓ Guardado"
   }:{
-    hi:"Good morning",value:"Total value",invested:"Invested",gain:"Gain",
-    positions:"My positions",asset:"Asset",target:"Target",broker:"Broker",
-    val:"Value",real:"% Real",addMov:"Record movement",
-    rebalTitle:"Suggested next contribution",
-    rebalDesc:"Allocate your next contribution to",
-    devLabel:"Deviation",loading:"Loading...",noPos:"No positions registered",
-    addFirst:"Add first position",logout:"Sign out",
-    objective:"Obj",realW:"Real"
+    patrimonio:"Total portfolio",desde:"since start",esteMes:"This month",
+    aportado:"Total invested",rentabilidad:"Return",aportMes:"Monthly",mejorActivo:"Best asset",
+    evolucion:"Evolution",distribucion:"Distribution",actualVsObj:"Current vs target",
+    posiciones:"Positions",añadir:"+ Add",
+    rebalPendiente:"Rebalancing needed",sobreObj:"above target",bajoObj:"below target",
+    proxAport:"Next contribution",loading:"Loading...",
+    noPos:"No positions registered",addFirst:"Add first position",logout:"Sign out",
+    obj:"Tgt",compra:"Buy",venta:"Sell",dividendo:"Dividend",registrar:"Save movement",
+    activo:"Asset",broker:"Where you hold it",importe:"Amount (€)",fecha:"Date",
+    participaciones:"Shares",precio:"Price (€)",comision:"Commission",notas:"Notes",masDetalles:"More details",
+    registrarMov:"Record movement",escribeActivo:"Name the asset however you like",
+    noConecta:"Kartera doesn't connect to any bank. Only you enter your data.",guardado:"✓ Saved"
   };
 
   const[positions,setPositions]=useState([]);
   const[targets,setTargets]=useState([]);
-  const[profileData,setProfileData]=useState(null);
-  const[historyData,setSnapshots]=useState([]);
+  const[historyData,setHistoryData]=useState([]);
   const[loading,setLoading]=useState(true);
   const[showMov,setShowMov]=useState(false);
-  const[mov,setMov]=useState({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:""});
+  const[mov,setMov]=useState({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:"",shares:"",price:"",commission:"",notes:""});
   const[movSaving,setMovSaving]=useState(false);
+  const[showDetails,setShowDetails]=useState(false);
+  const[expanded,setExpanded]=useState(null);
 
   const uid=session?.user?.id;
   const userName=session?.user?.user_metadata?.full_name||session?.user?.user_metadata?.name||session?.user?.email?.split("@")[0]||"";
@@ -1358,153 +1379,265 @@ function DashboardPage({go,lang,session}){
   useEffect(()=>{
     if(!uid)return;
     const load=async()=>{
-      const[{data:pos},{data:tgt},{data:prof},{data:snap}]=await Promise.all([
-        supabase.from("positions").select("*").eq("user_id",uid),
+      const[{data:pos},{data:tgt},{data:snap}]=await Promise.all([
+        supabase.from("positions").select("*").eq("user_id",uid).order("created_at"),
         supabase.from("target_portfolio").select("*").eq("user_id",uid),
-        supabase.from("profiles").select("*").eq("id",uid).single(),
         supabase.from("history").select("*").eq("user_id",uid).order("month")
       ]);
-      setPositions(pos||[]);setTargets(tgt||[]);setProfileData(prof);setSnapshots(snap||[]);
+      setPositions(pos||[]);setTargets(tgt||[]);setHistoryData(snap||[]);
       setLoading(false);
     };
     load();
   },[uid]);
 
-  if(loading)return<div style={{textAlign:"center",padding:60,color:TH.muted}}>{t.loading}</div>;
+  if(loading)return<div style={{background:D.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:D.t3,fontFamily:D.sans}}>{t.loading}</div>;
 
   const totalValue=positions.reduce((s,p)=>s+Number(p.current_value),0);
-  const totalInvested=positions.reduce((s,p)=>s+Number(p.total_invested),0);
+  const totalInvested=positions.reduce((s,p)=>s+Number(p.invested),0);
   const totalGain=totalValue-totalInvested;
   const totalPct=totalInvested>0?(totalGain/totalInvested*100):0;
 
-  // Rebalance calculation
   const targetMap={};targets.forEach(t=>{targetMap[t.asset_id]=Number(t.weight);});
-  let worstDev=null;
-  positions.forEach(p=>{
-    const realW=totalValue>0?(Number(p.current_value)/totalValue*100):0;
-    const tgtW=targetMap[p.asset_id]||0;
-    const dev=realW-tgtW;
-    if(tgtW>0&&(worstDev===null||dev<worstDev.dev)){
-      worstDev={asset_id:p.asset_id,dev,tgtW,realW};
-    }
-  });
 
+  // Rebalance data
+  const rebalData=positions.map((p,i)=>{
+    const val=Number(p.current_value);const inv=Number(p.invested);
+    const realW=totalValue>0?(val/totalValue*100):0;
+    const tgtW=targetMap[p.asset_id]||0;
+    const gain=inv>0?((val-inv)/inv*100):0;
+    return{...p,val,inv,realW,tgtW,diff:realW-tgtW,gain,color:COLORS[i%COLORS.length]};
+  });
+  const worstDev=rebalData.filter(r=>r.tgtW>0).sort((a,b)=>a.diff-b.diff)[0]||null;
+  const bestAsset=rebalData.length>0?rebalData.reduce((best,r)=>r.gain>best.gain?r:best,rebalData[0]):null;
+
+  // Chart
+  const chartData=historyData.map(s=>Number(s.total_value));
+  const chartMin=chartData.length>0?Math.min(...chartData)*0.96:0;
+  const chartMax=chartData.length>0?Math.max(...chartData)*1.01:100;
+  const chartRange=chartMax-chartMin||1;
+  const chartW=350,chartH=110;
+  const chartPts=chartData.map((v,i)=>{const x=(i/(Math.max(chartData.length-1,1)))*chartW;const y=chartH-((v-chartMin)/chartRange)*(chartH-8)-4;return`${x.toFixed(1)},${y.toFixed(1)}`;});
+  const chartLine=chartPts.length>1?chartPts.map((p,i)=>`${i===0?"M":"L"}${p}`).join(" "):"";
+  const chartArea=chartLine?`${chartLine} L${chartW},${chartH} L0,${chartH} Z`:"";
+
+  // Save movement
   const saveMov=async()=>{
     if(!mov.asset_id||!mov.amount)return;
     setMovSaving(true);
     const amt=Number(mov.amount);
-    // Insert movement
-    await supabase.from("movements").insert({user_id:uid,asset_id:mov.asset_id,broker:mov.broker||null,type:mov.type,amount:amt,date:mov.date});
-    // Update position
+    await supabase.from("movements").insert({user_id:uid,asset_id:mov.asset_id,broker:mov.broker||null,type:mov.type,amount:amt,date:mov.date,shares:mov.shares?Number(mov.shares):null,price:mov.price?Number(mov.price):null,commission:mov.commission?Number(mov.commission):0,notes:mov.notes||null});
     const existing=positions.find(p=>p.asset_id===mov.asset_id&&(p.broker||"")===(mov.broker||""));
     if(existing){
-      const newInv=mov.type==="sell"?Number(existing.total_invested)-amt:Number(existing.total_invested)+amt;
+      const newInv=mov.type==="sell"?Number(existing.invested)-amt:Number(existing.invested)+amt;
       const newVal=mov.type==="sell"?Number(existing.current_value)-amt:Number(existing.current_value)+amt;
-      await supabase.from("positions").update({total_invested:Math.max(0,newInv),current_value:Math.max(0,newVal),updated_at:new Date().toISOString()}).eq("id",existing.id);
+      await supabase.from("positions").update({invested:Math.max(0,newInv),current_value:Math.max(0,newVal),updated_at:new Date().toISOString()}).eq("id",existing.id);
     }else if(mov.type==="buy"){
-      await supabase.from("positions").insert({user_id:uid,asset_id:mov.asset_id,broker:mov.broker||null,total_invested:amt,current_value:amt});
+      await supabase.from("positions").insert({user_id:uid,asset_id:mov.asset_id,asset_name:mov.asset_id,broker:mov.broker||null,invested:amt,current_value:amt});
     }
-    // Refresh
-    const{data:pos}=await supabase.from("positions").select("*").eq("user_id",uid);
+    const{data:pos}=await supabase.from("positions").select("*").eq("user_id",uid).order("created_at");
     setPositions(pos||[]);
-    setShowMov(false);setMov({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:""});
-    setMovSaving(false);
+    setShowMov(false);setMov({type:"buy",date:new Date().toISOString().slice(0,10),asset_id:"",broker:"",amount:"",shares:"",price:"",commission:"",notes:""});
+    setMovSaving(false);setShowDetails(false);
   };
 
   const handleLogout=async()=>{await supabase.auth.signOut();go("/");};
 
-  if(positions.length===0&&!showMov)return<div style={{textAlign:"center",padding:60}}>
-    <div style={{fontFamily:TH.serif,fontSize:24,color:TH.dark,marginBottom:12}}>{t.noPos}</div>
-    <button onClick={()=>setShowMov(true)} style={{padding:"14px 28px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{t.addFirst}</button>
-  </div>;
+  const inp={width:"100%",padding:"12px 14px",background:D.s2,border:`1px solid ${D.border}`,borderRadius:10,color:D.t1,fontSize:15,fontFamily:D.sans,outline:"none",boxSizing:"border-box"};
+  const lbl={fontSize:10,color:D.t3,letterSpacing:"0.07em",display:"block",marginBottom:7};
 
-  return(<div>
-    {/* HEADER */}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-      <div style={{fontSize:15,color:TH.muted}}>{t.hi}, <span style={{fontWeight:600,color:TH.dark}}>{userName}</span></div>
-      <button onClick={handleLogout} style={{fontSize:11,color:TH.light,background:"none",border:"none",cursor:"pointer",fontFamily:TH.sans}}>{t.logout}</button>
+  /* ── MOVEMENT MODAL ── */
+  if(showMov)return(
+    <div style={{background:D.bg,minHeight:"100vh",fontFamily:D.sans,color:D.t1}}>
+      <div style={{padding:"18px 20px 14px",display:"flex",alignItems:"center",gap:12,borderBottom:`1px solid ${D.border}`}}>
+        <button onClick={()=>{setShowMov(false);setShowDetails(false);}} style={{background:"none",border:"none",color:D.t2,cursor:"pointer",display:"flex",padding:4}}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M14 18L7 11L14 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <div>
+          <div style={{fontSize:17,fontWeight:700,letterSpacing:"-0.02em"}}>{t.registrarMov}</div>
+          <div style={{fontSize:11,color:D.t3,marginTop:1}}>{t.escribeActivo}</div>
+        </div>
+      </div>
+      <div style={{padding:20,display:"flex",flexDirection:"column",gap:18}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,padding:4,background:D.s2,borderRadius:11,border:`1px solid ${D.border}`}}>
+          {[["buy",t.compra],["sell",t.venta],["dividend",t.dividendo]].map(([v,l])=>(
+            <button key={v} onClick={()=>setMov({...mov,type:v})} style={{padding:10,borderRadius:8,fontFamily:"inherit",cursor:"pointer",fontSize:13,fontWeight:600,border:"none",background:mov.type===v?(v==="buy"?D.gain:v==="sell"?D.loss:D.amber):"transparent",color:mov.type===v?D.bg:D.t3,transition:"all 0.18s"}}>{l}</button>
+          ))}
+        </div>
+        <div><label style={lbl}>{t.activo}</label><input value={mov.asset_id} onChange={e=>setMov({...mov,asset_id:e.target.value})} placeholder={lang==="es"?'Ej. "MSCI World Vanguard", "Bitcoin"...':'E.g. "MSCI World", "Bitcoin"...'} style={inp}/></div>
+        <div><label style={lbl}>{t.broker}</label><input value={mov.broker} onChange={e=>setMov({...mov,broker:e.target.value})} placeholder={lang==="es"?'Ej. "MyInvestor", "Coinbase"...':'E.g. "MyInvestor", "Coinbase"...'} style={inp}/></div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <div><label style={lbl}>{t.importe}</label><input type="number" value={mov.amount} onChange={e=>setMov({...mov,amount:e.target.value})} placeholder="0.00" style={inp}/></div>
+          <div><label style={lbl}>{t.fecha}</label><input type="date" value={mov.date} onChange={e=>setMov({...mov,date:e.target.value})} style={inp}/></div>
+        </div>
+        <button onClick={()=>setShowDetails(!showDetails)} style={{background:"none",border:"none",color:D.t3,fontSize:12,cursor:"pointer",fontFamily:D.sans,textAlign:"left"}}>{showDetails?"▲":"▾"} {t.masDetalles}</button>
+        {showDetails&&<div style={{display:"grid",gap:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            <div><label style={lbl}>{t.participaciones}</label><input type="number" value={mov.shares} onChange={e=>setMov({...mov,shares:e.target.value})} placeholder="0.00" style={inp}/></div>
+            <div><label style={lbl}>{t.precio}</label><input type="number" value={mov.price} onChange={e=>setMov({...mov,price:e.target.value})} placeholder="0.00" style={inp}/></div>
+          </div>
+          <div><label style={lbl}>{t.comision}</label><input type="number" value={mov.commission} onChange={e=>setMov({...mov,commission:e.target.value})} placeholder="0" style={inp}/></div>
+          <div><label style={lbl}>{t.notas}</label><input value={mov.notes} onChange={e=>setMov({...mov,notes:e.target.value})} placeholder="" style={inp}/></div>
+        </div>}
+        <button onClick={saveMov} disabled={movSaving||!mov.asset_id||!mov.amount} style={{padding:15,borderRadius:12,border:"none",cursor:"pointer",fontSize:15,fontWeight:700,fontFamily:"inherit",background:D.accent,color:D.bg,opacity:(!mov.asset_id||!mov.amount)&&!movSaving?0.4:1}}>{movSaving?t.guardado:t.registrar}</button>
+        <div style={{fontSize:11,color:D.t3,textAlign:"center",lineHeight:1.6}}>{t.noConecta}</div>
+      </div>
     </div>
+  );
 
-    {/* METRICS */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
-      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
-        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.value}</div>
-        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{fm(Math.round(totalValue))}€</div>
-      </div>
-      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
-        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.invested}</div>
-        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:TH.muted}}>{fm(Math.round(totalInvested))}€</div>
-      </div>
-      <div style={{background:TH.card,borderRadius:TH.r2,padding:"14px 12px",border:`1.5px solid ${TH.border}`}}>
-        <div style={{fontSize:10,color:TH.light,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{t.gain}</div>
-        <div style={{fontSize:20,fontWeight:700,fontFamily:"monospace",color:totalGain>=0?TH.green:TH.red}}>{totalGain>=0?"+":""}{fm(Math.round(totalGain))}€</div>
-        <div style={{fontSize:11,fontWeight:600,color:totalGain>=0?TH.green:TH.red}}>{totalPct>=0?"+":""}{totalPct.toFixed(1)}%</div>
-      </div>
+  /* ── EMPTY STATE ── */
+  if(positions.length===0)return(
+    <div style={{background:D.bg,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:D.sans,color:D.t1,padding:40}}>
+      <div style={{fontSize:48,fontWeight:700,letterSpacing:"-0.04em",marginBottom:8,color:D.t1}}>0 <span style={{fontSize:24,fontWeight:300,color:D.t3}}>€</span></div>
+      <div style={{fontSize:16,color:D.t3,marginBottom:24}}>{t.noPos}</div>
+      <button onClick={()=>setShowMov(true)} style={{padding:"14px 32px",borderRadius:12,border:"none",background:D.accent,color:D.bg,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:D.sans}}>{t.addFirst}</button>
+      <button onClick={handleLogout} style={{marginTop:16,background:"none",border:"none",color:D.t3,fontSize:12,cursor:"pointer",fontFamily:D.sans}}>{t.logout}</button>
     </div>
+  );
 
-    {/* CHART */}
-    {historyData.length>1&&<div style={{background:TH.card,borderRadius:TH.r2,padding:16,border:`1.5px solid ${TH.border}`,marginBottom:20}}>
-      <SvgChart lines={[historyData.map((s,i)=>({y:i,v:Number(s.total_value),inv:Number(s.total_invested)}))]} years={historyData.map((_,i)=>i)} labels={[t.value]} colors={[TH.green]} fill={true} yearLabel=""/>
-    </div>}
-
-    {/* POSITIONS */}
-    <div style={{background:TH.card,borderRadius:TH.r2,border:`1.5px solid ${TH.border}`,marginBottom:20,overflow:"hidden"}}>
-      <div style={{padding:"14px 16px",borderBottom:`1px solid ${TH.border}`,fontSize:13,fontWeight:700,color:TH.dark}}>{t.positions}</div>
-      {positions.map((p,i)=>{
-        const a=ASSETS.find(a=>a.id===p.asset_id);
-        const val=Number(p.current_value);const inv=Number(p.total_invested);
-        const gain=val-inv;const pct=inv>0?(gain/inv*100):0;
-        const realW=totalValue>0?(val/totalValue*100):0;
-        const tgtW=targetMap[p.asset_id]||0;
-        return<div key={i} style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:8,alignItems:"center",padding:"12px 16px",borderBottom:i<positions.length-1?`1px solid ${TH.border}`:"none"}}>
+  /* ── DASHBOARD ── */
+  return(
+    <div style={{background:D.bg,minHeight:"100vh",fontFamily:D.sans,color:D.t1,paddingBottom:90}}>
+      {/* Header */}
+      <div style={{padding:"20px 20px 0"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{fontSize:14,color:D.t3}}>{userName}</div>
+          <button onClick={handleLogout} style={{fontSize:11,color:D.t3,background:"none",border:"none",cursor:"pointer",fontFamily:D.sans}}>{t.logout}</button>
+        </div>
+        <div style={{fontSize:11,color:D.t3,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:8}}>{t.patrimonio}</div>
+        <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:10}}>
           <div>
-            <div style={{fontSize:13,fontWeight:600,color:TH.dark}}>{a?.name[lang]||p.asset_id}</div>
-            <div style={{fontSize:11,color:TH.light}}>{p.broker||""}{tgtW>0?` · ${t.objective} ${tgtW.toFixed(0)}%`:""}</div>
+            <div style={{fontSize:44,fontWeight:700,letterSpacing:"-0.04em",lineHeight:1}}>{fmtD(Math.round(totalValue))}<span style={{fontSize:22,fontWeight:300,color:D.t2,marginLeft:4}}>€</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
+              <span style={{fontSize:14,fontWeight:600,color:totalGain>=0?D.gain:D.loss,background:totalGain>=0?D.gainDim:D.lossDim,padding:"2px 8px",borderRadius:5}}>{fmtP(totalPct)}</span>
+              <span style={{fontSize:13,color:totalGain>=0?D.gain:D.loss,fontWeight:500}}>{totalGain>=0?"+":""}{fmtD(Math.round(totalGain))} €</span>
+              <span style={{fontSize:12,color:D.t3}}>{t.desde}</span>
+            </div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:13,fontWeight:600,fontFamily:"monospace",color:TH.dark}}>{fm(Math.round(val))}€</div>
-            <div style={{fontSize:11,fontWeight:600,color:gain>=0?TH.green:TH.red}}>{gain>=0?"+":""}{pct.toFixed(1)}%</div>
-          </div>
-          <div style={{textAlign:"right",minWidth:44}}>
-            <div style={{fontSize:12,fontWeight:700,fontFamily:"monospace",color:TH.dark}}>{realW.toFixed(1)}%</div>
-          </div>
-        </div>;
-      })}
-    </div>
-
-    {/* DONUT + REBALANCE */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
-      <div style={{background:TH.card,borderRadius:TH.r2,padding:16,border:`1.5px solid ${TH.border}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <Donut items={positions.map(p=>{const a=ASSETS.find(a=>a.id===p.asset_id);return{name:a?.name[lang]||p.asset_id,w:totalValue>0?(Number(p.current_value)/totalValue*100):0,c:a?.color||"#999"};})} size={100}/>
+        </div>
+        {/* Stats grid */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+          {[
+            {label:t.aportado,val:`${fmtD(Math.round(totalInvested))} €`,sub:`${positions.length} activos`},
+            {label:t.rentabilidad,val:fmtP(totalPct),sub:"TWRR",c:totalGain>=0?D.gain:D.loss},
+            {label:t.aportMes,val:`-- €`,sub:"registra movimientos"},
+            {label:t.mejorActivo,val:bestAsset?fmtP(bestAsset.gain):"--",sub:bestAsset?(bestAsset.asset_name||bestAsset.asset_id):"",c:bestAsset&&bestAsset.gain>=0?D.gain:D.loss},
+          ].map(s=>(
+            <div key={s.label} style={{padding:"12px 14px",background:D.s1,borderRadius:10,border:`1px solid ${D.border}`}}>
+              <div style={{fontSize:10,color:D.t3,marginBottom:4}}>{s.label}</div>
+              <div style={{fontSize:16,fontWeight:700,color:s.c||D.t1,letterSpacing:"-0.01em"}}>{s.val}</div>
+              <div style={{fontSize:10,color:D.t3,marginTop:2}}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
       </div>
-      {worstDev&&worstDev.dev<-2&&<div style={{background:TH.greenLight,borderRadius:TH.r2,padding:16,border:`1.5px solid #C6E6D5`,display:"flex",flexDirection:"column",justifyContent:"center"}}>
-        <div style={{fontSize:11,fontWeight:700,color:TH.greenText,marginBottom:6}}>{t.rebalTitle}</div>
-        <div style={{fontSize:13,color:TH.greenText,lineHeight:1.5}}>{t.rebalDesc} <strong>{ASSETS.find(a=>a.id===worstDev.asset_id)?.name[lang]||worstDev.asset_id}</strong></div>
-        <div style={{fontSize:11,color:TH.green,marginTop:6}}>{t.objective}: {worstDev.tgtW.toFixed(0)}% → {t.realW}: {worstDev.realW.toFixed(1)}%</div>
+
+      {/* Chart */}
+      {chartData.length>1&&<div style={{padding:"0 20px 14px",borderBottom:`1px solid ${D.border}`}}>
+        <div style={{fontSize:11,color:D.t3,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:10}}>{t.evolucion}</div>
+        <svg width="100%" height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="none" style={{display:"block",overflow:"visible"}}>
+          <defs><linearGradient id="dbGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={D.accent} stopOpacity="0.15"/><stop offset="85%" stopColor={D.accent} stopOpacity="0"/></linearGradient></defs>
+          {chartArea&&<path d={chartArea} fill="url(#dbGrad)"/>}
+          {chartLine&&<path d={chartLine} fill="none" stroke={D.accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>}
+        </svg>
       </div>}
+
+      {/* Allocation bar */}
+      <div style={{padding:"14px 20px",borderBottom:`1px solid ${D.border}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <span style={{fontSize:11,color:D.t3,letterSpacing:"0.06em",textTransform:"uppercase"}}>{t.distribucion}</span>
+          <span style={{fontSize:11,color:D.t3}}>{t.actualVsObj}</span>
+        </div>
+        <div style={{display:"flex",height:6,borderRadius:3,overflow:"hidden",gap:1}}>
+          {rebalData.map(r=><div key={r.id} style={{flex:r.realW,background:r.color,transition:"flex 0.4s ease"}}/>)}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:8,flexWrap:"wrap",gap:4}}>
+          {rebalData.map(r=><div key={r.id} style={{display:"flex",alignItems:"center",gap:4}}>
+            <div style={{width:7,height:7,borderRadius:2,background:r.color}}/>
+            <span style={{fontSize:10,color:D.t3}}>{(r.asset_name||r.asset_id).split(" ")[0]} {r.realW.toFixed(0)}%</span>
+          </div>)}
+        </div>
+      </div>
+
+      {/* Rebalance alert */}
+      {worstDev&&Math.abs(worstDev.diff)>2&&<div style={{margin:"14px 20px",padding:"12px 14px",background:"rgba(251,191,36,0.04)",border:`1px solid rgba(251,191,36,0.16)`,borderRadius:12}}>
+        <div style={{fontSize:10,fontWeight:600,color:D.amber,letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:8}}>{t.rebalPendiente}</div>
+        {rebalData.filter(r=>r.tgtW>0&&Math.abs(r.diff)>2).sort((a,b)=>a.diff-b.diff).slice(0,3).map(r=>(
+          <div key={r.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5,padding:"6px 8px",background:"rgba(255,255,255,0.02)",borderRadius:7}}>
+            <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <span style={{fontSize:13,fontWeight:700,color:r.diff>0?D.loss:D.gain}}>{r.diff>0?"↓":"↑"}</span>
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:D.t1}}>{r.asset_name||r.asset_id}</div>
+                <div style={{fontSize:10,color:D.t3}}>{Math.abs(r.diff).toFixed(1)}% {r.diff>0?t.sobreObj:t.bajoObj}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>}
+
+      {/* Positions */}
+      <div style={{padding:"14px 20px 0"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <span style={{fontSize:11,color:D.t3,letterSpacing:"0.06em",textTransform:"uppercase"}}>{t.posiciones} ({positions.length})</span>
+          <button onClick={()=>setShowMov(true)} style={{fontSize:12,padding:"6px 14px",borderRadius:7,fontFamily:"inherit",cursor:"pointer",background:D.accent,color:D.bg,border:"none",fontWeight:700}}>{t.añadir}</button>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          {rebalData.map(r=>{
+            const open=expanded===r.id;
+            return<div key={r.id} onClick={()=>setExpanded(open?null:r.id)} style={{padding:"14px 16px",background:D.s1,borderRadius:10,border:`1px solid ${D.border}`,cursor:"pointer"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:10,height:10,borderRadius:3,background:r.color,flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:600,color:D.t1}}>{r.asset_name||r.asset_id}</div>
+                      <div style={{fontSize:10,color:D.t3,marginTop:1}}>{r.broker||""}</div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontSize:15,fontWeight:700}}>{fmtD(Math.round(r.val))} €</div>
+                      <div style={{fontSize:11,fontWeight:600,color:r.gain>=0?D.gain:D.loss}}>{fmtP(r.gain)}</div>
+                    </div>
+                  </div>
+                  {r.tgtW>0&&<div style={{marginTop:10,display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{flex:1,height:4,background:D.s3,borderRadius:2,position:"relative"}}>
+                      <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${Math.min(r.realW/Math.max(...rebalData.map(x=>x.realW))*100,100)}%`,background:r.color,borderRadius:2}}/>
+                      <div style={{position:"absolute",top:-3,height:10,width:2,background:D.t3,left:`${r.tgtW/Math.max(...rebalData.map(x=>x.realW))*100}%`,borderRadius:1}}/>
+                    </div>
+                    <span style={{fontSize:10,color:D.t3,flexShrink:0}}>
+                      {r.realW.toFixed(0)}% <span style={{color:Math.abs(r.diff)>1.5?(r.diff>0?D.loss:D.gain):D.t3}}>
+                        {r.diff>0?"↑":"↓"}{Math.abs(r.diff).toFixed(1)}%
+                      </span>
+                    </span>
+                  </div>}
+                </div>
+              </div>
+              {open&&<div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${D.border}`,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                {[
+                  {l:t.aportado,v:`${fmtD(Math.round(r.inv))} €`},
+                  {l:lang==="es"?"Ganancia":"Gain",v:`${r.gain>=0?"+":""}${fmtD(Math.round(r.val-r.inv))} €`,c:r.gain>=0?D.gain:D.loss},
+                  {l:t.obj,v:`${r.tgtW}%`},
+                ].map(x=><div key={x.l}><div style={{fontSize:10,color:D.t3,marginBottom:3}}>{x.l}</div><div style={{fontSize:13,fontWeight:600,color:x.c||D.t1}}>{x.v}</div></div>)}
+              </div>}
+            </div>;
+          })}
+        </div>
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(13,11,8,0.95)",backdropFilter:"blur(20px)",borderTop:`1px solid ${D.border}`,padding:"10px 0 26px",display:"flex",justifyContent:"space-around",alignItems:"center",zIndex:200}}>
+        <button onClick={()=>go("/dashboard")} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"2px 24px",color:D.accent,fontFamily:"inherit"}}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="11" width="3.5" height="6" rx="1" fill="currentColor" opacity="0.5"/><rect x="8.25" y="7" width="3.5" height="10" rx="1" fill="currentColor" opacity="0.7"/><rect x="13.5" y="3" width="3.5" height="14" rx="1" fill="currentColor"/></svg>
+          <span style={{fontSize:10,fontWeight:600}}>{lang==="es"?"Cartera":"Portfolio"}</span>
+        </button>
+        <button onClick={()=>setShowMov(true)} style={{width:52,height:52,borderRadius:"50%",background:D.accent,color:D.bg,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 30px rgba(181,232,52,0.3)",flexShrink:0}}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4v14M4 11h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>
+        </button>
+        <button onClick={()=>go("/simulador-cartera")} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"2px 24px",color:D.t3,fontFamily:"inherit"}}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M7 7.5h6M7 11h3M7 14h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <span style={{fontSize:10,fontWeight:400}}>{lang==="es"?"Simulador":"Simulator"}</span>
+        </button>
+      </div>
     </div>
-
-    {/* ADD MOVEMENT BUTTON */}
-    <button onClick={()=>setShowMov(!showMov)} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:TH.green,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:TH.sans,marginBottom:16}}>+ {t.addMov}</button>
-
-    {/* MOVEMENT FORM */}
-    {showMov&&<div style={{background:TH.card,borderRadius:TH.r2,padding:18,border:`1.5px solid ${TH.border}`,marginBottom:20}}>
-      <div style={{display:"flex",gap:6,marginBottom:14}}>
-        {["buy","sell","dividend"].map(tp=><button key={tp} onClick={()=>setMov({...mov,type:tp})} style={{flex:1,padding:"8px",borderRadius:8,border:`1.5px solid ${mov.type===tp?TH.green:TH.border}`,background:mov.type===tp?TH.greenLight:TH.card,color:mov.type===tp?TH.greenText:TH.muted,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{tp==="buy"?(lang==="es"?"Compra":"Buy"):tp==="sell"?(lang==="es"?"Venta":"Sell"):(lang==="es"?"Dividendo":"Dividend")}</button>)}
-      </div>
-      <div style={{display:"grid",gap:10}}>
-        <input type="date" value={mov.date} onChange={e=>setMov({...mov,date:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
-        <select value={mov.asset_id} onChange={e=>setMov({...mov,asset_id:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}>
-          <option value="">{lang==="es"?"Activo":"Asset"}...</option>
-          {positions.map(p=>{const a=ASSETS.find(a=>a.id===p.asset_id);return<option key={p.id} value={p.asset_id}>{a?.name[lang]||p.asset_id}</option>;})}
-          <option value="_new">{lang==="es"?"+ Añadir nuevo":"+ Add new"}</option>
-        </select>
-        <input placeholder="Broker" value={mov.broker} onChange={e=>setMov({...mov,broker:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
-        <input type="number" placeholder={lang==="es"?"Importe (€)":"Amount (€)"} value={mov.amount} onChange={e=>setMov({...mov,amount:e.target.value})} style={{padding:"10px 14px",borderRadius:10,border:`1.5px solid ${TH.border}`,fontSize:13,fontFamily:TH.sans,background:TH.card,color:TH.dark}}/>
-        <button onClick={saveMov} disabled={movSaving||!mov.asset_id||!mov.amount} style={{padding:"12px",borderRadius:10,border:"none",background:TH.green,color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:TH.sans}}>{movSaving?"...":(lang==="es"?"Registrar":"Record")}</button>
-      </div>
-    </div>}
-  </div>);
+  );
 }
 
 /* ══════════════════════════════════════════════
@@ -1582,6 +1715,9 @@ export default function App(){
   if(path==="/dashboard"&&!session){go("/login");return null;}
   if(path==="/onboarding"&&!session){go("/login");return null;}
 
+  /* Dashboard renders as full-page dark screen */
+  if(path==="/dashboard"&&session) return <DashboardPage go={go} lang={lang} session={session}/>;
+
   return(
     <div style={{fontFamily:TH.sans,background:TH.bg,minHeight:"100vh",color:TH.text,WebkitFontSmoothing:"antialiased"}}>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
@@ -1605,7 +1741,6 @@ export default function App(){
         {path==="/"&&<HomePage t={t} go={go} lang={lang}/>}
         {path==="/login"&&<LoginPage go={go} lang={lang}/>}
         {path==="/onboarding"&&session&&<OnboardingPage go={go} lang={lang} session={session}/>}
-        {path==="/dashboard"&&session&&<DashboardPage go={go} lang={lang} session={session}/>}
         {path==="/interes-compuesto"&&<CompoundCalc go={go} t={t}/>}
         {path==="/simulador-cartera"&&<PortfolioSim t={t} lang={lang}/>}
         {path==="/simulacion"&&sim&&<SimulationPage sim={sim} t={t} lang={lang} go={go}/>}
