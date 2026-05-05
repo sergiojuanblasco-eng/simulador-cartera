@@ -3,20 +3,28 @@ import { supabase } from "./lib/supabase";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import Tools from "./pages/Tools";
 
 function useRouter() {
   const [path, setPath] = useState(window.location.pathname);
+  const [simSlug, setSimSlug] = useState(null);
   useEffect(() => {
-    const onPop = () => setPath(window.location.pathname);
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    const update = () => {
+      const raw = window.location.pathname;
+      const m = raw.match(/\/simulacion\/(.+)/);
+      setSimSlug(m ? m[1].replace(/\/+$/, "") : null);
+      setPath(m ? "/simulacion" : raw);
+    };
+    update();
+    window.addEventListener("popstate", update);
+    return () => window.removeEventListener("popstate", update);
   }, []);
-  const go = (p) => { window.history.pushState({}, "", p); setPath(p); };
-  return { path, go };
+  const go = (p) => { window.history.pushState({}, "", p); window.dispatchEvent(new PopStateEvent("popstate")); };
+  return { path, go, simSlug };
 }
 
 export default function App() {
-  const { path, go } = useRouter();
+  const { path, go, simSlug } = useRouter();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,9 +51,12 @@ export default function App() {
   if (path === "/onboarding" && session) return <Onboarding go={go} session={session} />;
   if (path === "/dashboard" && session) return <Dashboard go={go} session={session} />;
 
-  // Default: redirect to landing (served by Vercel as static HTML)
-  // If we're here, it means the SPA loaded but path is "/" or unknown
-  // Redirect to landing or show nothing (landing.html handles "/")
+  // Tool pages (public, no auth needed)
+  if (path === "/simulador-cartera" || path === "/interes-compuesto" || path === "/simulacion") {
+    return <Tools path={path} go={go} simSlug={simSlug} session={session} />;
+  }
+
+  // Landing page (static HTML served by Vercel)
   if (path === "/") {
     window.location.href = "/landing.html";
     return null;
