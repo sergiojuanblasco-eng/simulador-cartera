@@ -6,21 +6,24 @@ import Dashboard from "./pages/Dashboard";
 import Tools from "./pages/Tools";
 
 function useRouter() {
-  const [path, setPath] = useState(window.location.pathname);
-  const [simSlug, setSimSlug] = useState(null);
-  useEffect(() => {
-    const update = () => {
-      const raw = window.location.pathname;
-      const m = raw.match(/\/simulacion\/(.+)/);
-      setSimSlug(m ? m[1].replace(/\/+$/, "") : null);
-      setPath(m ? "/simulacion" : raw);
+  const parsePath = () => {
+    const raw = window.location.pathname.replace(/\/+$/, "") || "/";
+    const m = raw.match(/\/simulacion\/(.+)/);
+    return {
+      path: m ? "/simulacion" : raw,
+      slug: m ? m[1].replace(/\/+$/, "") : null
     };
-    update();
+  };
+  const [state, setState] = useState(parsePath);
+  useEffect(() => {
+    const update = () => setState(parsePath());
     window.addEventListener("popstate", update);
     return () => window.removeEventListener("popstate", update);
   }, []);
-  const go = (p) => { window.history.pushState({}, "", p); window.dispatchEvent(new PopStateEvent("popstate")); };
-  return { path, go, simSlug };
+  const go = (p) => { window.history.pushState({}, "", p); setState(parsePath()); };
+  // Also reparse on mount in case useEffect runs after initial render
+  useEffect(() => { setState(parsePath()); }, []);
+  return { path: state.path, go, simSlug: state.slug };
 }
 
 export default function App() {
