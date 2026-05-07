@@ -55,8 +55,10 @@
       justify-content: center;
       gap: 10px;
       letter-spacing: 0.01em;
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 200;
     }
     #top-banner .banner-icon {
@@ -75,8 +77,10 @@
 
     /* ── NAVBAR ── */
     #navbar {
-      position: sticky;
+      position: fixed;
       top: 41px;
+      left: 0;
+      right: 0;
       z-index: 100;
       background: oklch(97.5% 0.007 80 / 0.94);
       backdrop-filter: blur(12px);
@@ -212,7 +216,7 @@
 
     /* ── HERO ── */
     #hero {
-      padding: 80px 0 0;
+      padding: 180px 0 0;
       text-align: center;
       overflow: hidden;
     }
@@ -925,7 +929,7 @@
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       section { padding: 72px 0; }
-      #hero { padding: 56px 0 0; }
+      #hero { padding: 150px 0 0; }
       .nav-links { display: none; }
       .nav-actions { display: none; }
       .hamburger { display: flex; }
