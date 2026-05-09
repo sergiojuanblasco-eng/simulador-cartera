@@ -26,6 +26,7 @@ export default function Dashboard({ go, session }) {
   const [targets, setTargets] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [showMov, setShowMov] = useState(false);
   const [mov, setMov] = useState({ type: "buy", date: new Date().toISOString().slice(0, 10), asset_id: "", broker: "", amount: "", shares: "", price: "", commission: "", notes: "" });
   const [movSaving, setMovSaving] = useState(false);
@@ -33,7 +34,15 @@ export default function Dashboard({ go, session }) {
   const [expanded, setExpanded] = useState(null);
 
   const refresh = async () => {
-    const [pos, tgt, hist] = await Promise.all([getPositions(uid), getTargets(uid), getHistory(uid)]);
+    const [pos, tgt, hist, { data: profile }] = await Promise.all([
+      getPositions(uid),
+      getTargets(uid),
+      getHistory(uid),
+      supabase.from("profiles").select("onboarding_done").eq("id", uid).single()
+    ]);
+    if (profile && !profile.onboarding_done && pos.length === 0) {
+      setNeedsOnboarding(true);
+    }
     setPositions(pos);
     setTargets(tgt);
     setHistory(hist);
@@ -43,6 +52,8 @@ export default function Dashboard({ go, session }) {
   useEffect(() => { if (uid) refresh(); }, [uid]);
 
   if (loading) return <div style={{ background: D.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: D.t3, fontFamily: D.sans }}>Cargando...</div>;
+
+  if (needsOnboarding) { go("/onboarding"); return null; }
 
   const totalValue = positions.reduce((s, p) => s + Number(p.current_value), 0);
   const totalInvested = positions.reduce((s, p) => s + Number(p.invested), 0);
