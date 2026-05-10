@@ -9,10 +9,7 @@ function useRouter() {
   const parsePath = () => {
     const raw = window.location.pathname.replace(/\/+$/, "") || "/";
     const m = raw.match(/\/simulacion\/(.+)/);
-    return {
-      path: m ? "/simulacion" : raw,
-      slug: m ? m[1].replace(/\/+$/, "") : null
-    };
+    return { path: m ? "/simulacion" : raw, slug: m ? m[1].replace(/\/+$/, "") : null };
   };
   const [state, setState] = useState(parsePath);
   useEffect(() => {
@@ -21,7 +18,6 @@ function useRouter() {
     return () => window.removeEventListener("popstate", update);
   }, []);
   const go = (p) => { window.history.pushState({}, "", p); setState(parsePath()); };
-  // Also reparse on mount in case useEffect runs after initial render
   useEffect(() => { setState(parsePath()); }, []);
   return { path: state.path, go, simSlug: state.slug };
 }
@@ -44,26 +40,21 @@ export default function App() {
   }, []);
 
   if (loading && (path === "/dashboard" || path === "/onboarding")) {
-    return <div style={{ background: "#0d0b08", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#5c6170", fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}>Cargando...</div>;
+    return <div style={{ background: "#FBFAF8", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A7A74", fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}>Cargando...</div>;
   }
 
-  if (path === "/dashboard" && !session) { go("/login"); return null; }
-  if (path === "/onboarding" && !session) { go("/login"); return null; }
+  if ((path === "/dashboard" || path === "/onboarding") && !session) { go("/login"); return null; }
 
-  if (path === "/login") return <Login go={go} session={session} />;
+  if (path === "/login") return <Login go={go} session={session} mode="login" />;
+  if (path === "/registro") return <Login go={go} session={session} mode="signup" />;
   if (path === "/onboarding" && session) return <Onboarding go={go} session={session} />;
   if (path === "/dashboard" && session) return <Dashboard go={go} session={session} />;
 
-  // Tool pages (public, no auth needed)
   if (path === "/simulador-cartera" || path === "/interes-compuesto" || path === "/simulacion") {
     return <Tools path={path} go={go} simSlug={simSlug} session={session} />;
   }
 
-  // Landing page (static HTML served by Vercel)
-  if (path === "/") {
-    window.location.href = "/landing.html";
-    return null;
-  }
+  if (path === "/") { window.location.href = "/landing.html"; return null; }
 
-  return <div style={{ background: "#0d0b08", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#5c6170", fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}>Página no encontrada · <a href="/" style={{ color: "#b5e834", marginLeft: 6 }}>Volver</a></div>;
+  return <div style={{ background: "#FBFAF8", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A7A74", fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}>Página no encontrada · <a href="/" style={{ color: "#16754E", marginLeft: 6 }}>Volver</a></div>;
 }
