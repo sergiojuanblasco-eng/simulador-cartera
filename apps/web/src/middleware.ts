@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 /** Rutas accesibles sin sesión. */
 const PUBLIC_PREFIXES = [
-  '/login', '/registro', '/recuperar', '/privacidad', '/auth/', '/api/cron/', '/api/lista-espera', '/dev/',
+  '/login', '/registro', '/recuperar', '/privacidad', '/auth/', '/api/cron/', '/api/lista-espera', '/dev/', '/api/diag/',
   // Herramientas públicas de Kartera (SEO)
   '/simulador-cartera', '/interes-compuesto', '/simulacion/', '/landing.html', '/sitemap.xml', '/robots.txt',
 ];

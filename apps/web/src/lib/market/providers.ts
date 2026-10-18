@@ -10,7 +10,7 @@ import { serverEnv } from '@/lib/env';
  */
 
 export interface ExternalAsset {
-  proveedor: 'eodhd' | 'coingecko';
+  proveedor: 'eodhd' | 'coingecko' | 'yahoo';
   proveedorId: string;
   nombre: string;
   isin: string | null;
@@ -148,4 +148,97 @@ export async function coingeckoLive(ids: string[]): Promise<Map<string, number>>
   const res = await getJson<Record<string, { eur?: number }>>(`${CG}/simple/price?ids=${ids.map(encodeURIComponent).join(',')}&vs_currencies=eur`);
   for (const [id, v] of Object.entries(res)) if (v.eur && v.eur > 0) out.set(id, v.eur);
   return out;
+}
+
+// ---------------------------------------------------------------------------- Yahoo Finance (gratis, no oficial)
+/**
+ * API pública no oficial de Yahoo Finance: gratis y sin clave. Tiene ETFs y acciones de las bolsas
+ * europeas y la mayoría de fondos europeos (tickers «0P…» con el valor liquidativo diario de Morningstar).
+ * Puede cambiar o limitar peticiones sin aviso: por eso se usa con moderación y con EODHD como alternativa.
+ */
+const YH_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+  Accept: 'application/json,text/plain,*/*',
+  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+};
+
+async function yahooJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { headers: YH_HEADERS, signal: AbortSignal.timeout(TIMEOUT), cache: 'no-store' });
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status}`);
+  return (await res.json()) as T;
+}
+
+/** Mercados en euros (preferidos para un inversor español). */
+const EUR_SUFFIX = ['.DE', '.AS', '.PA', '.MI', '.MC', '.F', '.SG', '.BE', '.DU', '.MU', '.HM', '.VI', '.BR', '.LS', '.HE', '.IR'];
+
+function yahooTipo(q: string | undefined): AssetType {
+  switch (q) {
+    case 'ETF': return 'etf';
+    case 'MUTUALFUND': return 'fondo';
+    case 'EQUITY': return 'accion';
+    case 'CRYPTOCURRENCY': return 'cripto';
+    default: return 'otro';
+  }
+}
+
+export async function yahooSearch(q: string): Promise<ExternalAsset[]> {
+  type Q = { symbol?: string; shortname?: string; longname?: string; quoteType?: string; exchDisp?: string; typeDisp?: string };
+  const res = await yahooJson<{ quotes?: Q[] }>(
+    `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=10&newsCount=0&listsCount=0`,
+  );
+  const isin = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(q.trim().toUpperCase()) ? q.trim().toUpperCase() : null;
+  return (res.quotes ?? [])
+    .filter((x): x is Q & { symbol: string } => !!x.symbol && ['ETF', 'MUTUALFUND', 'EQUITY'].includes(x.quoteType ?? ''))
+    .map((x) => ({
+      proveedor: 'yahoo' as const,
+      proveedorId: x.symbol,
+      nombre: x.longname || x.shortname || x.symbol,
+      isin,
+      ticker: x.symbol,
+      tipo: yahooTipo(x.quoteType),
+      moneda: 'EUR', // la moneda real se lee del gráfico al darlo de alta
+      detalle: [x.typeDisp, x.exchDisp, x.symbol].filter(Boolean).join(' · '),
+    }));
+}
+
+/** El mejor resultado para un inversor en euros: fondo si lo hay; si no, la cotización en un mercado en euros. */
+export function pickYahoo(results: ExternalAsset[]): ExternalAsset | null {
+  const score = (r: ExternalAsset) =>
+    (r.tipo === 'fondo' ? 4 : 0) + (EUR_SUFFIX.some((s) => r.proveedorId.endsWith(s)) ? 3 : 0) + (r.proveedorId.endsWith('.DE') ? 1 : 0)
+    - (/\.(L|SW|TO|AX)$/.test(r.proveedorId) ? 3 : 0);
+  return [...results].sort((a, b) => score(b) - score(a))[0] ?? null;
+}
+
+export interface YahooChart {
+  currency: string;
+  points: { fecha: string; precio: number }[];
+  last: { precio: number; ts: number } | null;
+}
+
+/** Cierres diarios desde `from` (y el último precio) de un símbolo de Yahoo. Corrige peniques (GBp → GBP). */
+export async function yahooChart(symbol: string, from?: string): Promise<YahooChart> {
+  const p1 = Math.floor((from ? Date.parse(from + 'T00:00:00Z') : Date.now() - 5 * 365 * 86_400_000) / 1000);
+  const p2 = Math.floor(Date.now() / 1000) + 86_400;
+  type R = {
+    chart: { result?: { meta: { currency?: string; regularMarketPrice?: number; regularMarketTime?: number; gmtoffset?: number }; timestamp?: number[];
+      indicators: { quote: { close?: (number | null)[] }[] } }[] | null; error?: { description?: string } | null };
+  };
+  const res = await yahooJson<R>(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${p1}&period2=${p2}&interval=1d&includePrePost=false`);
+  const r = res.chart.result?.[0];
+  if (!r) throw new Error(res.chart.error?.description || 'Yahoo: sin datos');
+  const pence = r.meta.currency === 'GBp' || r.meta.currency === 'GBX';
+  const k = pence ? 0.01 : 1;
+  const off = r.meta.gmtoffset ?? 0;
+  const closes = r.indicators.quote[0]?.close ?? [];
+  const byDay = new Map<string, number>();
+  (r.timestamp ?? []).forEach((t, i) => {
+    const c = closes[i];
+    if (typeof c === 'number' && c > 0) byDay.set(new Date((t + off) * 1000).toISOString().slice(0, 10), c * k);
+  });
+  const lastPx = r.meta.regularMarketPrice;
+  return {
+    currency: pence ? 'GBP' : (r.meta.currency || 'EUR').toUpperCase(),
+    points: [...byDay.entries()].map(([fecha, precio]) => ({ fecha, precio })),
+    last: typeof lastPx === 'number' && lastPx > 0 ? { precio: lastPx * k, ts: (r.meta.regularMarketTime ?? Date.now() / 1000) * 1000 } : null,
+  };
 }

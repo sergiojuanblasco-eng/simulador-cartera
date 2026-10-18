@@ -5,7 +5,7 @@ export type AssetChoice =
   | { kind: 'local'; id: string; nombre: string; detalle?: string }
   | {
       kind: 'external';
-      proveedor: 'eodhd' | 'coingecko';
+      proveedor: 'eodhd' | 'coingecko' | 'yahoo';
       proveedorId: string;
       nombre: string;
       isin: string | null;
