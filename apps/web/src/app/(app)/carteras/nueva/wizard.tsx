@@ -45,6 +45,7 @@ export function NewPortfolioWizard({ primera, existentes }: { primera: boolean; 
           </span>
           <span className="flex flex-col gap-1"><span className="text-[17px] font-bold">Añadir a mano</span><span className="text-sm text-muted-2">Elige el producto y registra tu primera aportación.</span></span>
         </Link>
+        <Link href={`/carteras/${created.id}/objetivo`} className="self-center py-2 text-[15px] font-semibold text-brand">Definir primero mi cartera objetivo</Link>
         <Link href="/" className="self-center py-3 text-[15px] font-semibold text-brand">Dejarla vacía por ahora</Link>
       </div>
     );

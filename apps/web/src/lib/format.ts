@@ -2,6 +2,7 @@
 
 const eur0 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const eur2 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct0 = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 0 });
 const pct1 = new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const pct2 = new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const num = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 4 });
@@ -15,9 +16,9 @@ export function eurSigned(v: number, decimals: 0 | 2 = 0): string {
   return v > 0.004 ? `+${s}` : v < -0.004 ? `−${s}` : s;
 }
 
-export function pct(v: number | null | undefined, decimals: 1 | 2 = 1): string {
+export function pct(v: number | null | undefined, decimals: 0 | 1 | 2 = 1): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return '—';
-  return (decimals === 2 ? pct2 : pct1).format(v);
+  return (decimals === 2 ? pct2 : decimals === 0 ? pct0 : pct1).format(v);
 }
 
 export function pctSigned(v: number | null | undefined, decimals: 1 | 2 = 1): string {

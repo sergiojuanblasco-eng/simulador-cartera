@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { LinkButton, PageHeader } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
+import { parsePlan } from '@/lib/plan';
 import { PortfolioCard } from './portfolio-card';
 
 export const metadata: Metadata = { title: 'Mis carteras' };
@@ -22,7 +23,7 @@ export default async function CarterasPage() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
-      <PageHeader back="/mas" title="Mis carteras" subtitle="Separa tu dinero por objetivo y plazo" />
+      <PageHeader back="/mas" title="Mis carteras" subtitle="Separa tu dinero por objetivo y plazo. Toca una para ver su plan." />
       <div className="flex flex-col gap-3">
         {data.portfolios.map((p) => (
           <PortfolioCard
@@ -34,6 +35,7 @@ export default async function CarterasPage() {
             valor={valueBy.get(p.id) ?? 0}
             productos={countBy.get(p.id) ?? 0}
             peso={total > 0 ? (valueBy.get(p.id) ?? 0) / total : 0}
+            tienePlan={parsePlan(p.reparto_objetivo).length > 0}
           />
         ))}
       </div>

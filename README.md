@@ -9,7 +9,7 @@
   - las simulaciones SEO (`/simulacion/...`);
   - la lista de espera.
 - **App privada (PWA instalable):**
-  - carteras por objetivo;
+  - carteras por objetivo, cada una con su **cartera objetivo** (% por producto), aportación mensual y simulación;
   - aportaciones, retiradas y rebalanceos;
   - importación desde brókeres;
   - métricas: TIR, rentabilidad por año, caída máxima, comisiones y comparativa con el MSCI World.
@@ -23,7 +23,8 @@ Beta privada: se entra con invitación y es gratis.
 | Web pública | `/` (landing para visitantes; con sesión, el panel), `/simulador-cartera`, `/interes-compuesto`, `/simulacion/[slug]`, `/sitemap.xml`, `/robots.txt` |
 | Acceso | `/login`, `/registro` (con invitación crea la cuenta; sin ella apunta a la lista de espera), `/recuperar`, `/privacidad` |
 | Inicio | Patrimonio, aportado, ganancia, TIR, aportación media y racha, caída máxima, comisiones, gráficas, distribución, objetivos y filtro por cartera |
-| Movimientos | Botón **+**: aportación, retirada, rebalanceo (traspaso o venta/compra) y nueva cartera |
+| Movimientos | Botón **+**: invertir según mi plan, aportación, retirada, rebalanceo (traspaso o venta/compra) y nueva cartera |
+| Cartera (`/carteras/[id]`) | Cartera objetivo frente a la real, reparto de la aportación del mes (equilibrar o fijo), «Invertir ahora» que registra las compras, y simulación con datos históricos (plazo según el objetivo y probabilidad de llegar a la meta) |
 | Importar | MyInvestor, Trade Republic, plantilla CSV/Excel e IA (también PDF), con revisión y detección de duplicados |
 | Análisis | Activos y ficha con el valor liquidativo, Rendimiento (por año, frente al índice, comisiones, FIFO para la renta) y Mes |
 | Más | Carteras, historial, exportar CSV, simulador, invitaciones y lista de espera (admin), borrar cuenta |
@@ -37,7 +38,7 @@ packages/core        Motor de cálculo (XIRR, FIFO, traspasos, TWR, drawdown…)
 apps/web             App Next.js 15: web pública + app privada
 apps/web/src/kartera Simulador y calculadoras originales de Kartera (+ datos de 31 activos)
 apps/web/public/landing.html  Landing original de kartera.pro (el «Avísame» ya guarda emails)
-supabase/migrations  0001 esquema + seguridad · 0002 lista de espera
+supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 permisos · 0004 cartera objetivo
 ```
 
 ## Puesta en marcha
@@ -45,7 +46,8 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera
 ### 1. Supabase
 1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
-2. En **SQL Editor**, ejecuta en orden las dos migraciones de `supabase/migrations/`.
+2. En **SQL Editor**, ejecuta `supabase/instalar-todo.sql` (todas las migraciones; se puede repetir sin riesgo).
+   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000004_cartera_objetivo.sql`).
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
 4. En **Authentication → URL Configuration**:
    - Site URL: `https://www.kartera.pro`

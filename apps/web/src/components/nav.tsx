@@ -17,11 +17,13 @@ const tools = [
 ];
 
 const TOOL_PREFIXES = ['/simulador-cartera', '/interes-compuesto', '/simulacion/'];
+/** Pantallas a las que se llega desde «Más». */
+const MAS_PREFIXES = ['/mas', '/carteras', '/movimientos', '/importar'];
 
 function isActive(path: string, href: string) {
   if (href === '/') return path === '/';
   // En el móvil, las herramientas cuelgan de «Más».
-  if (href === '/mas' && TOOL_PREFIXES.some((p) => path.startsWith(p))) return true;
+  if (href === '/mas' && [...TOOL_PREFIXES, ...MAS_PREFIXES].some((p) => path.startsWith(p))) return true;
   return path === href || path.startsWith(href + '/');
 }
 
@@ -58,7 +60,7 @@ export function SideNav() {
   );
   return (
     <nav aria-label="Navegación principal" className="flex flex-col gap-1">
-      {items.map((it) => link(it, it.href === '/mas' ? path === '/mas' || path.startsWith('/mas/') : isActive(path, it.href)))}
+      {items.map((it) => link(it, it.href === '/mas' ? MAS_PREFIXES.some((p) => path.startsWith(p)) : isActive(path, it.href)))}
       <span className="mt-4 px-3 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">Herramientas</span>
       {tools.map((it) => link(it, path === it.href || (it.href === '/simulador-cartera' && path.startsWith('/simulacion/'))))}
     </nav>

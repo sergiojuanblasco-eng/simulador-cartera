@@ -8,3 +8,4 @@ export {
   whatIf, distribution, downsample, monthsToGoal, compoundInterest, sliceByPeriod, TIPO_LABEL,
   type GroupKey, type DistributionItem,
 } from './analysis';
+export * from './plan';

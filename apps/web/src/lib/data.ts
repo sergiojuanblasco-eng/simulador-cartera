@@ -37,7 +37,8 @@ export interface UserData {
 export async function loadUserData(supabase: ServerSupabase): Promise<UserData> {
   const today = hoyMadrid();
   const [pRes, aRes, hRes, txs] = await Promise.all([
-    supabase.from('portfolios').select('id, nombre, objetivo, objetivo_importe, objetivo_anio, color, orden, archivada').order('orden').order('created_at'),
+    // '*': así funciona antes y después de la migración 0004 (cartera objetivo)
+    supabase.from('portfolios').select('*').order('orden').order('created_at'),
     supabase.from('accounts').select('id, nombre, entidad').order('nombre'),
     supabase.from('holdings').select('id, portfolio_id, account_id, asset_id, asset:assets (*)'),
     fetchAll<TxRow>((from, to) =>

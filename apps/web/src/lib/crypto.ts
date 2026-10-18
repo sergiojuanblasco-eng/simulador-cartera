@@ -84,9 +84,12 @@ export function guessAssetType(p: { clase?: string | null; nombre?: string | nul
   if (/stock|share|equity|accion/.test(c)) return 'accion';
   if (/bond|bono|renta fija/.test(c)) return 'otro';
   if (/pension/.test(n)) return 'plan_pensiones';
-  if (/monetari|money market|liquidity|\bcash\b/.test(n) && !/etf/.test(n)) return 'monetario';
+  if (/monetari|money market|liquidit|tresorer|tesorer|\bcash\b/.test(n) && !/\betf\b/.test(n)) return 'monetario';
   if (/\betf\b|ucits etf|\betc\b|\betp\b/.test(n)) return 'etf';
   if (/etf|etp/.test(c)) return 'etf';
+  // Trade Republic: MUTUAL_FUND = fondo indexado; FUND = ETF/ETC cotizado.
+  if (/mutual/.test(c)) return 'fondo';
+  if (/^fund$/.test(c)) return 'etf';
   if (/fund|fondo/.test(c)) return 'fondo';
   return null;
 }

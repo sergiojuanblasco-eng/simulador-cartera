@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { H1 } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
+import { parsePlan } from '@/lib/plan';
 
 export const metadata: Metadata = { title: 'Nuevo movimiento' };
 
@@ -15,8 +16,9 @@ const ACTIONS = [
 
 export default async function MovimientoMenu() {
   const { supabase } = await requireUser();
-  const { count } = await supabase.from('portfolios').select('id', { count: 'exact', head: true });
-  if (!count) redirect('/carteras/nueva?primera=1');
+  const { data: carteras } = await supabase.from('portfolios').select('*').order('orden').order('created_at');
+  if (!carteras?.length) redirect('/carteras/nueva?primera=1');
+  const conPlan = carteras.filter((c) => parsePlan(c.reparto_objetivo).length > 0).slice(0, 3);
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
@@ -24,6 +26,22 @@ export default async function MovimientoMenu() {
         <H1>¿Qué quieres registrar?</H1>
         <p className="text-sm text-muted">Elige el tipo de movimiento.</p>
       </div>
+      {conPlan.length ? (
+        <ul className="flex flex-col gap-2.5">
+          {conPlan.map((c) => (
+            <li key={c.id}>
+              <Link href={`/carteras/${c.id}/invertir`} className="flex min-h-[76px] items-center gap-3.5 rounded-2xl border-2 border-brand bg-surface px-4 py-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand text-[20px] font-bold text-white" aria-hidden="true">◔</span>
+                <span className="flex flex-1 flex-col gap-0.5">
+                  <span className="font-semibold">Invertir según mi plan{conPlan.length > 1 ? `: ${c.nombre}` : ''}</span>
+                  <span className="text-[13px] leading-snug text-muted">Te decimos cuánto poner en cada producto</span>
+                </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 L16 12 L9 19" stroke="#A1A1AA" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <ul className="flex flex-col gap-2.5">
         {ACTIONS.map((a) => (
           <li key={a.href}>

@@ -31,6 +31,8 @@ export interface PreviewResult {
   products: ProductPreview[];
   nuevas: number;
   duplicadas: number;
+  /** Ya registradas a mano: se corregirán con los datos exactos del bróker. */
+  aCorregir?: number;
 }
 
 /** Huella estable de una fila: misma operación reimportada = misma huella. */
@@ -57,6 +59,36 @@ function cleanRows(rows: NormalizedRow[]): NormalizedRow[] {
 /** Pistas del grupo de filas de un producto (la primera que las tenga). */
 function hints(rs: NormalizedRow[]) {
   return { clase: rs.find((r) => r.clase)?.clase ?? null, ticker: rs.find((r) => r.ticker)?.ticker ?? null };
+}
+
+interface ManualTx { id: string; fecha: string; tipo: string; importe: number; assetId: string }
+
+/** Operaciones registradas a mano (sin huella de importación) para reconocerlas al importar. */
+async function loadManual(supabase: Awaited<ReturnType<typeof requireUser>>['supabase']): Promise<ManualTx[]> {
+  const { data } = await supabase.from('transactions').select('id, fecha, tipo, importe, holding:holdings (asset_id)')
+    .is('hash', null).in('tipo', ['compra', 'venta']).limit(5000);
+  return (data ?? []).map((t) => ({
+    id: t.id as string, fecha: t.fecha as string, tipo: t.tipo as string, importe: Number(t.importe),
+    assetId: (t.holding as unknown as { asset_id: string } | null)?.asset_id ?? '',
+  }));
+}
+
+/**
+ * Filas del extracto que ya se registraron a mano (p. ej. desde «Invertir según mi plan»):
+ * mismo producto y tipo, ±5 días y mismo importe (±2 %). Devuelve fila → operación manual.
+ */
+function matchManual(rows: NormalizedRow[], assetOf: (r: NormalizedRow) => string | null, manual: ManualTx[], skip: Set<number>): Map<number, string> {
+  const used = new Set<string>();
+  const out = new Map<number, string>();
+  rows.forEach((r, i) => {
+    if (skip.has(i) || (r.tipo !== 'compra' && r.tipo !== 'venta')) return;
+    const assetId = assetOf(r);
+    if (!assetId) return;
+    const m = manual.find((t) => !used.has(t.id) && t.assetId === assetId && t.tipo === r.tipo
+      && Math.abs(daysBetween(t.fecha, r.fecha!)) <= 5 && Math.abs(t.importe - r.importe!) <= Math.max(1, r.importe! * 0.02));
+    if (m) { used.add(m.id); out.set(i, m.id); }
+  });
+  return out;
 }
 
 export async function previewImport(rawRows: NormalizedRow[]): Promise<PreviewResult> {
@@ -128,7 +160,11 @@ export async function previewImport(rawRows: NormalizedRow[]): Promise<PreviewRe
     products.push({ key, nombre: match.nombre, isin: first.isin, operaciones: rs.length, match, matchLabel });
   }
   products.sort((a, b) => b.operaciones - a.operaciones);
-  return { ok: true, products, nuevas: rows.length - duplicadas, duplicadas };
+  // Las ya registradas a mano también cuentan como «ya estaban»
+  const localByKey = new Map(products.filter((x) => x.match.kind === 'local').map((x) => [x.key, (x.match as { id: string }).id]));
+  const hashDup = new Set(hashes.map((h, i) => (existing.has(h) ? i : -1)).filter((i) => i >= 0));
+  const manuales = matchManual(rows, (r) => localByKey.get(productKey(r)) ?? null, await loadManual(supabase), hashDup).size;
+  return { ok: true, products, nuevas: rows.length - duplicadas - manuales, duplicadas, aCorregir: manuales };
 }
 
 export interface CommitInput {
@@ -198,13 +234,32 @@ export async function commitImport(input: CommitInput): Promise<{ ok: boolean; e
     }
 
     const hashes = hashRows(rows);
+    const already = new Set<string>();
+    for (let i = 0; i < hashes.length; i += 300) {
+      const { data: hashed } = await supabase.from('transactions').select('hash').in('hash', hashes.slice(i, i + 300));
+      for (const x of hashed ?? []) if (x.hash) already.add(x.hash as string);
+    }
+    const manualMatch = matchManual(rows, (r) => assetByKey.get(productKey(r)) ?? null, await loadManual(supabase),
+      new Set(hashes.map((h, i) => (already.has(h) ? i : -1)).filter((i) => i >= 0)));
     const toInsert: Record<string, unknown>[] = [];
     let omitidas = 0;
+    let actualizadas = 0;
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i]!;
       const key = productKey(r);
       const holdingId = holdingByKey.get(key);
       if (!holdingId) { omitidas++; continue; }
+      const manualId = manualMatch.get(i);
+      if (manualId) {
+        // Ya se registró a mano: se corrige con los datos exactos del bróker (fecha, participaciones, comisión).
+        const cantidad = r.cantidad && r.cantidad > 0 ? r.cantidad : null;
+        const { error: upErr } = await supabase.from('transactions').update({
+          fecha: r.fecha, importe: Math.round(r.importe! * 100) / 100, comision: Math.round((r.comision ?? 0) * 100) / 100,
+          ...(cantidad ? { cantidad: Number(cantidad.toFixed(10)), precio: Number((r.importe! / cantidad).toFixed(8)) } : {}),
+          hash: hashes[i], import_id: imp.id,
+        }).eq('id', manualId);
+        if (!upErr) { actualizadas++; continue; }
+      }
       let cantidad = r.cantidad && r.cantidad > 0 ? r.cantidad : null;
       if (!cantidad && r.precio && r.precio > 0) cantidad = r.importe! / r.precio;
       const tipo = r.tipo as TxType;
@@ -243,7 +298,8 @@ export async function commitImport(input: CommitInput): Promise<{ ok: boolean; e
     }
     omitidas += toInsert.length - importadas;
 
-    await supabase.from('imports').update({ estado: 'completado', resumen: { importadas, omitidas, avisos: avisos.slice(0, 50) } }).eq('id', imp.id);
+    if (actualizadas) avisos.unshift(`${actualizadas} ${actualizadas === 1 ? 'compra ya estaba registrada a mano: se ha corregido' : 'compras ya estaban registradas a mano: se han corregido'} con los datos exactos del bróker.`);
+    await supabase.from('imports').update({ estado: 'completado', resumen: { importadas, omitidas, actualizadas, avisos: avisos.slice(0, 50) } }).eq('id', imp.id);
     for (const p of ['/', '/activos', '/movimientos', '/rendimiento', '/mes', '/carteras']) revalidatePath(p);
     return { ok: true, importadas, omitidas, avisos };
   } catch (e) {

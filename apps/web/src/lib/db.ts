@@ -13,6 +13,9 @@ export interface PortfolioRow {
   color: string | null;
   orden: number;
   archivada: boolean;
+  /** Migración 0004 (puede faltar si aún no se ha ejecutado). */
+  aportacion_mensual?: string | null;
+  reparto_objetivo?: unknown;
 }
 
 export interface AccountRow {

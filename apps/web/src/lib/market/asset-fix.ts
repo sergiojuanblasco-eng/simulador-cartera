@@ -64,6 +64,22 @@ export async function relinkAsset(db: SupabaseClient, fromId: string, toId: stri
       moved.set(h.id, h.id);
     }
   }
+  // Carteras objetivo que mencionan el producto antiguo
+  try {
+    const { data: ps } = await db.from('portfolios').select('id, reparto_objetivo').contains('reparto_objetivo', [{ assetId: fromId }]);
+    for (const p of ps ?? []) {
+      const merged: { assetId: string; pct: number; proxy: string | null }[] = [];
+      for (const it of (p.reparto_objetivo ?? []) as { assetId: string; pct: number; proxy: string | null }[]) {
+        const assetId = it.assetId === fromId ? toId : it.assetId;
+        const prev = merged.find((x) => x.assetId === assetId);
+        if (prev) prev.pct = Math.round((prev.pct + it.pct) * 100) / 100;
+        else merged.push({ ...it, assetId });
+      }
+      await db.from('portfolios').update({ reparto_objetivo: merged }).eq('id', p.id);
+    }
+  } catch {
+    // Sin la migración 0004 no hay carteras objetivo que actualizar.
+  }
   const { count } = await db.from('holdings').select('id', { count: 'exact', head: true }).eq('asset_id', fromId);
   if (!count) await db.from('assets').delete().eq('id', fromId);
   return moved;

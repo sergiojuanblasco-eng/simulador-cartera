@@ -99,6 +99,20 @@ describe('Trade Republic (exportación CSV de transacciones)', () => {
     ['2026-02-01T12:00:00Z', '2026-02-01', 'DEFAULT', 'TRADING', 'SELL', 'FUND', 'iShares Core MSCI World', 'IE00B4L5Y983', '-1', '110.00', '110.00', '-1.00', '', 'EUR'],
   ];
 
+  it('extracto real (anonimizado): transferencias fuera, fondos y bitcoin dentro', () => {
+    const real = [
+      ['2026-10-04T18:21:42.738419Z', '2026-10-04', 'DEFAULT', 'CASH', 'TRANSFER_INSTANT_INBOUND', '', 'TITULAR', '', '', '', '6350.000000', '', '', 'EUR', '', '', '', 'Incoming transfer', 'id1', 'TITULAR', 'ES00', '', ''],
+      ['2026-10-05T15:21:33.595Z', '2026-10-05', 'DEFAULT', 'TRADING', 'BUY', 'FUND', 'Physical Gold USD (Acc)', 'IE00B4ND3602', '17.3231650000', '71.4700000000', '-1238.09', '-1.00', '', 'EUR', '', '', '', 'Buy trade IE00B4ND3602', 'id2', '', '', '', ''],
+      ['2026-10-05T15:23:51.779Z', '2026-10-05', 'DEFAULT', 'TRADING', 'BUY', 'CRYPTO', 'Bitcoin', 'BTC', '0.0085330000', '77228.6400000000', '-658.99', '-1.00', '', 'EUR', '', '', '', 'Buy trade XF000BTC0017 Bitcoin', 'id3', '', '', '', ''],
+      ['2026-10-08T03:30:16.967Z', '2026-10-07', 'DEFAULT', 'TRADING', 'BUY', 'MUTUAL_FUND', 'Fidelity MSCI World Index P EUR Acc', 'IE00BYX5NX33', '170.9395810000', '14.6948000000', '-2511.92', '-1.00', '', 'EUR', '', '', '', 'Buy trade IE00BYX5NX33', 'id4', '', '', '', ''],
+    ];
+    const out = normalizeRows(real, autoMap(header, real), 2);
+    expect(rowIssues(out[0]!)).toEqual(['no_inversion']);
+    expect(out[1]).toMatchObject({ fecha: '2026-10-05', isin: 'IE00B4ND3602', tipo: 'compra', importe: 1238.09, cantidad: 17.323165, comision: 1 });
+    expect(out[2]).toMatchObject({ ticker: 'BTC', clase: 'CRYPTO', importe: 658.99, cantidad: 0.008533 });
+    expect(out[3]).toMatchObject({ fecha: '2026-10-07', isin: 'IE00BYX5NX33', importe: 2511.92 });
+  });
+
   it('reconoce el ISIN en «symbol» y el resto de columnas sin ayuda', () => {
     const m = autoMap(header, data);
     expect(m).toMatchObject({ fecha: 1, tipo: 4, clase: 5, producto: 6, isin: 7, cantidad: 8, precio: 9, importe: 10, comision: 11, moneda: 13 });
@@ -137,8 +151,12 @@ describe('cripto', () => {
   it('deduce el tipo de producto', () => {
     expect(guessAssetType({ clase: 'STOCK', nombre: 'Apple' })).toBe('accion');
     expect(guessAssetType({ clase: 'FUND', nombre: 'iShares Core MSCI World UCITS ETF' })).toBe('etf');
-    expect(guessAssetType({ clase: 'FUND', nombre: 'Fidelity MSCI World' })).toBe('fondo');
+    expect(guessAssetType({ clase: 'Fondo', nombre: 'Fidelity MSCI World' })).toBe('fondo');
     expect(guessAssetType({ nombre: 'Plan de pensiones Indexa' })).toBe('plan_pensiones');
+    // Etiquetas reales del extracto de Trade Republic
+    expect(guessAssetType({ clase: 'FUND', nombre: 'Physical Gold USD (Acc)' })).toBe('etf');
+    expect(guessAssetType({ clase: 'MUTUAL_FUND', nombre: 'Vanguard Global Bond Index EUR Hedged Acc' })).toBe('fondo');
+    expect(guessAssetType({ clase: 'MUTUAL_FUND', nombre: 'Groupama Tresorerie NC' })).toBe('monetario');
   });
 });
 

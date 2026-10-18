@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { Alert, Button, Field, Input } from '@/components/ui';
 import { eur, parseEsNumber, pct } from '@/lib/format';
@@ -7,7 +8,7 @@ import { deletePortfolio, updatePortfolio } from '../actions';
 
 export function PortfolioCard(p: {
   id: string; nombre: string; objetivoImporte: number | null; objetivoAnio: number | null;
-  valor: number; productos: number; peso: number;
+  valor: number; productos: number; peso: number; tienePlan: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [nombre, setNombre] = useState(p.nombre);
@@ -18,15 +19,18 @@ export function PortfolioCard(p: {
 
   if (!editing) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="font-semibold">{p.nombre}</span>
-          <span className="text-[13px] text-muted">
-            {p.productos} {p.productos === 1 ? 'producto' : 'productos'} · {pct(p.peso)} de tu patrimonio
-            {p.objetivoImporte ? ` · objetivo ${eur(p.objetivoImporte)}${p.objetivoAnio ? ` en ${p.objetivoAnio}` : ''}` : ''}
+      <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-line-strong">
+        <Link href={`/carteras/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-semibold">{p.nombre}</span>
+            <span className="text-[13px] text-muted">
+              {p.productos} {p.productos === 1 ? 'producto' : 'productos'} · {pct(p.peso)} de tu patrimonio
+              {p.objetivoImporte ? ` · meta ${eur(p.objetivoImporte)}${p.objetivoAnio ? ` en ${p.objetivoAnio}` : ''}` : ''}
+            </span>
+            <span className={`text-xs font-semibold ${p.tienePlan ? 'text-brand' : 'text-muted-2'}`}>{p.tienePlan ? '✓ Cartera objetivo definida' : 'Sin cartera objetivo · defínela →'}</span>
           </span>
-        </div>
-        <span className="font-semibold tabular">{eur(p.valor)}</span>
+          <span className="font-semibold tabular">{eur(p.valor)}</span>
+        </Link>
         <button type="button" onClick={() => setEditing(true)} className="min-h-11 px-2 text-sm font-semibold text-brand">Editar</button>
       </div>
     );

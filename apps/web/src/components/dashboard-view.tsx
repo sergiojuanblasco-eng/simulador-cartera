@@ -100,7 +100,7 @@ export function DashboardView(p: DashboardViewProps) {
             return (
               <div key={g.id} className="flex flex-col gap-2">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-semibold">{g.nombre}: {eur(g.objetivo)}{g.anio ? ` en ${g.anio}` : ''}</span>
+                  <Link href={`/carteras/${g.id}`} className="font-semibold hover:underline">{g.nombre}: {eur(g.objetivo)}{g.anio ? ` en ${g.anio}` : ''}</Link>
                   <span className="text-sm font-bold text-brand tabular">{pct(ratio, 1)}</span>
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-subtle" role="progressbar" aria-valuenow={Math.round(ratio * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={`Progreso de ${g.nombre}`}>
@@ -108,6 +108,7 @@ export function DashboardView(p: DashboardViewProps) {
                 </div>
                 <span className="text-[13px] text-muted">
                   {g.eta === 'conseguido' ? '¡Objetivo conseguido!' : g.eta ? `A este ritmo lo alcanzarías en ${mesLargo(g.eta)} (suponiendo un 5 % anual)` : 'A este ritmo no se alcanza: prueba a aportar más.'}
+                  {' '}<Link href={`/carteras/${g.id}`} className="font-semibold text-brand">Ver plan →</Link>
                 </span>
               </div>
             );

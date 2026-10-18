@@ -293,6 +293,7 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-line bg-surface p-2.5"><div className="text-xl font-bold">{preview.nuevas}</div><div className="text-xs text-muted">nuevas</div></div>
             <div className="rounded-xl border border-line bg-surface p-2.5"><div className="text-xl font-bold">{preview.duplicadas}</div><div className="text-xs text-muted">ya estaban (se omiten)</div></div>
+            {preview.aCorregir ? <p className="col-span-2 text-[13px] text-muted">{preview.aCorregir} {preview.aCorregir === 1 ? 'compra ya la registraste' : 'compras ya las registraste'} a mano: no se duplican, se completan con los datos exactos del bróker.</p> : null}
           </div>
           <span className="text-sm font-semibold">¿A qué cartera va cada producto?</span>
           <ul className="flex flex-col gap-2.5">
@@ -328,8 +329,9 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
             })}
           </ul>
           {error ? <Alert>{error}</Alert> : null}
-          <Button type="button" disabled={pending || preview.nuevas === 0} onClick={doImport}>
-            {pending ? 'Importando…' : preview.nuevas === 0 ? 'No hay nada nuevo que importar' : `Importar ${preview.nuevas} movimientos`}
+          <Button type="button" disabled={pending || preview.nuevas + (preview.aCorregir ?? 0) === 0} onClick={doImport}>
+            {pending ? 'Importando…' : preview.nuevas > 0 ? `Importar ${preview.nuevas} movimientos`
+              : preview.aCorregir ? `Completar ${preview.aCorregir} ${preview.aCorregir === 1 ? 'compra' : 'compras'}` : 'No hay nada nuevo que importar'}
           </Button>
           <Link href="/" className="self-center py-2 text-sm text-muted">Cancelar</Link>
         </>

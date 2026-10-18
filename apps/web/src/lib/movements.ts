@@ -64,7 +64,14 @@ export async function priceOn(supabase: ServerSupabase, assetId: string, fecha: 
   if (asset?.tipo === 'efectivo') return 1;
   const { data } = await supabase.from('asset_prices').select('precio, fecha')
     .eq('asset_id', assetId).lte('fecha', fecha).order('fecha', { ascending: false }).limit(1).maybeSingle();
-  return data ? Number(data.precio) : null;
+  if (data) return Number(data.precio);
+  // Sin histórico de precios (p. ej. aún sin proveedor): el de tu última operación con ese producto.
+  const { data: tx } = await supabase.from('transactions').select('precio, importe, cantidad, holdings!inner(asset_id)')
+    .eq('holdings.asset_id', assetId).in('tipo', ['compra', 'venta', 'traspaso_entrada']).lte('fecha', fecha)
+    .order('fecha', { ascending: false }).limit(1).maybeSingle();
+  if (!tx) return null;
+  const p = tx.precio ? Number(tx.precio) : Number(tx.cantidad) > 0 ? Number(tx.importe) / Number(tx.cantidad) : null;
+  return p && p > 0 ? p : null;
 }
 
 export async function positionOf(supabase: ServerSupabase, holdingId: string): Promise<number> {
