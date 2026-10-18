@@ -11,7 +11,7 @@ import { investPlan } from '../../plan-actions';
 interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean; sinPrecio: boolean }
 
 export function InvestPlan(p: {
-  portfolio: { id: string; nombre: string }; importe: number; aportadoMes: number; mensual: number; primera: boolean;
+  portfolio: { id: string; nombre: string }; importe: number; primera: boolean;
   today: string; broker: string; slots: Slot[];
 }) {
   const [importe, setImporte] = useState(p.importe ? String(p.importe) : '');
@@ -51,7 +51,7 @@ export function InvestPlan(p: {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
       <PageHeader back={`/carteras/${p.portfolio.id}`} title={p.primera ? 'Tu primera aportación' : '¿Cuánto pongo en cada uno?'}
-        subtitle={p.aportadoMes > 0 && p.mensual > 0 ? `${p.portfolio.nombre} · este mes llevas ${eur(p.aportadoMes)} de ${eur(p.mensual)}` : p.portfolio.nombre} />
+        subtitle={p.portfolio.nombre} />
 
       <Card className="flex flex-col gap-4">
         <Field label="¿Cuánto vas a invertir ahora?" htmlFor="importe">

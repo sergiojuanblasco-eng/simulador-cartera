@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { DashboardView, type GoalView } from '@/components/dashboard-view';
-import { MonthlyCard } from '@/components/monthly-card';
-import { monthlyPlan } from '@/lib/plan-view';
+import { TargetCard } from '@/components/target-table';
+import { targetSummary } from '@/lib/plan-view';
 import { Card, H2, LinkButton } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, labelMaps, loadUserData, toCoreHoldings } from '@/lib/data';
@@ -51,13 +51,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       };
     });
 
-  const plans = await Promise.all(
-    data.portfolios.filter((p) => !selected || p.id === selected).map((p) => monthlyPlan(supabase, data, p, p.id === selected ? result : undefined)),
+  const objetivos = await Promise.all(
+    data.portfolios.filter((p) => !selected || p.id === selected).map((p) => targetSummary(supabase, data, p, p.id === selected ? result : undefined)),
   );
 
   return (
     <DashboardView
-      monthly={<MonthlyCard plans={plans} mes={data.today.slice(0, 7)} />}
+      objetivo={<TargetCard summaries={objetivos} />}
       nombre={nombre}
       today={data.today}
       carteras={data.portfolios.map((p) => ({ id: p.id, nombre: p.nombre }))}

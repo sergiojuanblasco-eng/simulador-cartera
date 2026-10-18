@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
 import { priceOn } from '@/lib/movements';
-import { monthlyPlan, planView } from '@/lib/plan-view';
+import { planView } from '@/lib/plan-view';
 import { InvestPlan } from './invest';
 
 export const metadata: Metadata = { title: 'Invertir según mi plan' };
@@ -27,7 +27,7 @@ export default async function InvertirPage({ params, searchParams }: { params: P
   }
   const broker = [...uso.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Trade Republic';
 
-  const month = await monthlyPlan(supabase, data, p, result);
+  const mensual = view.aportacionMensual ?? (Math.round(result.metrics.aportacionMediaMensual) || 0);
   const slots = await Promise.all(view.rows.filter((r) => r.pctObjetivo !== null).map(async (r) => ({
     assetId: r.assetId, nombre: r.nombre, pct: r.pctObjetivo!, actual: r.valor, nuevo: r.holdingId === null,
     // Sin precio conocido hay que indicar las participaciones al registrar
@@ -37,9 +37,7 @@ export default async function InvertirPage({ params, searchParams }: { params: P
   return (
     <InvestPlan
       portfolio={{ id: p.id, nombre: p.nombre }}
-      importe={month.restante > 0 ? month.restante : month.mensual}
-      aportadoMes={month.aportadoMes}
-      mensual={month.mensual}
+      importe={mensual}
       primera={!!primera}
       today={data.today}
       broker={broker}

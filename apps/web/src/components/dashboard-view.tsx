@@ -27,8 +27,8 @@ export interface DashboardViewProps {
   goals: GoalView[];
   warnings: string[];
   baseHref?: string;
-  /** Tarjeta «Tu aportación de este mes» (se pinta en el servidor). */
-  monthly?: React.ReactNode;
+  /** Tarjeta «Tu cartera objetivo» (se pinta en el servidor; va al final). */
+  objetivo?: React.ReactNode;
 }
 
 function saludo(): string {
@@ -86,8 +86,6 @@ export function DashboardView(p: DashboardViewProps) {
           sub={`Pagadas en compras y ventas · ${m.terMedio === null ? 'TER de los fondos: pendiente' : `TER ${pct(m.terMedio, 2)} ≈ ${eur(m.costeAnual)}/año`}`} />
       </div>
 
-      {p.monthly}
-
       <DashboardCharts today={p.today} value={p.value} byProduct={p.byProduct} byClass={p.byClass} />
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -119,6 +117,8 @@ export function DashboardView(p: DashboardViewProps) {
           })}
         </Card>
       </div>
+
+      {p.objetivo}
 
       {p.warnings.length ? (
         <details className="rounded-xl border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn-ink">

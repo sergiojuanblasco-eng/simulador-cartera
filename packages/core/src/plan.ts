@@ -64,3 +64,26 @@ export function splitContribution(amount: number, slots: PlanSlot[], mode: Split
     pesoDespues: T > 0 ? (actual[i]! + importes[i]!) / T : 0,
   }));
 }
+
+export interface GapLine {
+  key: string;
+  pesoObjetivo: number;
+  pesoActual: number;
+  /** Valor que debería tener según el objetivo (EUR). */
+  objetivo: number;
+  /** + añadir / − retirar para quedar exactamente en el objetivo (EUR, redondeado). */
+  ajuste: number;
+}
+
+/** Cuánto añadir o retirar de cada producto para estar exactamente en el reparto objetivo hoy. */
+export function rebalanceGap(slots: PlanSlot[]): GapLine[] {
+  const sumW = slots.reduce((a, s) => a + Math.max(0, s.peso), 0);
+  if (!slots.length || sumW <= 0) return [];
+  const total = slots.reduce((a, s) => a + Math.max(0, s.actual), 0);
+  return slots.map((s) => {
+    const w = Math.max(0, s.peso) / sumW;
+    const actual = Math.max(0, s.actual);
+    const objetivo = w * total;
+    return { key: s.key, pesoObjetivo: w, pesoActual: total > 0 ? actual / total : 0, objetivo, ajuste: Math.round(objetivo - actual) };
+  });
+}

@@ -41,3 +41,18 @@ describe('reparto de la aportación', () => {
     expect(splitContribution(100, [{ key: 'A', peso: 0, actual: 5 }], 'equilibrar')).toEqual([]);
   });
 });
+
+describe('ajuste para cuadrar con el objetivo', async () => {
+  const { rebalanceGap } = await import('../src/plan');
+  it('dice cuánto añadir o retirar de cada producto', () => {
+    // 1000 € en total: objetivo 60/30/10, hoy 700/200/100
+    const g = rebalanceGap([{ key: 'A', peso: 60, actual: 700 }, { key: 'B', peso: 30, actual: 200 }, { key: 'C', peso: 10, actual: 100 }]);
+    expect(g.map((x) => x.ajuste)).toEqual([-100, 100, 0]);
+    expect(g[0]!.pesoActual).toBeCloseTo(0.7, 10);
+    expect(g[0]!.pesoObjetivo).toBeCloseTo(0.6, 10);
+  });
+  it('un producto del objetivo que aún no tienes: todo a añadir', () => {
+    const g = rebalanceGap([{ key: 'A', peso: 50, actual: 1000 }, { key: 'B', peso: 50, actual: 0 }]);
+    expect(g.map((x) => x.ajuste)).toEqual([-500, 500]);
+  });
+});
