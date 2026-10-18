@@ -96,16 +96,16 @@ npm run dev                                     # http://localhost:3000
 npm test && npm run typecheck
 ```
 
-## Datos de mercado
-- **EODHD** (plan *Historian*, 19,99 $/mes o 199 $/año): valor liquidativo diario de fondos europeos (`ISIN.EUFUND`),
-  cierres y precio con ~15 min de retraso de ETFs y acciones, 30+ años de histórico. Clave en `EODHD_API_KEY`.
-  El plan gratuito (20 llamadas/día) sirve para probar.
+## Datos de mercado (gratis por defecto)
+- **Yahoo Finance** (API pública no oficial, gratis y sin clave): valor liquidativo diario de los fondos europeos
+  (tickers «0P…»), ETFs y acciones con precio del día. Puede cambiar o limitar peticiones sin aviso.
 - **CoinGecko** (gratis): cripto en euros, en vivo.
-- **BCE (Frankfurter)**: tipos de cambio.
-- **TER**: EODHD no da el de los fondos europeos → catálogo verificado en `src/lib/market/ter-catalog.ts`
-  + TER propio por posición (ficha del producto).
-- Cuándo se actualiza: cada noche (cron) y, además, al abrir la app (cripto cada 5 min, ETFs/acciones cada 15 min,
-  fondos cada 6 h). Admin: «Más → Actualizar precios ahora» (también enlaza con EODHD los productos creados a mano).
+- **BCE (Frankfurter)**: tipos de cambio (los ETFs que cotizan en USD/GBP se pasan a euros).
+- **EODHD** (opcional, de pago): si se pone `EODHD_API_KEY`, se usa primero (datos con licencia; recomendable
+  si Kartera pasa a ser de pago).
+- **TER**: catálogo verificado en `src/lib/market/ter-catalog.ts` + TER propio por posición (ficha del producto).
+- Cuándo se actualiza: cada noche (cron) y al abrir la app (cripto cada 5 min, ETFs/acciones cada 15 min,
+  fondos cada 6 h). Admin: «Más → Actualizar precios ahora» (también enlaza los productos importados).
 
 ## Decisiones técnicas clave
 - Los importes de dinero se guardan como `NUMERIC` en la base de datos y se calculan con `decimal.js`; nunca con decimales flotantes.

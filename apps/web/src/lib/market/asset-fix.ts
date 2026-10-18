@@ -3,12 +3,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { detectCrypto, type CryptoHint } from '@/lib/crypto';
 import type { AssetRow } from '@/lib/db';
 import { serverEnv } from '@/lib/env';
-import { coingeckoSearch, eodhdSearch, type ExternalAsset } from './providers';
+import { coingeckoSearch, eodhdSearch, pickYahoo, yahooChart, yahooSearch, type ExternalAsset } from './providers';
 
 /**
  * Arreglos de productos propios (los que se crearon «a mano» porque no se reconocieron):
  *  - una cripto guardada como fondo → se enlaza con su precio de CoinGecko;
- *  - un fondo/ETF con ISIN → se enlaza con EODHD cuando hay clave (precio diario + TER).
+ *  - un fondo/ETF con ISIN → se enlaza con EODHD si hay clave o, gratis, con Yahoo Finance.
  * Enlazar = mover sus posiciones y movimientos al activo del catálogo global y borrar el propio.
  */
 
@@ -39,6 +39,41 @@ export async function eodhdTarget(isin: string): Promise<ExternalAsset | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Mejor cotización gratis (Yahoo Finance) para un ISIN: prefiere el fondo (valor liquidativo) o un
+ * mercado en euros, y solo acepta un símbolo que tenga precios recientes. Devuelve la moneda real.
+ */
+export async function yahooTarget(isin: string): Promise<ExternalAsset | null> {
+  let results: ExternalAsset[];
+  try {
+    results = await yahooSearch(isin);
+  } catch {
+    return null;
+  }
+  const ranked: ExternalAsset[] = [];
+  let rest = [...results];
+  while (rest.length) {
+    const best = pickYahoo(rest)!;
+    ranked.push(best);
+    rest = rest.filter((r) => r !== best);
+  }
+  const desde = new Date(Date.now() - 45 * 86_400_000).toISOString().slice(0, 10);
+  for (const cand of ranked.slice(0, 4)) {
+    try {
+      const c = await yahooChart(cand.proveedorId, desde);
+      if (c.points.length >= 3) return { ...cand, isin, moneda: c.currency };
+    } catch {
+      // probar el siguiente
+    }
+  }
+  return null;
+}
+
+/** Cotización para un ISIN: EODHD si hay clave; si no (o no lo tiene), Yahoo Finance. */
+export async function listedTarget(isin: string): Promise<ExternalAsset | null> {
+  return (await eodhdTarget(isin)) ?? (await yahooTarget(isin));
 }
 
 /**
@@ -91,6 +126,6 @@ export async function marketTargetFor(a: Pick<AssetRow, 'nombre' | 'isin' | 'tic
     ? detectCrypto({ nombre: a.nombre, ticker: a.ticker, isin: a.isin, clase: 'crypto' })
     : detectCrypto({ nombre: a.nombre, ticker: a.ticker, isin: a.isin });
   if (hint) return cryptoTarget(hint, a.nombre);
-  if (a.isin && a.tipo !== 'efectivo') return eodhdTarget(a.isin);
+  if (a.isin && a.tipo !== 'efectivo') return listedTarget(a.isin);
   return null;
 }

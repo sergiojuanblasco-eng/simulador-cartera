@@ -3,7 +3,7 @@ import type { AssetRow } from '@/lib/db';
 import { hoyMadrid } from '@/lib/format';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { syncAssetPrices } from './ingest';
-import { coingeckoLive, eodhdLive } from './providers';
+import { coingeckoLive, eodhdLive, yahooChart } from './providers';
 
 /** Cada cuánto se vuelve a pedir un precio (para no gastar llamadas del proveedor). */
 const LIVE_MIN = { cripto: 5, cotizado: 15 };
@@ -24,7 +24,7 @@ export async function refreshPrices(assetIds: string[], opts: { force?: boolean 
   if (ids.length === 0) return { actualizados: 0, errores: [] };
   const admin = createAdminClient();
   const { data } = await admin.from('assets').select('*').in('id', ids);
-  const assets = ((data ?? []) as AssetRow[]).filter((a) => a.proveedor_id && (a.proveedor === 'eodhd' || a.proveedor === 'coingecko'));
+  const assets = ((data ?? []) as AssetRow[]).filter((a) => a.proveedor_id && ['eodhd', 'coingecko', 'yahoo'].includes(a.proveedor ?? ''));
   const today = hoyMadrid();
   const now = new Date().toISOString();
   const rows: { asset_id: string; fecha: string; precio: number; fuente: string }[] = [];
@@ -74,8 +74,30 @@ export async function refreshPrices(assetIds: string[], opts: { force?: boolean 
     }
   }
 
-  if (rows.length) {
-    const { error } = await admin.from('asset_prices').upsert(rows, { onConflict: 'asset_id,fecha' });
+  // Yahoo (gratis): una llamada por producto trae los cierres que falten y el último precio.
+  // Fondos («0P…»): valor liquidativo, cada 6 h. ETFs y acciones: cada 15 min.
+  const yahoo = assets.filter((a) => a.proveedor === 'yahoo').filter((a) => {
+    const fondo = a.proveedor_id!.startsWith('0P') || a.tipo === 'fondo';
+    const m = a.metadata as Meta;
+    return opts.force || (fondo ? ageMin(m.sync_at) >= DAILY_HOURS * 60 : ageMin(m.live_at) >= LIVE_MIN.cotizado);
+  }).slice(0, 25);
+  for (const a of yahoo) {
+    try {
+      const { data: last } = await admin.from('asset_prices').select('fecha').eq('asset_id', a.id).neq('fuente', 'live')
+        .order('fecha', { ascending: false }).limit(1).maybeSingle();
+      const desde = last?.fecha ?? new Date(Date.now() - 5 * 365 * 86_400_000).toISOString().slice(0, 10);
+      const c = await yahooChart(a.proveedor_id!, desde);
+      for (const p of c.points) if (p.fecha <= today) rows.push({ asset_id: a.id, fecha: p.fecha, precio: p.precio, fuente: 'yahoo' });
+      const fondo = a.proveedor_id!.startsWith('0P') || a.tipo === 'fondo';
+      if (!fondo && c.last && !c.points.some((p) => p.fecha === today)) rows.push({ asset_id: a.id, fecha: today, precio: c.last.precio, fuente: 'live' });
+      touched.set(a.id, { ...meta(a), sync_at: now, live_at: now });
+    } catch (e) {
+      errores.push(`${a.nombre}: ${(e as Error).message}`);
+    }
+  }
+
+  for (let i = 0; i < rows.length; i += 500) {
+    const { error } = await admin.from('asset_prices').upsert(rows.slice(i, i + 500), { onConflict: 'asset_id,fecha' });
     if (error) errores.push(error.message);
   }
   for (const [id, m] of touched) await admin.from('assets').update({ metadata: m }).eq('id', id);

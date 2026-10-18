@@ -54,7 +54,7 @@ export function RefreshPricesButton() {
       {state.error ? <Alert>{state.error}</Alert> : null}
       {state.resumen ? (
         <Alert tone={state.resumen.errores.length ? 'warn' : 'ok'}>
-          {!state.resumen.conEodhd ? 'Aún no hay clave de EODHD: solo se actualizan las cripto. ' : ''}
+          {state.resumen.conEodhd ? 'Fuente: EODHD. ' : 'Fuente gratis: Yahoo Finance (fondos, ETFs y acciones) y CoinGecko (cripto). '}
           {state.resumen.enlazados} productos enlazados con datos de mercado · {state.resumen.precios} precios nuevos de {state.resumen.activos} productos
           {state.resumen.ter ? ` · ${state.resumen.ter} TER añadidos` : ''}.
           {state.resumen.errores.length ? <span className="mt-1 block text-xs">Avisos: {state.resumen.errores.join(' · ')}</span> : null}

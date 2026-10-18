@@ -9,8 +9,7 @@ import { hoyMadrid } from '@/lib/format';
 import { productKey, rowIssues, type NormalizedRow } from '@/lib/import/parse';
 import { parsePlan } from '@/lib/plan';
 import { detectCrypto, guessAssetType } from '@/lib/crypto';
-import { cryptoTarget, relinkAsset } from '@/lib/market/asset-fix';
-import { eodhdSearch } from '@/lib/market/providers';
+import { cryptoTarget, listedTarget, relinkAsset } from '@/lib/market/asset-fix';
 import { ensureAccount, ensureHolding, priceOn, resolveAsset } from '@/lib/movements';
 
 const MAX_ROWS = 5000;
@@ -140,10 +139,10 @@ export async function previewImport(rawRows: NormalizedRow[]): Promise<PreviewRe
         matchLabel = 'Encontrado en el catálogo';
       } else {
         try {
-          const ext = (await eodhdSearch(first.isin))[0];
+          const ext = await listedTarget(first.isin);
           if (ext) {
             match = { kind: 'external', ...ext };
-            matchLabel = `Encontrado: ${ext.detalle}`;
+            matchLabel = `Encontrado: ${ext.detalle} · precio diario en ${ext.moneda}`;
           }
         } catch {
           // Sin proveedor disponible: se crea como producto propio.

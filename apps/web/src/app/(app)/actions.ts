@@ -10,7 +10,7 @@ import { hoyMadrid } from '@/lib/format';
 import { ensureAccount, ensureHolding, positionOf, priceOn, resolveAsset } from '@/lib/movements';
 import { marketTargetFor, relinkAsset } from '@/lib/market/asset-fix';
 import { ensureGlobalAsset, syncAssetPrices } from '@/lib/market/ingest';
-import { coingeckoSearch, eodhdSearch } from '@/lib/market/providers';
+import { coingeckoSearch, eodhdSearch, yahooSearch } from '@/lib/market/providers';
 
 export interface ActionResult<T = undefined> {
   ok: boolean;
@@ -94,8 +94,11 @@ export async function searchAssets(q: string): Promise<SearchResult[]> {
   const knownIsins = new Set((local ?? []).map((a) => a.isin).filter(Boolean));
 
   if (term.length >= 3) {
-    const [eod, cg] = await Promise.allSettled([eodhdSearch(term), coingeckoSearch(term)]);
-    const ext = [...(eod.status === 'fulfilled' ? eod.value : []), ...(cg.status === 'fulfilled' ? cg.value : [])];
+    const [eod, yh, cg] = await Promise.allSettled([eodhdSearch(term), yahooSearch(term), coingeckoSearch(term)]);
+    const eodRows = eod.status === 'fulfilled' ? eod.value : [];
+    // Yahoo (gratis) solo si EODHD no ha dado nada
+    const yhRows = eodRows.length === 0 && yh.status === 'fulfilled' ? yh.value.slice(0, 8) : [];
+    const ext = [...eodRows, ...yhRows, ...(cg.status === 'fulfilled' ? cg.value : [])];
     for (const e of ext) {
       if (e.isin && knownIsins.has(e.isin)) continue;
       results.push({ choice: { kind: 'external', ...e }, nombre: e.nombre, detalle: [e.isin, e.detalle].filter(Boolean).join(' · ') });

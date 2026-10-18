@@ -42,7 +42,7 @@ export default async function MasPage() {
       {isAdmin(user.email) ? (
         <Card className="flex flex-col gap-2">
           <span className="font-semibold">Precios y datos de mercado</span>
-          <span className="text-[13px] text-muted">Cada noche se actualizan solos. Usa esto tras conectar EODHD o si ves un precio antiguo.</span>
+          <span className="text-[13px] text-muted">Se actualizan solos al abrir la app y cada noche. Usa esto para enlazar con datos de mercado los productos importados o si ves un precio antiguo.</span>
           <RefreshPricesButton />
         </Card>
       ) : null}

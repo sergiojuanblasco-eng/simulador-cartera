@@ -6,7 +6,7 @@ import { hoyMadrid } from '@/lib/format';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { marketTargetFor, relinkAsset } from './asset-fix';
 import { catalogTer } from './ter-catalog';
-import { coingeckoPrices, ecbRates, eodhdPrices, eodhdTer, type ExternalAsset } from './providers';
+import { coingeckoPrices, ecbRates, eodhdPrices, eodhdTer, yahooChart, type ExternalAsset } from './providers';
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -24,7 +24,7 @@ async function upsertChunks(admin: Admin, table: string, rows: Record<string, un
  * (o desde el último precio guardado). Idempotente: se puede repetir sin duplicar.
  */
 export async function syncAssetPrices(asset: Pick<AssetRow, 'id' | 'proveedor' | 'proveedor_id'>, from?: string): Promise<number> {
-  if (!asset.proveedor_id || (asset.proveedor !== 'eodhd' && asset.proveedor !== 'coingecko')) return 0;
+  if (!asset.proveedor_id || !['eodhd', 'coingecko', 'yahoo'].includes(asset.proveedor ?? '')) return 0;
   const admin = createAdminClient();
   const today = hoyMadrid();
 
@@ -41,7 +41,9 @@ export async function syncAssetPrices(asset: Pick<AssetRow, 'id' | 'proveedor' |
 
   const points = asset.proveedor === 'eodhd'
     ? await eodhdPrices(asset.proveedor_id, start)
-    : await coingeckoPrices(asset.proveedor_id, daysBetween(start, today) + 1);
+    : asset.proveedor === 'yahoo'
+      ? (await yahooChart(asset.proveedor_id, start)).points
+      : await coingeckoPrices(asset.proveedor_id, daysBetween(start, today) + 1);
 
   const rows = points
     .filter((p) => p.fecha >= start && p.fecha <= today)
@@ -61,13 +63,21 @@ export async function ensureGlobalAsset(ext: ExternalAsset): Promise<string> {
     if (byIsin) return byIsin.id;
   }
   const ter = (ext.proveedor === 'eodhd' && (ext.tipo === 'etf' || ext.tipo === 'fondo') ? await eodhdTer(ext.proveedorId) : null) ?? catalogTer(ext.isin);
+  let moneda = ext.moneda;
+  if (ext.proveedor === 'yahoo') {
+    try {
+      moneda = (await yahooChart(ext.proveedorId, addDays(hoyMadrid(), -10))).currency;
+    } catch {
+      // se queda la moneda del resultado
+    }
+  }
   const { data, error } = await admin.from('assets').insert({
     owner_id: null,
     isin: ext.isin,
     ticker: ext.ticker,
     nombre: ext.nombre.slice(0, 200),
     tipo: ext.tipo,
-    moneda: ext.moneda,
+    moneda,
     ter,
     proveedor: ext.proveedor,
     proveedor_id: ext.proveedorId,
@@ -82,10 +92,11 @@ export async function ensureBenchmark(): Promise<AssetRow | null> {
   const isin = serverEnv.benchmarkIsin();
   const { data } = await admin.from('assets').select('*').is('owner_id', null).eq('isin', isin).maybeSingle();
   if (data) return data as AssetRow;
-  if (!serverEnv.eodhdKey()) return null;
+  // Con EODHD, su símbolo; si no, gratis en Yahoo (iShares Core MSCI World en Xetra, en euros).
+  const conEodhd = !!serverEnv.eodhdKey();
   const { data: created, error } = await admin.from('assets').insert({
     owner_id: null, isin, nombre: 'Índice de referencia (MSCI World)', tipo: 'etf', moneda: 'EUR',
-    proveedor: 'eodhd', proveedor_id: serverEnv.benchmarkSymbol(),
+    proveedor: conEodhd ? 'eodhd' : 'yahoo', proveedor_id: conEodhd ? serverEnv.benchmarkSymbol() : 'EUNL.DE',
   }).select('*').single();
   if (error) return null;
   return created as AssetRow;
@@ -93,26 +104,24 @@ export async function ensureBenchmark(): Promise<AssetRow | null> {
 
 /**
  * Productos propios que ahora se pueden reconocer (cripto guardada como fondo,
- * fondos con ISIN cuando hay clave de EODHD): se enlazan con el catálogo global.
+ * fondos y ETFs con ISIN, en EODHD o gratis en Yahoo): se enlazan con el catálogo global.
  * Cada producto se reintenta como mucho una vez al mes.
  */
 export async function fixOwnAssets(max = 40, force = false): Promise<{ enlazados: number; errores: string[] }> {
   const admin = createAdminClient();
   const today = hoyMadrid();
-  const hayEodhd = !!serverEnv.eodhdKey();
   const out = { enlazados: 0, errores: [] as string[] };
   const { data } = await admin.from('assets').select('*').not('owner_id', 'is', null)
     .or('proveedor.is.null,proveedor.eq.manual').neq('tipo', 'efectivo').limit(500);
   const pending = ((data ?? []) as AssetRow[]).filter((a) => {
-    const tried = (a.metadata as { enlace_intentado?: string }).enlace_intentado;
+    const tried = (a.metadata as { enlace_intentado2?: string }).enlace_intentado2;
     return force || !tried || daysBetween(tried, today) >= 30;
   }).slice(0, max);
   for (const a of pending) {
     try {
       const target = await marketTargetFor(a);
       if (!target) {
-        // Sin clave de EODHD no se ha podido buscar: no cuenta como intento.
-        if (hayEodhd || a.tipo === 'cripto') await admin.from('assets').update({ metadata: { ...a.metadata, enlace_intentado: today } }).eq('id', a.id);
+        await admin.from('assets').update({ metadata: { ...a.metadata, enlace_intentado2: today } }).eq('id', a.id);
         continue;
       }
       const globalId = await ensureGlobalAsset(target);
