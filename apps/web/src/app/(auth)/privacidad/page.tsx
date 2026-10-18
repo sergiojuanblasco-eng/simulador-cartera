@@ -12,7 +12,7 @@ export default function PrivacidadPage() {
       <p><strong>Responsable:</strong> [TU NOMBRE O EMPRESA] · [EMAIL DE CONTACTO].</p>
       <p><strong>Qué datos guardamos:</strong> tu nombre, tu email y las operaciones de inversión que registras o importas. No pedimos ni guardamos claves de tus bancos o brókeres.</p>
       <p><strong>Para qué:</strong> únicamente para calcular y mostrarte tu patrimonio. No vendemos ni cedemos tus datos.</p>
-      <p><strong>Dónde:</strong> en servidores de la Unión Europea (Supabase, región Frankfurt). Cada cuenta está aislada: nadie más puede ver tus datos.</p>
+      <p><strong>Dónde:</strong> en servidores de la Unión Europea (Supabase, región Irlanda). Cada cuenta está aislada: nadie más puede ver tus datos.</p>
       <p><strong>Tus derechos:</strong> puedes descargar tus datos y borrar tu cuenta en cualquier momento desde «Más». También puedes escribirnos para acceso, rectificación o supresión.</p>
       <p><strong>Aviso:</strong> Kartera muestra información; no es asesoramiento financiero ni recomienda productos.</p>
     </div>

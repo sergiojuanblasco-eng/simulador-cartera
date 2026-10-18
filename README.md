@@ -43,7 +43,7 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera
 ## Puesta en marcha
 
 ### 1. Supabase
-1. Crea un proyecto **nuevo** en la región **Frankfurt**.
+1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
 2. En **SQL Editor**, ejecuta en orden las dos migraciones de `supabase/migrations/`.
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
