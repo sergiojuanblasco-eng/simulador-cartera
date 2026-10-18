@@ -1,0 +1,36 @@
+{
+  "name": "@kartera/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/instrument-serif": "5.3.0",
+    "@fontsource/plus-jakarta-sans": "5.3.0",
+    "@kartera/core": "*",
+    "@supabase/ssr": "0.7.0",
+    "@supabase/supabase-js": "2.75.0",
+    "next": "15.5.28",
+    "papaparse": "5.5.3",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "read-excel-file": "5.8.8",
+    "recharts": "3.2.1",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.1.18",
+    "@types/node": "22.18.0",
+    "@types/papaparse": "5.3.16",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

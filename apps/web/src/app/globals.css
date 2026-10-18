@@ -1,0 +1,59 @@
+@import 'tailwindcss';
+
+/* Identidad Kartera: fondo crema, tinta casi negra, verde de marca, Instrument Serif + Plus Jakarta Sans */
+@theme {
+  --color-ink: #1b1b18;
+  --color-ink-2: #34342f;
+  --color-paper: #fbfaf8;
+  --color-surface: #ffffff;
+  --color-line: #e4e4e0;
+  --color-line-strong: #d2d2cc;
+  --color-muted: #6b6b66;
+  --color-muted-2: #3f3f3a;
+  --color-subtle: #f2f0eb;
+  --color-brand: #16754e;
+  --color-brand-dark: #14532d;
+  --color-brand-soft: #e8f5ef;
+  --color-pos: #16754e;
+  --color-pos-on-dark: #8fe3b8;
+  --color-neg: #b91c1c;
+  --color-neg-on-dark: #fca5a5;
+  --color-warn-bg: #fbf1e4;
+  --color-warn-line: #ebcfa6;
+  --color-warn-ink: #7a3e0c;
+  --color-teal-soft: #e6eef7;
+  --color-teal-ink: #24507e;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Instrument Serif solo tiene un peso: nunca negrita sintética. (Fuera de @layer: gana a las utilidades.) */
+.font-display {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Números alineados en tablas y métricas */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.recharts-wrapper *:focus {
+  outline: none;
+}

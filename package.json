@@ -1,20 +1,17 @@
 {
-  "name": "simulador-cartera",
+  "name": "kartera",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "npm run dev -w @kartera/web",
+    "build": "npm run build -w @kartera/web",
+    "test": "npm test -w @kartera/core && npm test -w @kartera/web",
+    "typecheck": "npm run typecheck -w @kartera/core && npm run typecheck -w @kartera/web"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@supabase/supabase-js": "^2.49.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0",
-    "vite": "^5.0.0"
+  "engines": {
+    "node": ">=20"
   }
 }
