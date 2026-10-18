@@ -69,7 +69,7 @@ export async function investPlan(portfolioId: string, input: {
   fecha: string;
   comisionPorOrden: number;
   broker: string;
-  lines: { assetId: string; importe: number; cantidad?: number | null }[];
+  lines: { assetId: string; importe: number; cantidad?: number | null; comision?: number | null }[];
 }): Promise<Result<{ registradas: number; sinPrecio: string[] }>> {
   const { supabase } = await requireUser();
   if (!isIsoDate(input.fecha) || input.fecha > hoyMadrid() || input.fecha < '1990-01-01') return fail('La fecha no es válida.');
@@ -97,10 +97,11 @@ export async function investPlan(portfolioId: string, input: {
         holdingId = await ensureHolding(supabase, portfolioId, accountId, asset.id);
       }
       const importe = Math.round(l.importe * 100) / 100;
+      const comLinea = l.comision != null && Number.isFinite(l.comision) ? Math.max(0, Math.min(1000, l.comision)) : comision;
       toInsert.push({
         holding_id: holdingId, tipo: 'compra', fecha: input.fecha,
         cantidad: Number((importe / precio).toFixed(10)), precio: Number(precio.toFixed(8)),
-        importe, comision: Math.round(comision * 100) / 100,
+        importe, comision: Math.round(comLinea * 100) / 100,
         notas: 'Aportación según la cartera objetivo',
       });
     }
