@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseEsNumber } from '@/lib/format';
+import { detectCrypto, guessAssetType } from '@/lib/crypto';
 import { autoMap, detectTipo, findHeaderRow, normalizeAiRows, normalizeRows, parseDate, rowIssues } from '@/lib/import/parse';
 
 describe('números en español', () => {
@@ -81,8 +82,63 @@ describe('importación de un CSV típico', () => {
   });
 
   it('sin columna de tipo, deduce compra/venta por el signo', () => {
-    const out = normalizeRows([['2026-01-01', 'X', '-3', '30']], { fecha: 0, producto: 1, cantidad: 2, importe: 3, isin: -1, tipo: -1, precio: -1, comision: -1, moneda: -1 });
+    const out = normalizeRows([['2026-01-01', 'X', '-3', '30']], { fecha: 0, producto: 1, cantidad: 2, importe: 3, isin: -1, tipo: -1, precio: -1, comision: -1, moneda: -1, clase: -1 });
     expect(out[0]!.tipo).toBe('venta');
+  });
+});
+
+describe('Trade Republic (exportación CSV de transacciones)', () => {
+  const header = ['datetime', 'date', 'account_type', 'category', 'type', 'asset_class', 'name', 'symbol', 'shares', 'price', 'amount', 'fee', 'tax', 'currency',
+    'original_amount', 'original_currency', 'fx_rate', 'description', 'transaction_id', 'counterparty_name', 'counterparty_iban', 'payment_reference', 'mcc_code'];
+  const data = [
+    ['2026-01-02T10:00:00Z', '2026-01-02', 'DEFAULT', 'TRADING', 'BUY', 'FUND', 'iShares Core MSCI World', 'IE00B4L5Y983', '2.5', '100.00', '-250.00', '-1.00', '', 'EUR'],
+    ['2026-01-02T08:00:00Z', '2026-01-02', 'DEFAULT', 'TRADING', 'SAVINGS_PLAN', 'FUND', 'Vanguard FTSE All-World', 'IE00BK5BQT80', '0.8', '125.00', '-100.00', '', '', 'EUR'],
+    ['2026-01-03T09:00:00Z', '2026-01-03', 'DEFAULT', 'TRADING', 'BUY', 'CRYPTO', 'Bitcoin', 'BTC', '0.001', '90000', '-90.00', '-1.00', '', 'EUR'],
+    ['2026-01-04T12:00:00Z', '2026-01-04', 'DEFAULT', 'CASH', 'CARD_TRANSACTION', '', 'Mercadona', '', '', '', '-53.06', '', '', 'EUR'],
+    ['2026-01-05T12:00:00Z', '2026-01-05', 'DEFAULT', 'CASH', 'CARD_ORDERING_FEE', '', '', '', '', '', '0', '-5.00', '', 'EUR'],
+    ['2026-02-01T12:00:00Z', '2026-02-01', 'DEFAULT', 'TRADING', 'SELL', 'FUND', 'iShares Core MSCI World', 'IE00B4L5Y983', '-1', '110.00', '110.00', '-1.00', '', 'EUR'],
+  ];
+
+  it('reconoce el ISIN en «symbol» y el resto de columnas sin ayuda', () => {
+    const m = autoMap(header, data);
+    expect(m).toMatchObject({ fecha: 1, tipo: 4, clase: 5, producto: 6, isin: 7, cantidad: 8, precio: 9, importe: 10, comision: 11, moneda: 13 });
+  });
+
+  it('normaliza compras, plan de inversión, cripto y venta; ignora los movimientos de cuenta', () => {
+    const out = normalizeRows(data, autoMap(header, data), 2);
+    expect(out[0]).toMatchObject({ isin: 'IE00B4L5Y983', tipo: 'compra', importe: 250, comision: 1, cantidad: 2.5 });
+    expect(out[1]).toMatchObject({ tipo: 'compra', importe: 100 });
+    expect(out[2]).toMatchObject({ isin: null, ticker: 'BTC', clase: 'CRYPTO', producto: 'Bitcoin', tipo: 'compra' });
+    expect(rowIssues(out[2]!)).toEqual([]);
+    expect(rowIssues(out[3]!)).toEqual(['no_inversion']);
+    expect(rowIssues(out[4]!)).toEqual(['no_inversion']);
+    expect(out[5]).toMatchObject({ tipo: 'venta', cantidad: 1, importe: 110, comision: 1 });
+  });
+
+  it('encuentra la columna del ISIN por su contenido aunque se llame raro', () => {
+    const m = autoMap(['Fecha', 'Producto', 'Código', 'Importe'], [['01/01/2026', 'Fondo', 'IE00B4L5Y983', '10'], ['02/01/2026', 'Fondo', 'IE00B4L5Y983', '20']]);
+    expect(m.isin).toBe(2);
+  });
+});
+
+describe('cripto', () => {
+  it('detecta cripto directa y no confunde los ETP', () => {
+    expect(detectCrypto({ nombre: 'Bitcoin' })).toEqual({ symbol: 'BTC', coingeckoId: 'bitcoin' });
+    expect(detectCrypto({ nombre: 'Bitcoin (BTC)' })?.coingeckoId).toBe('bitcoin');
+    expect(detectCrypto({ isin: 'XF000BTC0017', nombre: 'Bitcoin' })?.symbol).toBe('BTC');
+    expect(detectCrypto({ ticker: 'ETH', clase: 'CRYPTO', nombre: 'Ethereum' })?.coingeckoId).toBe('ethereum');
+    expect(detectCrypto({ ticker: 'XYZ', clase: 'CRYPTO', nombre: 'Rara' })).toEqual({ symbol: 'XYZ', coingeckoId: null });
+    expect(detectCrypto({ isin: 'CH0454664001', nombre: '21Shares Bitcoin ETP' })).toBeNull();
+    expect(detectCrypto({ nombre: 'WisdomTree Physical Bitcoin' })).toBeNull();
+    expect(detectCrypto({ isin: 'IE00B4L5Y983', nombre: 'iShares Core MSCI World' })).toBeNull();
+    expect(detectCrypto({ nombre: 'Fidelity MSCI World' })).toBeNull();
+  });
+
+  it('deduce el tipo de producto', () => {
+    expect(guessAssetType({ clase: 'STOCK', nombre: 'Apple' })).toBe('accion');
+    expect(guessAssetType({ clase: 'FUND', nombre: 'iShares Core MSCI World UCITS ETF' })).toBe('etf');
+    expect(guessAssetType({ clase: 'FUND', nombre: 'Fidelity MSCI World' })).toBe('fondo');
+    expect(guessAssetType({ nombre: 'Plan de pensiones Indexa' })).toBe('plan_pensiones');
   });
 });
 

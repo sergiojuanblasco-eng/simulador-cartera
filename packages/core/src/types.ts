@@ -66,6 +66,8 @@ export interface DailyPoint {
   aportado: number;
   /** Flujo externo neto del día (+ entra dinero, − sale). */
   flujo: number;
+  /** Comisiones de compra/venta/custodia pagadas ese día (EUR). */
+  comision: number;
   /** Valor por posición. */
   porHolding: Record<string, number>;
 }
@@ -83,6 +85,8 @@ export interface PositionResult {
   gananciaPct: number | null;
   /** Precio medio de coste por participación. */
   precioMedio: number | null;
+  /** Comisiones de compra/venta pagadas en este producto (EUR, histórico). */
+  comisiones: number;
 }
 
 export interface RealizedGain {
@@ -104,8 +108,12 @@ export interface YearReturn {
 export interface MonthSummary {
   /** 'YYYY-MM' */
   mes: string;
+  /** Dinero nuevo neto (incluye lo pagado en comisiones). */
   aportado: number;
+  /** Ganancia o pérdida del MERCADO (sin comisiones). */
   ganancia: number;
+  /** Comisiones de compra/venta/custodia pagadas en el mes. */
+  comisiones: number;
   valorFin: number;
 }
 
@@ -125,7 +133,10 @@ export interface Metrics {
   terMedio: number | null;
   costeAnual: number;
   costeMensual: number;
-  mesActual: { aportado: number; ganancia: number };
+  mesActual: { aportado: number; ganancia: number; comisiones: number };
+  /** Comisiones de compra/venta/custodia pagadas en total (EUR). */
+  comisionesPagadas: number;
+  comisionesPorAnio: { anio: number; importe: number }[];
   rentabilidadAnual: YearReturn[];
 }
 

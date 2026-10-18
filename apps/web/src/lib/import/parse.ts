@@ -5,7 +5,7 @@
 import type { TxType } from '@kartera/core';
 import { parseEsNumber } from '@/lib/format';
 
-export const FIELDS = ['fecha', 'isin', 'producto', 'tipo', 'importe', 'cantidad', 'precio', 'comision', 'moneda'] as const;
+export const FIELDS = ['fecha', 'isin', 'producto', 'tipo', 'importe', 'cantidad', 'precio', 'comision', 'moneda', 'clase'] as const;
 export type Field = (typeof FIELDS)[number];
 export type Mapping = Record<Field, number>;
 
@@ -19,6 +19,7 @@ export const FIELD_LABEL: Record<Field, string> = {
   precio: 'Precio',
   comision: 'Comisión',
   moneda: 'Moneda',
+  clase: 'Clase de activo',
 };
 
 export interface NormalizedRow {
@@ -33,13 +34,22 @@ export interface NormalizedRow {
   precio: number | null;
   comision: number | null;
   moneda: string | null;
+  /** Clase de activo del extracto (FUND, STOCK, CRYPTO…), si viene. */
+  clase?: string | null;
+  /** Símbolo cuando no es un ISIN (BTC, ETH, AAPL…). */
+  ticker?: string | null;
+  /** Movimiento de cuenta que no es una inversión (pago con tarjeta, transferencia, intereses…). */
+  noInversion?: boolean;
 }
 
 const strip = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+/** Para cabeceras y tipos: además, «asset_class» = «asset class». */
+const stripH = (s: string) => strip(s.replace(/_/g, ' '));
+const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
 
 const SYNONYMS: Record<Field, string[]> = {
   fecha: ['fecha', 'fecha operacion', 'fecha de operacion', 'fecha valor', 'fecha contratacion', 'date', 'trade date', 'datum', 'booking date'],
-  isin: ['isin', 'codigo isin', 'isin code', 'cod. isin'],
+  isin: ['isin', 'codigo isin', 'isin code', 'cod. isin', 'symbol', 'simbolo', 'isin/wkn', 'wkn/isin'],
   producto: ['producto', 'nombre', 'fondo', 'nombre del fondo', 'descripcion', 'instrumento', 'activo', 'valor', 'name', 'security', 'title', 'asset', 'instrument'],
   tipo: ['tipo', 'tipo operacion', 'tipo de operacion', 'operacion', 'movimiento', 'concepto', 'type', 'transaction type', 'side', 'action'],
   importe: ['importe', 'importe total', 'importe neto', 'importe bruto', 'efectivo', 'valor efectivo', 'importe (eur)', 'importe eur', 'amount', 'total', 'net amount'],
@@ -47,11 +57,12 @@ const SYNONYMS: Record<Field, string[]> = {
   precio: ['precio', 'valor liquidativo', 'precio unitario', 'precio por participacion', 'price', 'nav', 'cotizacion', 'share price'],
   comision: ['comision', 'comisiones', 'gastos', 'fee', 'fees', 'commission'],
   moneda: ['moneda', 'divisa', 'currency'],
+  clase: ['asset class', 'clase de activo', 'clase activo', 'tipo de activo', 'tipo de producto', 'asset type', 'product type', 'instrument type'],
 };
 
 /** Detecta qué columna corresponde a cada campo a partir de las cabeceras. */
-export function autoMap(headers: string[]): Mapping {
-  const h = headers.map((x) => strip(String(x ?? '')));
+export function autoMap(headers: string[], dataRows: unknown[][] = []): Mapping {
+  const h = headers.map((x) => stripH(String(x ?? '')));
   const used = new Set<number>();
   const map = Object.fromEntries(FIELDS.map((f) => [f, -1])) as Mapping;
   // 1) coincidencia exacta, 2) la cabecera contiene el sinónimo
@@ -68,7 +79,37 @@ export function autoMap(headers: string[]): Mapping {
       }
     }
   }
-  return map;
+  return dataRows.length ? refineIsin(map, headers.length, dataRows) : map;
+}
+
+/** Proporción de celdas (no vacías) de una columna que son ISIN. */
+function isinRatio(rows: unknown[][], col: number): number {
+  let n = 0;
+  let ok = 0;
+  for (const r of rows.slice(0, 200)) {
+    const v = text(r?.[col]).toUpperCase().replace(/\s/g, '');
+    if (!v) continue;
+    n++;
+    if (ISIN_RE.test(v)) ok++;
+  }
+  return n ? ok / n : 0;
+}
+
+/**
+ * Si la columna del ISIN no se reconoce por el nombre (o no tiene ISINs),
+ * se busca por el contenido: la columna libre donde la mayoría de valores son ISIN.
+ */
+export function refineIsin(map: Mapping, nCols: number, rows: unknown[][]): Mapping {
+  if (map.isin >= 0 && isinRatio(rows, map.isin) >= 0.3) return map;
+  const used = new Set(FIELDS.filter((f) => f !== 'isin').map((f) => map[f]).filter((i) => i >= 0));
+  let best = -1;
+  let bestRatio = 0.6;
+  for (let c = 0; c < nCols; c++) {
+    if (used.has(c)) continue;
+    const r = isinRatio(rows, c);
+    if (r >= bestRatio) { best = c; bestRatio = r; }
+  }
+  return best >= 0 ? { ...map, isin: best } : map;
 }
 
 /** Busca la fila de cabeceras (los extractos a veces traen líneas de título antes). */
@@ -114,7 +155,7 @@ export function parseDate(v: unknown): string | null {
 
 /** Traduce el texto del extracto al tipo de operación. null si no se reconoce. */
 export function detectTipo(text: string): TxType | null {
-  const s = strip(text);
+  const s = stripH(text);
   if (!s) return null;
   if (s.includes('traspaso') || s.includes('transfer')) {
     if (/entrada|recibido|in\b|incoming/.test(s)) return 'traspaso_entrada';
@@ -124,7 +165,7 @@ export function detectTipo(text: string): TxType | null {
   if (/dividend|distribuci|cupon/.test(s)) return 'dividendo';
   if (/comision|\bfee|custodia|gastos/.test(s)) return 'comision';
   if (/venta|reembolso|rescate|\bsell|\bsale|verkauf/.test(s)) return 'venta';
-  if (/compra|suscripci|aportaci|\bbuy|purchase|plan de inversion|plan de ahorro|savings plan|sparplan|kauf/.test(s)) return 'compra';
+  if (/compra|suscripci|aportaci|\bbuy|purchase|plan de inversion|plan de ahorro|savings plan|sparplan|kauf|round ?up|redondeo/.test(s)) return 'compra';
   return null;
 }
 
@@ -147,14 +188,22 @@ export function normalizeRows(rows: unknown[][], mapping: Mapping, firstRowNumbe
     const precio = num(cell(row, mapping.precio));
     const comision = num(cell(row, mapping.comision));
     let tipo = detectTipo(tipoTexto);
-    // Sin columna de tipo: el signo de las participaciones lo dice (+ compra, − venta).
-    if (!tipo && mapping.tipo < 0 && cantidad !== null && cantidad !== 0) tipo = cantidad > 0 ? 'compra' : 'venta';
+    // Sin columna de tipo (o «orden ejecutada»): el signo lo dice (+ participaciones = compra).
+    const generic = mapping.tipo < 0 || /trade|order|execut|ejecuci|orden/.test(stripH(tipoTexto));
+    if (!tipo && generic) {
+      if (cantidad !== null && cantidad !== 0) tipo = cantidad > 0 ? 'compra' : 'venta';
+      else if (mapping.tipo >= 0 && importe !== null && importe !== 0) tipo = importe < 0 ? 'compra' : 'venta';
+    }
+    const isin = ISIN_RE.test(isinRaw) ? isinRaw : null;
+    const clase = mapping.clase >= 0 ? text(cell(row, mapping.clase)) || null : null;
+    // Extractos con «clase de activo» (Trade Republic): sin clase ni ISIN es un movimiento de cuenta.
+    const noInversion = mapping.clase >= 0 && !clase && !isin;
     let imp = importe !== null ? Math.abs(importe) : null;
     if (imp === null && cantidad !== null && precio !== null) imp = Math.abs(cantidad * precio);
     out.push({
       fila: firstRowNumber + idx,
       fecha: parseDate(cell(row, mapping.fecha)),
-      isin: /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isinRaw) ? isinRaw : null,
+      isin,
       producto: text(cell(row, mapping.producto)) || null,
       tipo,
       tipoTexto,
@@ -163,14 +212,18 @@ export function normalizeRows(rows: unknown[][], mapping: Mapping, firstRowNumbe
       precio: precio !== null ? Math.abs(precio) : null,
       comision: comision !== null ? Math.abs(comision) : null,
       moneda: (text(cell(row, mapping.moneda)).toUpperCase().match(/^[A-Z]{3}$/)?.[0]) ?? null,
+      clase,
+      ticker: !isin && /^[A-Z0-9.]{1,12}$/.test(isinRaw) ? isinRaw : null,
+      ...(noInversion ? { noInversion: true } : {}),
     });
   });
   return out;
 }
 
-export type RowIssue = 'sin_fecha' | 'sin_importe' | 'sin_producto' | 'tipo_desconocido';
+export type RowIssue = 'no_inversion' | 'sin_fecha' | 'sin_importe' | 'sin_producto' | 'tipo_desconocido';
 
 export function rowIssues(r: NormalizedRow): RowIssue[] {
+  if (r.noInversion) return ['no_inversion'];
   const issues: RowIssue[] = [];
   if (!r.fecha) issues.push('sin_fecha');
   if (!r.importe || r.importe <= 0) issues.push('sin_importe');
@@ -180,6 +233,7 @@ export function rowIssues(r: NormalizedRow): RowIssue[] {
 }
 
 export const ISSUE_LABEL: Record<RowIssue, string> = {
+  no_inversion: 'movimiento de cuenta, no es una inversión',
   sin_fecha: 'sin fecha válida',
   sin_importe: 'sin importe',
   sin_producto: 'sin producto ni ISIN',
@@ -201,7 +255,7 @@ export function normalizeAiRows(items: unknown[]): NormalizedRow[] {
     return {
       fila: i + 1,
       fecha: parseDate(o.fecha),
-      isin: /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin) ? isin : null,
+      isin: ISIN_RE.test(isin) ? isin : null,
       producto: text(o.producto) || null,
       tipo: (TIPOS as string[]).includes(t) ? (t as TxType) : detectTipo(t),
       tipoTexto: t,

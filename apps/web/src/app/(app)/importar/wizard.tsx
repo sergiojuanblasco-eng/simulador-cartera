@@ -22,7 +22,7 @@ const SOURCES: { id: Source; ini: string; name: string; sub: string; how: string
   { id: 'myinvestor', ini: 'MI', name: 'MyInvestor', sub: 'Archivo CSV o Excel de movimientos', broker: 'MyInvestor', accept: '.csv,.xlsx',
     how: ['Entra en la web de MyInvestor.', 'Ve a los movimientos de tu cartera de fondos o de tu cuenta de valores.', 'Exporta a Excel o CSV y súbelo aquí.'] },
   { id: 'trade_republic', ini: 'TR', name: 'Trade Republic', sub: 'Extracto de operaciones', broker: 'Trade Republic', accept: '.csv,.xlsx',
-    how: ['Descarga el extracto de operaciones desde la app o la web.', 'Si solo tienes PDFs, usa la opción «Otro bróker (con IA)».'] },
+    how: ['En la app de Trade Republic, exporta tus transacciones a CSV (desde tu perfil).', 'Súbelo tal cual: reconocemos sus columnas, la comisión de 1 € y las cripto.', 'Los pagos con tarjeta, transferencias e intereses se ignoran solos.', 'Si solo tienes PDFs, usa la opción «Otro bróker (con IA)».'] },
   { id: 'excel', ini: 'XL', name: 'Mi propio Excel', sub: 'Con nuestra plantilla de columnas', broker: 'Otro', accept: '.csv,.xlsx',
     how: ['Descarga la plantilla.', 'Copia tus operaciones: fecha, ISIN, producto, tipo (compra/venta), importe y participaciones.', 'Súbela aquí (CSV o Excel).'] },
   { id: 'ia', ini: 'IA', name: 'Otro bróker (con IA)', sub: 'Cualquier extracto, incluso PDF · Beta', broker: 'Otro', accept: '.csv,.xlsx,.pdf',
@@ -60,7 +60,8 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
   }, [aiRows, mapping, table, headerRow, fixes]);
   const valid = rows.filter((r) => rowIssues(r).length === 0);
   const unknownTipo = rows.filter((r) => rowIssues(r).length === 1 && rowIssues(r)[0] === 'tipo_desconocido');
-  const broken = rows.filter((r) => rowIssues(r).some((x) => x !== 'tipo_desconocido'));
+  const cashRows = rows.filter((r) => r.noInversion);
+  const broken = rows.filter((r) => !r.noInversion && rowIssues(r).some((x) => x !== 'tipo_desconocido'));
 
   async function onFile(file: File) {
     setError(null);
@@ -99,7 +100,7 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
       const hr = findHeaderRow(parsed);
       setTable(parsed);
       setHeaderRow(hr);
-      setMapping(autoMap((parsed[hr] ?? []).map((c) => String(c ?? ''))));
+      setMapping(autoMap((parsed[hr] ?? []).map((c) => String(c ?? '')), parsed.slice(hr + 1)));
       setStep(3);
     } catch {
       setError('No se pudo leer el archivo. ¿Es un CSV o un Excel válido?');
@@ -266,6 +267,10 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
                 </div>
               ))}
             </Card>
+          ) : null}
+
+          {cashRows.length ? (
+            <p className="text-[13px] text-muted">{cashRows.length} movimientos de cuenta (tarjeta, transferencias, intereses…) no son inversiones y no se importan.</p>
           ) : null}
 
           {broken.length ? (

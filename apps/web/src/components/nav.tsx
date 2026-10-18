@@ -11,8 +11,18 @@ const items = [
   { href: '/mas', label: 'Más', icon: <><circle cx="6" cy="12" r="1.8" fill="currentColor" /><circle cx="12" cy="12" r="1.8" fill="currentColor" /><circle cx="18" cy="12" r="1.8" fill="currentColor" /></> },
 ];
 
+const tools = [
+  { href: '/simulador-cartera', label: 'Simulador de cartera', icon: <path d="M4 19 C8 17 9 9 12 9 C15 9 16 14 20 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /> },
+  { href: '/interes-compuesto', label: 'Interés compuesto', icon: <><path d="M5 19 V13 M10 19 V10 M15 19 V7 M20 19 V4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /></> },
+];
+
+const TOOL_PREFIXES = ['/simulador-cartera', '/interes-compuesto', '/simulacion/'];
+
 function isActive(path: string, href: string) {
-  return href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+  if (href === '/') return path === '/';
+  // En el móvil, las herramientas cuelgan de «Más».
+  if (href === '/mas' && TOOL_PREFIXES.some((p) => path.startsWith(p))) return true;
+  return path === href || path.startsWith(href + '/');
 }
 
 export function BottomNav() {
@@ -39,18 +49,18 @@ export function BottomNav() {
 
 export function SideNav() {
   const path = usePathname();
+  const link = (it: (typeof items)[number], active: boolean) => (
+    <Link key={it.href} href={it.href} aria-current={active ? 'page' : undefined}
+      className={`flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] ${active ? 'bg-brand-soft font-semibold text-brand-dark' : 'font-medium text-muted-2 hover:bg-subtle'}`}>
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">{it.icon}</svg>
+      {it.label}
+    </Link>
+  );
   return (
     <nav aria-label="Navegación principal" className="flex flex-col gap-1">
-      {items.map((it) => {
-        const active = isActive(path, it.href);
-        return (
-          <Link key={it.href} href={it.href} aria-current={active ? 'page' : undefined}
-            className={`flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] ${active ? 'bg-brand-soft font-semibold text-brand-dark' : 'font-medium text-muted-2 hover:bg-subtle'}`}>
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">{it.icon}</svg>
-            {it.label}
-          </Link>
-        );
-      })}
+      {items.map((it) => link(it, it.href === '/mas' ? path === '/mas' || path.startsWith('/mas/') : isActive(path, it.href)))}
+      <span className="mt-4 px-3 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">Herramientas</span>
+      {tools.map((it) => link(it, path === it.href || (it.href === '/simulador-cartera' && path.startsWith('/simulacion/'))))}
     </nav>
   );
 }

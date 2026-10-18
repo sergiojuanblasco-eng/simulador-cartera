@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef } from "react";
 import ASSETS from "./data/assets.json";
 import R from "./data/returns.json";
 import SIMS from "./data/simulations.json";
+import { gY, pc, cP, capExtremeReturn, computePortfolioScenarios, filledSim } from "./engine";
 
 const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}},{id:"etf",name:{es:"ETF Sect.",en:"Sector ETFs"}}];
 const CATCO={idx:"#3b82f6",stk:"#16754E",fi:"#1e40af",cry:"#d97706",alt:"#92400e",etf:"#7c3aed"};
@@ -147,9 +148,6 @@ const T={
 /* ══════════════════════════════════════════════
    UTILITY
    ══════════════════════════════════════════════ */
-function gY(id){const d=R[id];return d?Object.keys(d).map(Number).sort((a,b)=>a-b):[];}
-function pc(a,p){if(!a.length)return null;const i=(p/100)*(a.length-1);const l=Math.floor(i),h=Math.ceil(i);return l===h?a[l]:a[l]+(a[h]-a[l])*(i-l);}
-function cP(ini,mo,yrs,rate){const mr=rate/100/12;const d=[{y:0,v:ini,inv:ini}];let v=ini,inv=ini;for(let y=1;y<=yrs;y++){for(let m=0;m<12;m++){v=v*(1+mr)+mo;inv+=mo;}d.push({y,v,inv});}return d;}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
 const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
 
@@ -477,92 +475,6 @@ function analyzePortfolio(sel, nW, yr, profile) {
 /* ══════════════════════════════════════════════
    SIMULATION ENGINE
    ══════════════════════════════════════════════ */
-
-function capExtremeReturn(ret, asset) {
-  if (!asset.uf) return ret;
-  let r = ret;
-  if (r > 100) r = 65 + (r - 100) * 0.1;
-  else if (r > 50) r = 50 + (r - 50) * 0.3;
-  return r;
-}
-
-function getPortfolioAnnualReturns(selectedIds, normalizedWeights) {
-  const allYearsSet = new Set();
-  selectedIds.forEach(id => gY(id).forEach(y => allYearsSet.add(y)));
-  const allYears = [...allYearsSet].sort((a, b) => a - b);
-  if (allYears.length === 0) return [];
-  return allYears.map(year => {
-    const available = selectedIds.filter(id => R[id] && R[id][year] !== undefined);
-    if (available.length === 0) return null;
-    const totalAvailWeight = available.reduce((s, id) => s + (normalizedWeights[id] || 0), 0);
-    if (totalAvailWeight === 0) return null;
-    let portRet = 0;
-    available.forEach(id => {
-      const reW = (normalizedWeights[id] || 0) / totalAvailWeight;
-      const asset = ASSETS.find(a => a.id === id);
-      let r = R[id][year];
-      if (asset) r = capExtremeReturn(r, asset);
-      portRet += reW * r;
-    });
-    return { year, ret: portRet };
-  }).filter(Boolean);
-}
-
-function getPortfolioRollingCAGR(annualReturns, horizon) {
-  if (horizon < 1 || annualReturns.length < horizon) return [];
-  const cagrs = [];
-  for (let i = 0; i <= annualReturns.length - horizon; i++) {
-    let cum = 1;
-    for (let j = 0; j < horizon; j++) cum *= (1 + annualReturns[i + j].ret / 100);
-    cagrs.push((Math.pow(cum, 1 / horizon) - 1) * 100);
-  }
-  return cagrs.sort((a, b) => a - b);
-}
-
-function computePortfolioScenarios(selectedIds, normalizedWeights, horizon) {
-  const activeIds = selectedIds.filter(id => (normalizedWeights[id] || 0) > 0);
-  if (activeIds.length === 0) return null;
-  const annualRets = getPortfolioAnnualReturns(activeIds, normalizedWeights);
-  const numYears = annualRets.length;
-  if (numYears < 2) return null;
-
-  // Try requested horizon first; if not enough, find max usable horizon
-  let usedHorizon = horizon;
-  let rollingCAGRs = getPortfolioRollingCAGR(annualRets, horizon);
-  let projected = false;
-
-  if (rollingCAGRs.length === 0) {
-    // Find largest horizon that gives at least 1 window
-    for (let h = numYears; h >= 1; h--) {
-      const test = getPortfolioRollingCAGR(annualRets, h);
-      if (test.length > 0) { rollingCAGRs = test; usedHorizon = h; projected = true; break; }
-    }
-    if (rollingCAGRs.length === 0) return null;
-  }
-
-  const rawP = pc(rollingCAGRs, 10), rawE = pc(rollingCAGRs, 50), rawO = pc(rollingCAGRs, 90);
-  const negCount = rollingCAGRs.filter(c => c < 0).length;
-  const rawProbLoss = negCount / rollingCAGRs.length;
-  const probLossDisplay = rawProbLoss === 0 ? "< 1%" : Math.round(rawProbLoss * 100) + "%";
-  const probLossNum = Math.round(rawProbLoss * 100);
-
-  const p10val = pc(rollingCAGRs, 10), p90val = pc(rollingCAGRs, 90);
-  const pessCount = rollingCAGRs.filter(c => c <= p10val).length;
-  const optCount = rollingCAGRs.filter(c => c >= p90val).length;
-  const probPess = Math.round((pessCount / rollingCAGRs.length) * 100);
-  const probOpt = Math.round((optCount / rollingCAGRs.length) * 100);
-
-  return {
-    p: rawP, e: rawE, o: rawO,
-    probLossDisplay, probLossNum,
-    probPess, probEsp: 100 - probPess - probOpt, probOpt,
-    worstCase: rollingCAGRs[0],
-    dataYears: numYears,
-    rollingCount: rollingCAGRs.length,
-    fewWindows: rollingCAGRs.length < 10,
-    projected, usedHorizon,
-  };
-}
 
 function gS(id,h){
   const a=ASSETS.find(x=>x.id===id);if(!a)return{e:0};
@@ -999,26 +911,30 @@ function SimulationPage({sim,t,lang,go}){
    ══════════════════════════════════════════════ */
 
 
-export default function Tools({path, go, simSlug, session}) {
+export default function Tools({path, go, simSlug, session, embedded = false}) {
   const [lang, setLangState] = useState(() => {
     try { return localStorage.getItem("kartera_lang") || "es"; } catch(e) { return "es"; }
   });
   const setLang = (l) => { setLangState(l); try { localStorage.setItem("kartera_lang", l); } catch(e) {} };
   const t = T[lang];
-  const sim = simSlug ? SIMS.find(s => s.slug === simSlug) : null;
+  const sim = useMemo(() => filledSim(simSlug ? SIMS.find(s => s.slug === simSlug) : null), [simSlug]);
   const pageTitle = path === "/interes-compuesto" ? t.ci : path === "/simulador-cartera" ? t.sim : path === "/simulacion" && sim ? sim.title[lang] : null;
 
   return (
-    <div style={{fontFamily: TH.sans, background: TH.bg, minHeight: "100vh", color: TH.text, WebkitFontSmoothing: "antialiased"}}>
-      <div style={{maxWidth: 680, margin: "0 auto", padding: "20px 16px 40px"}}>
+    <div style={{fontFamily: TH.sans, background: embedded ? "transparent" : TH.bg, minHeight: embedded ? undefined : "100vh", color: TH.text, WebkitFontSmoothing: "antialiased"}}>
+      <div style={{maxWidth: embedded ? 720 : 680, margin: "0 auto", padding: embedded ? "0 0 24px" : "20px 16px 40px"}}>
         <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12}}>
           <div style={{display: "flex", alignItems: "center", gap: 10}}>
-            <h1 onClick={() => window.location.href = "/"} style={{fontFamily: TH.serif, fontSize: 24, fontWeight: 400, cursor: "pointer", margin: 0, color: TH.dark, letterSpacing: "-0.02em"}}>Kartera<span style={{color: TH.green}}>.</span></h1>
-            {pageTitle && <span style={{fontSize: 11, color: TH.light, fontWeight: 500}}>/ {pageTitle}</span>}
+            {embedded
+              ? (path === "/simulacion"
+                ? <button onClick={() => go("/simulador-cartera")} style={{background: "none", border: "none", padding: 0, fontSize: 13, color: TH.muted, cursor: "pointer", fontFamily: TH.sans}}>← {t.sim}</button>
+                : <h1 style={{fontFamily: TH.serif, fontSize: 32, fontWeight: 400, margin: 0, color: TH.dark, letterSpacing: "-0.01em", lineHeight: 1.1}}>{pageTitle}</h1>)
+              : <h1 onClick={() => window.location.href = "/"} style={{fontFamily: TH.serif, fontSize: 24, fontWeight: 400, cursor: "pointer", margin: 0, color: TH.dark, letterSpacing: "-0.02em"}}>Kartera<span style={{color: TH.green}}>.</span></h1>}
+            {pageTitle && !embedded && <span style={{fontSize: 11, color: TH.light, fontWeight: 500}}>/ {pageTitle}</span>}
           </div>
           <div style={{display: "flex", gap: 6, alignItems: "center"}}>
             <button onClick={() => setLang(lang === "es" ? "en" : "es")} style={{background: TH.bg2, border: `1.5px solid ${TH.border}`, borderRadius: 8, padding: "5px 12px", fontSize: 11, color: TH.muted, cursor: "pointer", fontWeight: 600, fontFamily: TH.sans}}>{lang === "es" ? "EN" : "ES"}</button>
-            {session ?
+            {embedded ? null : session ?
               <button onClick={() => go("/")} style={{background: TH.green, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: TH.sans}}>Mi cartera</button>
               : <button onClick={() => go("/login")} style={{background: TH.dark, color: TH.bg, border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: TH.sans}}>Entrar</button>
             }
@@ -1032,7 +948,7 @@ export default function Tools({path, go, simSlug, session}) {
         {path === "/simulador-cartera" && <PortfolioSim t={t} lang={lang} />}
         {path === "/simulacion" && sim && <SimulationPage sim={sim} t={t} lang={lang} go={go} />}
         {path === "/simulacion" && !sim && <div style={{textAlign: "center", padding: 40}}><p style={{fontSize: 16, color: TH.muted}}>Simulación no encontrada</p><button onClick={() => window.location.href = "/"} style={{marginTop: 12, background: TH.green, color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: TH.sans}}>Volver al inicio</button></div>}
-        <div style={{textAlign: "center", marginTop: 24, fontSize: 10, color: TH.border}}>kartera.pro 2026</div>
+        {!embedded && <div style={{textAlign: "center", marginTop: 24, fontSize: 10, color: TH.border}}>kartera.pro 2026</div>}
       </div>
     </div>
   );

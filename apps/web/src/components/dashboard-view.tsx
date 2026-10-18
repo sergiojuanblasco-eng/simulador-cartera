@@ -80,7 +80,8 @@ export function DashboardView(p: DashboardViewProps) {
         <Stat label="TIR anualizada" value={m.tir === null ? '—' : pct(m.tir)} sub={m.tir === null ? 'Con 3 meses de historia' : 'Rentabilidad real por año'} />
         <Stat label="Aportación media" value={`${eur(m.aportacionMediaMensual)}/mes`} sub={m.racha > 0 ? `Racha: ${m.racha} ${m.racha === 1 ? 'mes' : 'meses seguidos'}` : 'Sin racha activa'} tone={m.racha > 0 ? 'brand' : undefined} />
         <Stat label="Caída máxima" value={pct(m.maxDrawdown)} sub="Peor bache (drawdown)" tone={m.maxDrawdown < -0.0005 ? 'neg' : undefined} />
-        <Stat label="Comisiones" value={m.terMedio === null ? '—' : pct(m.terMedio, 2)} sub={m.terMedio === null ? 'Sin datos de TER' : `≈ ${eur(m.costeAnual)}/año · ${eur(m.costeMensual, 2)}/mes`} />
+        <Stat label="Comisiones" value={eur(m.comisionesPagadas, 2)}
+          sub={`Pagadas en compras y ventas · ${m.terMedio === null ? 'TER de los fondos: pendiente' : `TER ${pct(m.terMedio, 2)} ≈ ${eur(m.costeAnual)}/año`}`} />
       </div>
 
       <DashboardCharts today={p.today} value={p.value} byProduct={p.byProduct} byType={p.byType} />

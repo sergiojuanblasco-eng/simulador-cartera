@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { addDays, whatIf } from '@kartera/core';
 import { ValueChart, YearBars } from '@/components/charts';
 import { Card, H2, PageHeader, Stat } from '@/components/ui';
@@ -34,13 +35,19 @@ export default async function RendimientoPage() {
 
   const holdings = new Map(data.holdings.map((h) => [h.id, h]));
   const comisiones = result.positions
-    .filter((p) => p.valor > 0)
+    // Cripto y efectivo no tienen TER
+    .filter((p) => p.valor > 0 && !['cripto', 'efectivo'].includes(holdings.get(p.holdingId)!.asset.tipo))
     .map((p) => {
       const h = holdings.get(p.holdingId)!;
       const ter = h.asset.ter === null ? null : Number(h.asset.ter);
-      return { id: p.holdingId, nombre: h.asset.nombre, valor: p.valor, ter, coste: ter === null ? null : p.valor * ter };
+      return { id: p.holdingId, nombre: h.asset.nombre, valor: p.valor, ter, coste: ter === null ? null : p.valor * ter, puedeEditar: h.asset.owner_id !== null };
     })
     .sort((a, b) => (b.coste ?? -1) - (a.coste ?? -1));
+
+  const feesByProduct = result.positions
+    .filter((p) => p.comisiones > 0)
+    .map((p) => ({ id: p.holdingId, nombre: holdings.get(p.holdingId)!.asset.nombre, importe: p.comisiones }))
+    .sort((a, b) => b.importe - a.importe);
 
   const realizedByYear = new Map<number, number>();
   for (const r of result.realized) {
@@ -54,9 +61,9 @@ export default async function RendimientoPage() {
 
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         <Stat label="TIR anualizada" value={m.tir === null ? '—' : pct(m.tir)} sub="Incluye cuándo aportaste" />
-        <Stat label="Ganancia total" value={eurSigned(m.ganancia)} sub={pctSigned(m.gananciaPct)} tone={m.ganancia >= 0 ? 'pos' : 'neg'} />
+        <Stat label="Ganancia total" value={eurSigned(m.ganancia)} sub={`${pctSigned(m.gananciaPct)}${m.comisionesPagadas > 0 ? ' · ya descontadas comisiones' : ''}`} tone={m.ganancia >= 0 ? 'pos' : 'neg'} />
         <Stat label="Caída máxima" value={pct(m.maxDrawdown)} sub="Desde un máximo" tone={m.maxDrawdown < -0.0005 ? 'neg' : undefined} />
-        <Stat label="Comisiones" value={eur(m.costeAnual)} sub="Coste estimado al año" />
+        <Stat label="Comisiones pagadas" value={eur(m.comisionesPagadas, 2)} sub={m.terMedio === null ? 'Compras y ventas' : `+ TER ≈ ${eur(m.costeAnual)}/año`} />
       </div>
 
       <Card className="flex flex-col gap-3">
@@ -96,20 +103,53 @@ export default async function RendimientoPage() {
         ) : <p className="text-sm text-muted">La comparativa aparecerá cuando se carguen los precios del índice (proceso nocturno).</p>}
       </Card>
 
-      <Card className="flex flex-col gap-3">
+      <Card className="flex flex-col gap-4">
         <H2>Lo que pagas en comisiones</H2>
-        <p className="-mt-2 text-[13px] text-muted">
-          TER medio de tu cartera: <strong className="text-ink">{m.terMedio === null ? '—' : pct(m.terMedio, 2)}</strong> · ≈ {eur(m.costeAnual)} al año, {eur(m.costeMensual, 2)} al mes.
-        </p>
-        <ul className="flex flex-col divide-y divide-line text-sm">
-          {comisiones.map((c) => (
-            <li key={c.id} className="flex items-center gap-3 py-2.5">
-              <span className="min-w-0 flex-1 truncate">{c.nombre}</span>
-              <span className="w-14 text-right text-muted tabular">{c.ter === null ? '—' : pct(c.ter, 2)}</span>
-              <span className="w-20 text-right font-semibold tabular">{c.coste === null ? '—' : `${eur(c.coste)}/año`}</span>
-            </li>
-          ))}
-        </ul>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="text-[15px] font-semibold">Comisiones de compra y venta</h3>
+            <span className="font-semibold tabular">{eur(m.comisionesPagadas, 2)}</span>
+          </div>
+          <p className="text-[13px] text-muted">Lo que te cobra el bróker en cada operación (por ejemplo, 1 € por orden en Trade Republic). Ya está restado de tu ganancia, pero no cuenta como pérdida del mercado.</p>
+          {m.comisionesPagadas > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ul className="flex flex-col divide-y divide-line text-sm">
+                {[...m.comisionesPorAnio].reverse().map((y) => (
+                  <li key={y.anio} className="flex justify-between py-2"><span>{y.anio}</span><span className="tabular">{eur(y.importe, 2)}</span></li>
+                ))}
+              </ul>
+              <ul className="flex flex-col divide-y divide-line text-sm">
+                {feesByProduct.map((c) => (
+                  <li key={c.id} className="flex justify-between gap-3 py-2"><span className="min-w-0 truncate">{c.nombre}</span><span className="tabular">{eur(c.importe, 2)}</span></li>
+                ))}
+              </ul>
+            </div>
+          ) : <p className="text-sm text-muted-2">No has pagado comisiones por operar. 👌</p>}
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-line pt-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="text-[15px] font-semibold">Gastos de los fondos (TER)</h3>
+            <span className="font-semibold tabular">{m.terMedio === null ? '—' : `≈ ${eur(m.costeAnual)}/año`}</span>
+          </div>
+          <p className="text-[13px] text-muted">
+            El fondo o ETF se lo cobra cada día dentro de su precio: no aparece como un cargo, pero te cuesta.
+            {m.terMedio !== null ? <> TER medio: <strong className="text-ink">{pct(m.terMedio, 2)}</strong> · {eur(m.costeMensual, 2)} al mes.</> : null}
+          </p>
+          <ul className="flex flex-col divide-y divide-line text-sm">
+            {comisiones.map((c) => (
+              <li key={c.id} className="flex items-center gap-3 py-2.5">
+                <Link href={`/activos/${c.id}`} className="min-w-0 flex-1 truncate hover:underline">{c.nombre}</Link>
+                <span className="w-14 text-right text-muted tabular">{c.ter === null ? '—' : pct(c.ter, 2)}</span>
+                <span className="w-20 text-right font-semibold tabular">{c.coste === null ? '—' : `${eur(c.coste)}/año`}</span>
+              </li>
+            ))}
+          </ul>
+          {comisiones.some((c) => c.ter === null && c.puedeEditar) ? (
+            <p className="text-[13px] text-muted">Donde ves «—», entra en el producto y escribe su TER (lo encuentras en la ficha del fondo). Los fondos enlazados con datos de mercado lo traen solo.</p>
+          ) : null}
+        </div>
       </Card>
 
       {realizedByYear.size ? (

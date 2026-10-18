@@ -1,12 +1,14 @@
 'use server';
 
-import { isIsoDate } from '@kartera/core';
+import { isIsoDate, type AssetType } from '@kartera/core';
 import { revalidatePath } from 'next/cache';
 import type { AssetChoice, SearchResult } from '@/lib/asset-choice';
 import { requireUser } from '@/lib/auth';
 import { GOAL_PRESETS, type PortfolioGoal } from '@/lib/db';
 import { hoyMadrid } from '@/lib/format';
 import { ensureAccount, ensureHolding, positionOf, priceOn, resolveAsset } from '@/lib/movements';
+import { marketTargetFor, relinkAsset } from '@/lib/market/asset-fix';
+import { ensureGlobalAsset, syncAssetPrices } from '@/lib/market/ingest';
 import { coingeckoSearch, eodhdSearch } from '@/lib/market/providers';
 
 export interface ActionResult<T = undefined> {
@@ -251,4 +253,64 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   if (empty?.length) await supabase.from('holdings').delete().in('id', empty.map((e) => e.holding_id));
   refresh();
   return { ok: true };
+}
+
+// ============================================================================ Productos propios
+
+const ASSET_TYPES = new Set(['fondo', 'etf', 'accion', 'cripto', 'monetario', 'plan_pensiones', 'efectivo', 'otro']);
+
+/**
+ * Edita un producto propio (nombre, tipo, TER, ISIN). Si con los datos nuevos se reconoce
+ * (cripto → CoinGecko, ISIN → EODHD) se enlaza con datos de mercado.
+ */
+export async function updateOwnAsset(input: {
+  holdingId: string;
+  nombre: string;
+  tipo: string;
+  terPct: number | null;
+  isin: string;
+}): Promise<ActionResult<{ holdingId: string; enlazado: string | null }>> {
+  const { supabase, user } = await requireUser();
+  const { data: h } = await supabase.from('holdings').select('id, asset:assets (id, owner_id, nombre, isin, ticker, tipo)')
+    .eq('id', input.holdingId).maybeSingle();
+  const asset = (h?.asset ?? null) as unknown as { id: string; owner_id: string | null; ticker: string | null } | null;
+  if (!h || !asset) return fail('Producto no encontrado.');
+  if (asset.owner_id !== user.id) return fail('Este producto tiene datos de mercado y se actualiza solo.');
+
+  const nombre = input.nombre.trim().slice(0, 200);
+  if (!nombre) return fail('Escribe el nombre del producto.');
+  if (!ASSET_TYPES.has(input.tipo)) return fail('Tipo de producto no válido.');
+  const ter = input.terPct === null ? null : input.terPct / 100;
+  if (ter !== null && (!Number.isFinite(ter) || ter < 0 || ter >= 0.2)) return fail('El TER debe estar entre 0 % y 20 %.');
+  const isin = input.isin.trim().toUpperCase().replace(/\s/g, '');
+  if (isin && !/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)) return fail('El ISIN tiene 12 caracteres: 2 letras de país, 9 letras o números y 1 número (p. ej. IE00B4L5Y983).');
+
+  const tipo = input.tipo as AssetType;
+  const { error } = await supabase.from('assets')
+    .update({ nombre, tipo, ter: ter === null ? null : Math.round(ter * 1e6) / 1e6, isin: isin || null })
+    .eq('id', asset.id);
+  if (error) return fail('No se pudo guardar el producto.');
+
+  // ¿Ahora lo reconocemos? Enlazar con datos de mercado.
+  let enlazado: string | null = null;
+  let holdingId = h.id;
+  try {
+    const target = await marketTargetFor({ nombre, isin: isin || null, ticker: asset.ticker, tipo });
+    if (target) {
+      const globalId = await ensureGlobalAsset(target);
+      try {
+        await syncAssetPrices({ id: globalId, proveedor: target.proveedor, proveedor_id: target.proveedorId });
+      } catch {
+        // Los precios llegarán en el proceso nocturno.
+      }
+      const moved = await relinkAsset(supabase, asset.id, globalId);
+      holdingId = moved.get(h.id) ?? h.id;
+      enlazado = target.nombre;
+    }
+  } catch {
+    // Si falla el enlace, el producto queda guardado como propio con los datos nuevos.
+  }
+  refresh();
+  revalidatePath(`/activos/${holdingId}`);
+  return { ok: true, data: { holdingId, enlazado } };
 }

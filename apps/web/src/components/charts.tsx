@@ -190,7 +190,10 @@ export function YearBars({ data, height = 200 }: { data: { anio: number; rentabi
   );
 }
 
-export function MonthBars({ data, height = 220 }: { data: { mes: string; aportado: number; ganancia: number }[]; height?: number }) {
+export function MonthBars({ data: raw, height = 220 }: { data: { mes: string; aportado: number; ganancia: number; comisiones?: number }[]; height?: number }) {
+  const data = raw.map((d) => ({ ...d, comisionNeg: d.comisiones ? -d.comisiones : 0 }));
+  const hasFees = data.some((d) => d.comisionNeg !== 0);
+  const LABEL: Record<string, string> = { aportado: 'Aportado', ganancia: 'Mercado', comisionNeg: 'Comisiones' };
   return (
     <Sized height={height} label="Por mes: dinero aportado y ganancia o pérdida del mercado">
       {(w) => (
@@ -202,13 +205,14 @@ export function MonthBars({ data, height = 220 }: { data: { mes: string; aportad
           <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null;
-              return <TooltipBox title={mesCorto(String(label))} rows={payload.map((p) => ({ label: p.dataKey === 'aportado' ? 'Aportado' : 'Mercado', value: eur(Number(p.value)), color: String(p.color) }))} />;
+              return <TooltipBox title={mesCorto(String(label))} rows={payload.filter((p) => p.dataKey !== 'comisionNeg' || Number(p.value) !== 0).map((p) => ({ label: LABEL[String(p.dataKey)] ?? '', value: eur(Number(p.value), p.dataKey === 'comisionNeg' ? 2 : 0), color: String(p.color) }))} />;
             }}
           />
           <Bar dataKey="aportado" stackId="m" fill="#A7D7BF" isAnimationActive={false} />
           <Bar dataKey="ganancia" stackId="m" isAnimationActive={false}>
             {data.map((d) => <Cell key={d.mes} fill={d.ganancia >= 0 ? '#14532D' : '#D9822B'} />)}
           </Bar>
+          {hasFees ? <Bar dataKey="comisionNeg" stackId="m" fill="#71717A" isAnimationActive={false} /> : null}
         </BarChart>
       )}
     </Sized>

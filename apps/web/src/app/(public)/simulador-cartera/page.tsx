@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { isLoggedIn } from '@/kartera/session';
-import { ToolsClient } from '@/kartera/tools-client';
+import { ToolsPage } from '@/kartera/tools-page';
 
 export const metadata: Metadata = {
   title: { absolute: 'Simulador de cartera de inversión con datos reales · Kartera' },
@@ -10,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default async function SimuladorPage() {
-  return <ToolsClient path="/simulador-cartera" loggedIn={await isLoggedIn()} />;
+  return <ToolsPage path="/simulador-cartera" />;
 }

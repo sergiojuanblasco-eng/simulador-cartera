@@ -4,6 +4,7 @@ import type { AssetRow } from '@/lib/db';
 import { serverEnv } from '@/lib/env';
 import { hoyMadrid } from '@/lib/format';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { marketTargetFor, relinkAsset } from './asset-fix';
 import { coingeckoPrices, ecbRates, eodhdPrices, eodhdTer, type ExternalAsset } from './providers';
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -89,13 +90,53 @@ export async function ensureBenchmark(): Promise<AssetRow | null> {
 }
 
 /**
+ * Productos propios que ahora se pueden reconocer (cripto guardada como fondo,
+ * fondos con ISIN cuando hay clave de EODHD): se enlazan con el catálogo global.
+ * Cada producto se reintenta como mucho una vez al mes.
+ */
+export async function fixOwnAssets(max = 40): Promise<{ enlazados: number; errores: string[] }> {
+  const admin = createAdminClient();
+  const today = hoyMadrid();
+  const out = { enlazados: 0, errores: [] as string[] };
+  const { data } = await admin.from('assets').select('*').not('owner_id', 'is', null)
+    .or('proveedor.is.null,proveedor.eq.manual').neq('tipo', 'efectivo').limit(500);
+  const pending = ((data ?? []) as AssetRow[]).filter((a) => {
+    const tried = (a.metadata as { enlace_intentado?: string }).enlace_intentado;
+    return !tried || daysBetween(tried, today) >= 30;
+  }).slice(0, max);
+  for (const a of pending) {
+    try {
+      const target = await marketTargetFor(a);
+      if (!target) {
+        await admin.from('assets').update({ metadata: { ...a.metadata, enlace_intentado: today } }).eq('id', a.id);
+        continue;
+      }
+      const globalId = await ensureGlobalAsset(target);
+      await relinkAsset(admin, a.id, globalId);
+      out.enlazados++;
+    } catch (e) {
+      out.errores.push(`${a.nombre}: ${(e as Error).message}`);
+    }
+  }
+  return out;
+}
+
+/**
  * Proceso nocturno: actualiza precios de todos los activos en uso,
  * el índice de referencia y los tipos de cambio.
  */
 export async function runDailyIngest() {
   const admin = createAdminClient();
   const today = hoyMadrid();
-  const summary = { activos: 0, precios: 0, tiposCambio: 0, errores: [] as string[] };
+  const summary = { activos: 0, precios: 0, tiposCambio: 0, enlazados: 0, errores: [] as string[] };
+
+  try {
+    const fix = await fixOwnAssets();
+    summary.enlazados = fix.enlazados;
+    summary.errores.push(...fix.errores);
+  } catch (e) {
+    summary.errores.push(`Enlazar productos: ${(e as Error).message}`);
+  }
 
   const { data: holdings, error } = await admin.from('holdings').select('asset_id');
   if (error) throw new Error(error.message);

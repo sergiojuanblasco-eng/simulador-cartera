@@ -189,9 +189,33 @@ describe('computePortfolio', () => {
       today: '2026-02-28',
     });
     expect(r.months).toEqual([
-      { mes: '2026-01', aportado: 100, ganancia: 10, valorFin: 110 },
-      { mes: '2026-02', aportado: 110, ganancia: 20, valorFin: 240 },
+      { mes: '2026-01', aportado: 100, ganancia: 10, comisiones: 0, valorFin: 110 },
+      { mes: '2026-02', aportado: 110, ganancia: 20, comisiones: 0, valorFin: 240 },
     ]);
+  });
+
+  it('la comisión de compra cuenta como comisión, no como pérdida de mercado', () => {
+    // Trade Republic: compras 100 € de fondo + 1 € de comisión; el precio no se mueve.
+    const r = computePortfolio({
+      holdings: [H('A')],
+      txs: [
+        T({ holdingId: 'A', tipo: 'compra', fecha: '2026-01-10', cantidad: 10, importe: 100, comision: 1 }),
+        T({ holdingId: 'A', tipo: 'venta', fecha: '2026-02-10', cantidad: 5, importe: 50, comision: 1 }),
+        T({ holdingId: 'A', tipo: 'comision', fecha: '2026-02-20', cantidad: 0.1, importe: 1 }),
+      ],
+      prices: { 'asset-A': [{ fecha: '2026-01-10', precio: 10 }] },
+      today: '2026-02-28',
+    });
+    expect(r.months).toEqual([
+      { mes: '2026-01', aportado: 101, ganancia: 0, comisiones: 1, valorFin: 100 },
+      { mes: '2026-02', aportado: -49, ganancia: 0, comisiones: 2, valorFin: 49 },
+    ]);
+    expect(r.metrics.comisionesPagadas).toBe(3);
+    expect(r.metrics.comisionesPorAnio).toEqual([{ anio: 2026, importe: 3 }]);
+    expect(r.metrics.mesActual).toEqual({ aportado: -49, ganancia: 0, comisiones: 2 });
+    expect(r.positions[0]!.comisiones).toBe(3);
+    // La ganancia total sí es neta de comisiones: 49 − (101 − 49) = −3
+    expect(r.metrics.ganancia).toBe(-3);
   });
 });
 
@@ -209,8 +233,8 @@ describe('análisis', () => {
   it('distribución por tipo con porcentajes', () => {
     const d = distribution(
       [
-        { holdingId: 'A', cantidad: 1, precio: 1, fechaPrecio: null, valor: 750, coste: 0, ganancia: 0, gananciaPct: null, precioMedio: null },
-        { holdingId: 'B', cantidad: 1, precio: 1, fechaPrecio: null, valor: 250, coste: 0, ganancia: 0, gananciaPct: null, precioMedio: null },
+        { holdingId: 'A', cantidad: 1, precio: 1, fechaPrecio: null, valor: 750, coste: 0, ganancia: 0, gananciaPct: null, precioMedio: null, comisiones: 0 },
+        { holdingId: 'B', cantidad: 1, precio: 1, fechaPrecio: null, valor: 250, coste: 0, ganancia: 0, gananciaPct: null, precioMedio: null, comisiones: 0 },
       ],
       [H('A'), H('B', { tipo: 'cripto' })],
       'tipo',

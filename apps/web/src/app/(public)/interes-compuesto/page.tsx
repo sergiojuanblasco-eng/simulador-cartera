@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { isLoggedIn } from '@/kartera/session';
-import { ToolsClient } from '@/kartera/tools-client';
+import { ToolsPage } from '@/kartera/tools-page';
 
 export const metadata: Metadata = {
   title: { absolute: 'Calculadora de interés compuesto · Kartera' },
@@ -10,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default async function InteresCompuestoPage() {
-  return <ToolsClient path="/interes-compuesto" loggedIn={await isLoggedIn()} />;
+  return <ToolsPage path="/interes-compuesto" />;
 }

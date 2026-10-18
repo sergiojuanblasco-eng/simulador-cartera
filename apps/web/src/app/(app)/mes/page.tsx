@@ -35,11 +35,16 @@ export default async function MesPage() {
           <span className="text-[34px] leading-none font-bold tracking-tight tabular">{eurSigned(cambio)}</span>
           <span className="text-sm text-[#B8B8B0]">Cambio de tu patrimonio este mes</span>
         </div>
-        <div className="grid grid-cols-2 gap-3 border-t border-ink-2 pt-3">
-          <div className="flex flex-col"><span className="text-xs text-[#B8B8B0]">Dinero nuevo aportado</span><span className="font-semibold tabular">{eurSigned(cur.aportado)}</span></div>
-          <div className="flex flex-col"><span className="text-xs text-[#B8B8B0]">Ganancia del mercado</span>
+        <div className="grid grid-cols-3 gap-3 border-t border-ink-2 pt-3">
+          <div className="flex flex-col"><span className="text-xs text-[#B8B8B0]">Dinero aportado</span><span className="font-semibold tabular">{eurSigned(cur.aportado)}</span></div>
+          <div className="flex flex-col"><span className="text-xs text-[#B8B8B0]">Mercado</span>
             <span className={`font-semibold tabular ${cur.ganancia >= 0 ? 'text-pos-on-dark' : 'text-neg-on-dark'}`}>{eurSigned(cur.ganancia)}</span></div>
+          <div className="flex flex-col"><span className="text-xs text-[#B8B8B0]">Comisiones</span>
+            <span className="font-semibold tabular">{cur.comisiones > 0 ? eurSigned(-cur.comisiones, 2) : '0 €'}</span></div>
         </div>
+        {cur.comisiones > 0 ? (
+          <p className="-mt-1 text-xs text-[#B8B8B0]">Aportado − comisiones + mercado = cambio del mes. Las comisiones de compra y venta no cuentan como pérdida del mercado.</p>
+        ) : null}
       </section>
 
       <Card className="flex flex-col gap-3">
@@ -49,19 +54,23 @@ export default async function MesPage() {
           <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#A7D7BF]" />Aportado</span>
           <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#14532D]" />Ganancia del mercado</span>
           <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#D9822B]" />Pérdida del mercado</span>
+          {months.slice(-12).some((x) => x.comisiones > 0) ? <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#71717A]" />Comisiones</span> : null}
         </div>
       </Card>
 
       <Card className="flex flex-col gap-1 overflow-x-auto">
         <H2>Mes a mes</H2>
-        <table className="w-full min-w-[420px] text-sm">
+        <table className="w-full min-w-[320px] text-sm">
           <thead><tr className="text-left text-xs text-muted"><th className="py-2 font-medium">Mes</th><th className="py-2 text-right font-medium">Aportado</th><th className="py-2 text-right font-medium">Mercado</th><th className="py-2 text-right font-medium">Valor final</th></tr></thead>
           <tbody>
             {[...months].reverse().map((mm) => (
               <tr key={mm.mes} className="border-t border-line">
                 <td className="py-2 capitalize">{mesLargo(mm.mes)}</td>
                 <td className="py-2 text-right tabular">{eurSigned(mm.aportado)}</td>
-                <td className={`py-2 text-right font-semibold tabular ${mm.ganancia >= 0 ? 'text-pos' : 'text-neg'}`}>{eurSigned(mm.ganancia)}</td>
+                <td className="py-2 text-right tabular">
+                  <span className={`font-semibold ${mm.ganancia >= 0 ? 'text-pos' : 'text-neg'}`}>{eurSigned(mm.ganancia)}</span>
+                  {mm.comisiones > 0 ? <span className="block text-xs text-muted">comisiones {eurSigned(-mm.comisiones, 2)}</span> : null}
+                </td>
                 <td className="py-2 text-right tabular">{eur(mm.valorFin)}</td>
               </tr>
             ))}

@@ -19,7 +19,11 @@ export async function resolveAsset(supabase: ServerSupabase, userId: string, cho
   if (!nombre) throw new Error('Escribe el nombre del producto.');
   const isin = choice.isin && /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(choice.isin) ? choice.isin : null;
   if (isin) {
-    const { data: own } = await supabase.from('assets').select('id').eq('owner_id', userId).eq('isin', isin).maybeSingle();
+    const { data: own } = await supabase.from('assets').select('id').eq('owner_id', userId).eq('isin', isin).limit(1).maybeSingle();
+    if (own) return own.id;
+  } else {
+    // Mismo nombre ya creado antes (p. ej. al reimportar): se reutiliza.
+    const { data: own } = await supabase.from('assets').select('id').eq('owner_id', userId).is('isin', null).eq('nombre', nombre).limit(1).maybeSingle();
     if (own) return own.id;
   }
   const { data, error } = await supabase.from('assets').insert({

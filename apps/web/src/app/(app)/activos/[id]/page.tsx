@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { TIPO_LABEL } from '@kartera/core';
 import { PriceChart } from '@/components/charts';
 import { DeleteTxButton } from '@/components/delete-tx';
+import { EditAssetCard } from '@/components/edit-asset';
+import { detectCrypto } from '@/lib/crypto';
 import { Card, H2, PageHeader, Stat } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
@@ -32,6 +34,8 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
     .map((t) => ({ fecha: t.fecha, precio: t.precio ? Number(t.precio) : Number(t.importe) / Number(t.cantidad), tipo: t.tipo as 'compra' | 'venta' }));
   const ter = h.asset.ter === null ? null : Number(h.asset.ter);
   const meta = h.asset.metadata as { top10?: { nombre: string; peso: number }[] };
+  const propio = h.asset.owner_id !== null;
+  const cripto = propio && h.asset.tipo !== 'cripto' ? detectCrypto({ nombre: h.asset.nombre, isin: h.asset.isin, ticker: h.asset.ticker }) : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -41,8 +45,14 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
         <Stat label="Valor" value={eur(p?.valor ?? 0)} sub={p?.fechaPrecio ? `Precio a ${fechaCorta(p.fechaPrecio)}` : undefined} />
         <Stat label="Ganancia" value={eurSigned(p?.ganancia ?? 0)} sub={pctSigned(p?.gananciaPct)} tone={(p?.ganancia ?? 0) >= 0 ? 'pos' : 'neg'} />
         <Stat label="Participaciones" value={qty(p?.cantidad ?? 0)} sub={p?.precioMedio ? `Coste medio ${p.precioMedio.toLocaleString('es-ES', { maximumFractionDigits: 4 })} €` : undefined} />
-        <Stat label="Comisión (TER)" value={ter === null ? '—' : pct(ter, 2)} sub={ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : 'Sin dato'} />
+        <Stat label="Comisiones" value={ter === null ? (p?.comisiones ? eur(p.comisiones, 2) : '—') : `TER ${pct(ter, 2)}`}
+          sub={[ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : null, p?.comisiones ? `${eur(p.comisiones, 2)} pagadas al operar` : null].filter(Boolean).join(' · ') || 'Sin dato de TER'} />
       </div>
+
+      {propio ? (
+        <EditAssetCard holdingId={h.id} nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
+          isin={h.asset.isin} sugerencia={cripto ? cripto.symbol : null} />
+      ) : null}
 
       <Card className="flex flex-col gap-3">
         <div>

@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import SIMS from '@/kartera/data/simulations.json';
-import { isLoggedIn } from '@/kartera/session';
-import { ToolsClient } from '@/kartera/tools-client';
+import { filledSim } from '@/kartera/engine';
+import { ToolsPage } from '@/kartera/tools-page';
 
 type Sim = { slug: string; title: { es: string }; hook?: { es: string } };
 const sims = SIMS as Sim[];
 
-export function generateStaticParams() {
-  return sims.map((s) => ({ slug: s.slug }));
-}
+// Dinámica: con sesión se muestra dentro del menú de la app.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const sim = sims.find((s) => s.slug === slug);
-  if (!sim) return {};
+  const raw = sims.find((s) => s.slug === slug);
+  if (!raw) return {};
+  const sim = filledSim(raw) as Sim;
   const description = (sim.hook?.es ?? '').replace(/\s+/g, ' ').slice(0, 160);
   return {
     title: { absolute: `${sim.title.es} · Kartera` },
@@ -27,5 +27,5 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function SimulacionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (!sims.some((s) => s.slug === slug)) notFound();
-  return <ToolsClient path="/simulacion" slug={slug} loggedIn={await isLoggedIn()} />;
+  return <ToolsPage path="/simulacion" slug={slug} />;
 }

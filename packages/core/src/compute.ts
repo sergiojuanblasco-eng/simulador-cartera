@@ -49,6 +49,13 @@ function externalFlow(tx: CoreTx, internal: boolean): Decimal {
   }
 }
 
+/** Comisión pagada en la operación (EUR): la de compra/venta, o el importe si es un cargo de comisión. */
+function txFee(tx: CoreTx): Decimal {
+  if (tx.tipo === 'comision') return toEur(tx.importe, tx.fxEur).plus(toEur(tx.comision ?? 0, tx.fxEur));
+  if (tx.tipo === 'dividendo') return new Decimal(0);
+  return toEur(tx.comision ?? 0, tx.fxEur);
+}
+
 class Pricer {
   private readonly market = new Map<string, PriceSeries>();
   private readonly implied = new Map<string, PriceSeries>();
@@ -119,7 +126,8 @@ function emptyMetrics(): Metrics {
   return {
     valor: 0, aportado: 0, ganancia: 0, gananciaPct: null, tir: null, maxDrawdown: 0,
     aportacionMediaMensual: 0, racha: 0, terMedio: null, costeAnual: 0, costeMensual: 0,
-    mesActual: { aportado: 0, ganancia: 0 }, rentabilidadAnual: [],
+    mesActual: { aportado: 0, ganancia: 0, comisiones: 0 }, rentabilidadAnual: [],
+    comisionesPagadas: 0, comisionesPorAnio: [],
   };
 }
 
@@ -157,6 +165,16 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     const f = externalFlow(t, isInternal(t));
     if (f.isZero()) continue;
     flowByDay.set(t.fecha, (flowByDay.get(t.fecha) ?? new Decimal(0)).plus(f));
+  }
+
+  // Comisiones pagadas por día y por posición
+  const feeByDay = new Map<string, Decimal>();
+  const feeByHolding = new Map<string, Decimal>();
+  for (const t of txs) {
+    const f = txFee(t);
+    if (f.isZero()) continue;
+    feeByDay.set(t.fecha, (feeByDay.get(t.fecha) ?? new Decimal(0)).plus(f));
+    feeByHolding.set(t.holdingId, (feeByHolding.get(t.holdingId) ?? new Decimal(0)).plus(f));
   }
 
   // Serie diaria
@@ -210,7 +228,10 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     prevValor = valor;
     indexByDay.push({ fecha: d, index });
 
-    series.push({ fecha: d, valor: round2(valor), aportado: round2(aportado.toNumber()), flujo: round2(f), porHolding });
+    series.push({
+      fecha: d, valor: round2(valor), aportado: round2(aportado.toNumber()), flujo: round2(f),
+      comision: round2((feeByDay.get(d) ?? new Decimal(0)).toNumber()), porHolding,
+    });
   }
 
   // Posiciones vivas (FIFO)
@@ -230,6 +251,7 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
       ganancia: round2(valor - c),
       gananciaPct: c > 0 ? (valor - c) / c : null,
       precioMedio: qn > 0 ? c / qn : null,
+      comisiones: round2((feeByHolding.get(id) ?? new Decimal(0)).toNumber()),
     };
   });
 
@@ -282,23 +304,33 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     const k = monthKey(p.fecha);
     if (!cur || cur.mes !== k) {
       if (cur) {
-        cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado);
+        cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado + cur.comisiones);
         prevFin = cur.valorFin;
         months.push(cur);
       }
-      cur = { mes: k, aportado: 0, ganancia: 0, valorFin: 0 };
+      cur = { mes: k, aportado: 0, ganancia: 0, comisiones: 0, valorFin: 0 };
     }
     cur.aportado = round2(cur.aportado + p.flujo);
+    cur.comisiones = round2(cur.comisiones + p.comision);
     cur.valorFin = p.valor;
   }
   if (cur) {
-    cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado);
+    // Mercado = cambio de valor − dinero nuevo + comisiones (las comisiones no son mercado)
+    cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado + cur.comisiones);
     months.push(cur);
   }
   const lastMonth = months[months.length - 1];
   const mesActual = lastMonth && lastMonth.mes === currentMonth
-    ? { aportado: lastMonth.aportado, ganancia: lastMonth.ganancia }
-    : { aportado: 0, ganancia: 0 };
+    ? { aportado: lastMonth.aportado, ganancia: lastMonth.ganancia, comisiones: lastMonth.comisiones }
+    : { aportado: 0, ganancia: 0, comisiones: 0 };
+
+  const feesByYear = new Map<number, number>();
+  let feesTotal = 0;
+  for (const [d, f] of feeByDay) {
+    const y = Number(d.slice(0, 4));
+    feesByYear.set(y, round2((feesByYear.get(y) ?? 0) + f.toNumber()));
+    feesTotal += f.toNumber();
+  }
 
   // Rentabilidad por año natural (TWR)
   const rentabilidadAnual: YearReturn[] = [];
@@ -335,6 +367,8 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
       costeMensual: round2(costeAnual / 12),
       mesActual,
       rentabilidadAnual,
+      comisionesPagadas: round2(feesTotal),
+      comisionesPorAnio: [...feesByYear.entries()].sort(([a], [b]) => a - b).map(([anio, importe]) => ({ anio, importe })),
     },
   };
 }
