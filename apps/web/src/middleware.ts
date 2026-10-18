@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 /** Rutas accesibles sin sesión. */
 const PUBLIC_PREFIXES = [
-  '/login', '/registro', '/recuperar', '/privacidad', '/auth/', '/api/cron/', '/api/lista-espera', '/dev/', '/diag-latencia',
+  '/login', '/registro', '/recuperar', '/privacidad', '/auth/', '/api/cron/', '/api/lista-espera', '/dev/',
   // Herramientas públicas de Kartera (SEO)
   '/simulador-cartera', '/interes-compuesto', '/simulacion/', '/landing.html', '/sitemap.xml', '/robots.txt',
 ];
@@ -39,8 +39,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Refresca la sesión si ha caducado. No poner código entre createServerClient y getUser.
-  const { data: { user } } = await supabase.auth.getUser();
+  // Refresca la sesión si ha caducado. No poner código entre createServerClient y getClaims.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
 
   if (!user && path === '/') return landing(request);
   if (!user && !isPublic) {

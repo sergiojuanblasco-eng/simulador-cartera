@@ -15,11 +15,14 @@ export function PriceRefresher() {
     if (Date.now() - last < EVERY_MS) return;
     try { sessionStorage.setItem(KEY, String(Date.now())); } catch { /* sin almacenamiento */ }
     let alive = true;
-    fetch('/api/precios/actualizar', { method: 'POST' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: { actualizados?: number } | null) => { if (alive && j?.actualizados) router.refresh(); })
-      .catch(() => {});
-    return () => { alive = false; };
+    // Espera a que la pantalla haya cargado para no competir con ella
+    const t = setTimeout(() => {
+      fetch('/api/precios/actualizar', { method: 'POST' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j: { actualizados?: number } | null) => { if (alive && j?.actualizados) router.refresh(); })
+        .catch(() => {});
+    }, 2500);
+    return () => { alive = false; clearTimeout(t); };
   }, [router]);
   return null;
 }

@@ -49,15 +49,14 @@ export async function refreshPrices(assetIds: string[], opts: { force?: boolean 
 
   // EODHD: cierres diarios que falten (fondos y cotizados)
   const eod = assets.filter((a) => a.proveedor === 'eodhd');
-  for (const a of eod) {
-    if (!opts.force && ageMin((a.metadata as Meta).sync_at) < DAILY_HOURS * 60) continue;
+  await Promise.all(eod.filter((a) => opts.force || ageMin((a.metadata as Meta).sync_at) >= DAILY_HOURS * 60).map(async (a) => {
     try {
       await syncAssetPrices(a);
       touched.set(a.id, { ...meta(a), sync_at: now });
     } catch (e) {
       errores.push(`${a.nombre}: ${(e as Error).message}`);
     }
-  }
+  }));
 
   // EODHD: precio en vivo de ETFs y acciones (los fondos EUFUND no tienen)
   const listed = eod.filter((a) => !a.proveedor_id!.endsWith('.EUFUND') && (opts.force || ageMin((a.metadata as Meta).live_at) >= LIVE_MIN.cotizado));
@@ -81,7 +80,14 @@ export async function refreshPrices(assetIds: string[], opts: { force?: boolean 
     const m = a.metadata as Meta;
     return opts.force || (fondo ? ageMin(m.sync_at) >= DAILY_HOURS * 60 : ageMin(m.live_at) >= LIVE_MIN.cotizado);
   }).slice(0, 25);
-  for (const a of yahoo) {
+  // Hasta 4 productos a la vez
+  const pool = async <T,>(items: T[], n: number, fn: (x: T) => Promise<void>) => {
+    let i = 0;
+    await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+      while (i < items.length) await fn(items[i++]!);
+    }));
+  };
+  await pool(yahoo, 4, async (a) => {
     try {
       const { data: last } = await admin.from('asset_prices').select('fecha').eq('asset_id', a.id).neq('fuente', 'live')
         .order('fecha', { ascending: false }).limit(1).maybeSingle();
@@ -94,12 +100,12 @@ export async function refreshPrices(assetIds: string[], opts: { force?: boolean 
     } catch (e) {
       errores.push(`${a.nombre}: ${(e as Error).message}`);
     }
-  }
+  });
 
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await admin.from('asset_prices').upsert(rows.slice(i, i + 500), { onConflict: 'asset_id,fecha' });
     if (error) errores.push(error.message);
   }
-  for (const [id, m] of touched) await admin.from('assets').update({ metadata: m }).eq('id', id);
+  await Promise.all([...touched].map(([id, m]) => admin.from('assets').update({ metadata: m }).eq('id', id)));
   return { actualizados: rows.length + [...touched.values()].filter((m) => m.sync_at === now).length, errores };
 }

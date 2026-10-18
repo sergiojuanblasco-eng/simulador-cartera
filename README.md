@@ -107,6 +107,13 @@ npm test && npm run typecheck
 - Cuándo se actualiza: cada noche (cron) y al abrir la app (cripto cada 5 min, ETFs/acciones cada 15 min,
   fondos cada 6 h). Admin: «Más → Actualizar precios ahora» (también enlaza los productos importados).
 
+## Rendimiento
+- Región de los servidores: **Dublín (`dub1`, en `apps/web/vercel.json`)**, junto a la base de datos de Supabase
+  (medido: ~15-35 ms por consulta frente a ~100-150 ms desde EE. UU.).
+- Sesión con `getClaims` (sin viaje al servidor de Auth si el proyecto usa claves de firma asimétricas).
+- Datos en dos tandas de consultas en paralelo; páginas de 1000 filas pedidas a la vez; cálculos memorizados por petición.
+- Esqueleto de carga instantáneo al navegar (`(app)/loading.tsx`); precios en segundo plano tras cargar.
+
 ## Decisiones técnicas clave
 - Los importes de dinero se guardan como `NUMERIC` en la base de datos y se calculan con `decimal.js`; nunca con decimales flotantes.
 - Las posiciones no se guardan: se derivan de las operaciones (`v_positions`).
