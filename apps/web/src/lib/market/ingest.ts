@@ -5,6 +5,7 @@ import { serverEnv } from '@/lib/env';
 import { hoyMadrid } from '@/lib/format';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { marketTargetFor, relinkAsset } from './asset-fix';
+import { catalogTer } from './ter-catalog';
 import { coingeckoPrices, ecbRates, eodhdPrices, eodhdTer, type ExternalAsset } from './providers';
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -27,8 +28,9 @@ export async function syncAssetPrices(asset: Pick<AssetRow, 'id' | 'proveedor' |
   const admin = createAdminClient();
   const today = hoyMadrid();
 
+  // El último cierre oficial (el precio «en vivo» de hoy no cuenta: se sustituye por el cierre)
   const { data: last } = await admin.from('asset_prices').select('fecha')
-    .eq('asset_id', asset.id).order('fecha', { ascending: false }).limit(1).maybeSingle();
+    .eq('asset_id', asset.id).neq('fuente', 'live').order('fecha', { ascending: false }).limit(1).maybeSingle();
   const { data: first } = await admin.from('asset_prices').select('fecha')
     .eq('asset_id', asset.id).order('fecha', { ascending: true }).limit(1).maybeSingle();
 
@@ -58,7 +60,7 @@ export async function ensureGlobalAsset(ext: ExternalAsset): Promise<string> {
     const { data: byIsin } = await admin.from('assets').select('id').is('owner_id', null).eq('isin', ext.isin).maybeSingle();
     if (byIsin) return byIsin.id;
   }
-  const ter = ext.proveedor === 'eodhd' && (ext.tipo === 'etf' || ext.tipo === 'fondo') ? await eodhdTer(ext.proveedorId) : null;
+  const ter = (ext.proveedor === 'eodhd' && (ext.tipo === 'etf' || ext.tipo === 'fondo') ? await eodhdTer(ext.proveedorId) : null) ?? catalogTer(ext.isin);
   const { data, error } = await admin.from('assets').insert({
     owner_id: null,
     isin: ext.isin,
@@ -94,21 +96,23 @@ export async function ensureBenchmark(): Promise<AssetRow | null> {
  * fondos con ISIN cuando hay clave de EODHD): se enlazan con el catálogo global.
  * Cada producto se reintenta como mucho una vez al mes.
  */
-export async function fixOwnAssets(max = 40): Promise<{ enlazados: number; errores: string[] }> {
+export async function fixOwnAssets(max = 40, force = false): Promise<{ enlazados: number; errores: string[] }> {
   const admin = createAdminClient();
   const today = hoyMadrid();
+  const hayEodhd = !!serverEnv.eodhdKey();
   const out = { enlazados: 0, errores: [] as string[] };
   const { data } = await admin.from('assets').select('*').not('owner_id', 'is', null)
     .or('proveedor.is.null,proveedor.eq.manual').neq('tipo', 'efectivo').limit(500);
   const pending = ((data ?? []) as AssetRow[]).filter((a) => {
     const tried = (a.metadata as { enlace_intentado?: string }).enlace_intentado;
-    return !tried || daysBetween(tried, today) >= 30;
+    return force || !tried || daysBetween(tried, today) >= 30;
   }).slice(0, max);
   for (const a of pending) {
     try {
       const target = await marketTargetFor(a);
       if (!target) {
-        await admin.from('assets').update({ metadata: { ...a.metadata, enlace_intentado: today } }).eq('id', a.id);
+        // Sin clave de EODHD no se ha podido buscar: no cuenta como intento.
+        if (hayEodhd || a.tipo === 'cripto') await admin.from('assets').update({ metadata: { ...a.metadata, enlace_intentado: today } }).eq('id', a.id);
         continue;
       }
       const globalId = await ensureGlobalAsset(target);
@@ -125,13 +129,13 @@ export async function fixOwnAssets(max = 40): Promise<{ enlazados: number; error
  * Proceso nocturno: actualiza precios de todos los activos en uso,
  * el índice de referencia y los tipos de cambio.
  */
-export async function runDailyIngest() {
+export async function runDailyIngest(opts: { force?: boolean } = {}) {
   const admin = createAdminClient();
   const today = hoyMadrid();
-  const summary = { activos: 0, precios: 0, tiposCambio: 0, enlazados: 0, errores: [] as string[] };
+  const summary = { activos: 0, precios: 0, tiposCambio: 0, enlazados: 0, ter: 0, errores: [] as string[] };
 
   try {
-    const fix = await fixOwnAssets();
+    const fix = await fixOwnAssets(opts.force ? 200 : 40, opts.force);
     summary.enlazados = fix.enlazados;
     summary.errores.push(...fix.errores);
   } catch (e) {
@@ -161,6 +165,17 @@ export async function runDailyIngest() {
       summary.precios += n;
     } catch (e) {
       summary.errores.push(`${a.nombre}: ${(e as Error).message}`);
+    }
+  }
+
+  // TER: completar con el catálogo lo que el proveedor no da
+  for (const a of assets) {
+    if (a.ter === null && a.owner_id === null) {
+      const t = catalogTer(a.isin);
+      if (t !== null) {
+        await admin.from('assets').update({ ter: t }).eq('id', a.id);
+        summary.ter++;
+      }
     }
   }
 

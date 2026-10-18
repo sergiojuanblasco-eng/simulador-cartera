@@ -55,8 +55,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     data.portfolios.filter((p) => !selected || p.id === selected).map((p) => targetSummary(supabase, data, p, p.id === selected ? result : undefined)),
   );
 
+  // Cuándo se actualizaron los precios por última vez
+  let ultima = 0;
+  for (const h of data.holdings) {
+    const m = h.asset.metadata as { live_at?: string; sync_at?: string };
+    for (const t of [m.live_at, m.sync_at]) if (t) ultima = Math.max(ultima, Date.parse(t));
+  }
+  const actualizado = ultima
+    ? new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(ultima))
+    : null;
+
   return (
     <DashboardView
+      actualizado={actualizado}
       objetivo={<TargetCard summaries={objetivos} />}
       nombre={nombre}
       today={data.today}

@@ -1,5 +1,6 @@
 import 'server-only';
 import { claseOf } from '@/lib/asset-class';
+import { effectiveTer } from '@/lib/market/ter-catalog';
 import {
   addDays, computePortfolio, type ComputeInput, type ComputeResult, type CoreHolding, type PricePoint,
 } from '@kartera/core';
@@ -92,7 +93,7 @@ export function toCoreHoldings(data: UserData): CoreHolding[] {
     nombre: h.asset.nombre,
     tipo: h.asset.tipo,
     moneda: h.asset.moneda,
-    ter: h.asset.ter === null ? null : Number(h.asset.ter),
+    ter: effectiveTer(h.ter, h.asset),
     clase: claseOf(h.clase, h.asset),
   }));
 }

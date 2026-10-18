@@ -1,6 +1,7 @@
 import 'server-only';
 import type { AssetChoice } from '@/lib/asset-choice';
 import { ensureGlobalAsset, syncAssetPrices } from '@/lib/market/ingest';
+import { catalogTer } from '@/lib/market/ter-catalog';
 import type { ServerSupabase } from '@/lib/supabase/server';
 
 /** Convierte la elección del buscador en un id de activo (creándolo si hace falta). */
@@ -31,7 +32,7 @@ export async function resolveAsset(supabase: ServerSupabase, userId: string, cho
     nombre,
     tipo: choice.tipo,
     moneda: 'EUR',
-    ter: choice.ter !== null && choice.ter >= 0 && choice.ter < 0.2 ? choice.ter : null,
+    ter: choice.ter !== null && choice.ter >= 0 && choice.ter < 0.2 ? choice.ter : catalogTer(choice.isin),
     isin,
     proveedor: 'manual',
   }).select('id').single();

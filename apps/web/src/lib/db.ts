@@ -45,6 +45,8 @@ export interface HoldingRow {
   asset_id: string;
   /** Clase de activo elegida por la persona (migración 0005; puede faltar). */
   clase?: string | null;
+  /** TER puesto por la persona (migración 0006; puede faltar). */
+  ter?: string | null;
   asset: AssetRow;
 }
 

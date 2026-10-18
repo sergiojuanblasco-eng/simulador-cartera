@@ -39,7 +39,7 @@ packages/core        Motor de cálculo (XIRR, FIFO, traspasos, TWR, drawdown…)
 apps/web             App Next.js 15: web pública + app privada
 apps/web/src/kartera Simulador y calculadoras originales de Kartera (+ datos de 31 activos)
 apps/web/public/landing.html  Landing original de kartera.pro (el «Avísame» ya guarda emails)
-supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 permisos · 0004 cartera objetivo · 0005 clase de activo
+supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 permisos · 0004 cartera objetivo · 0005 clase de activo · 0006 TER propio
 ```
 
 ## Puesta en marcha
@@ -48,7 +48,7 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 pe
 1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
 2. En **SQL Editor**, ejecuta `supabase/instalar-todo.sql` (todas las migraciones; se puede repetir sin riesgo).
-   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000005_clase_activo.sql`, que incluye la 0004).
+   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000006_ter_propio.sql`, que incluye la 0004 y la 0005).
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
 4. En **Authentication → URL Configuration**:
    - Site URL: `https://www.kartera.pro`
@@ -95,6 +95,17 @@ cp apps/web/.env.example apps/web/.env.local   # rellena las claves
 npm run dev                                     # http://localhost:3000
 npm test && npm run typecheck
 ```
+
+## Datos de mercado
+- **EODHD** (plan *Historian*, 19,99 $/mes o 199 $/año): valor liquidativo diario de fondos europeos (`ISIN.EUFUND`),
+  cierres y precio con ~15 min de retraso de ETFs y acciones, 30+ años de histórico. Clave en `EODHD_API_KEY`.
+  El plan gratuito (20 llamadas/día) sirve para probar.
+- **CoinGecko** (gratis): cripto en euros, en vivo.
+- **BCE (Frankfurter)**: tipos de cambio.
+- **TER**: EODHD no da el de los fondos europeos → catálogo verificado en `src/lib/market/ter-catalog.ts`
+  + TER propio por posición (ficha del producto).
+- Cuándo se actualiza: cada noche (cron) y, además, al abrir la app (cripto cada 5 min, ETFs/acciones cada 15 min,
+  fondos cada 6 h). Admin: «Más → Actualizar precios ahora» (también enlaza con EODHD los productos creados a mano).
 
 ## Decisiones técnicas clave
 - Los importes de dinero se guardan como `NUMERIC` en la base de datos y se calculan con `decimal.js`; nunca con decimales flotantes.

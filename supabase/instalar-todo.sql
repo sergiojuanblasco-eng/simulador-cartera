@@ -508,3 +508,7 @@ alter table public.holdings add column if not exists clase text;
 alter table public.holdings drop constraint if exists holdings_clase_check;
 alter table public.holdings add constraint holdings_clase_check
   check (clase is null or clase in ('rv', 'rf', 'monetario', 'materias_primas', 'cripto', 'inmobiliario', 'mixto', 'otros'));
+
+alter table public.holdings add column if not exists ter numeric(7,6);
+alter table public.holdings drop constraint if exists holdings_ter_check;
+alter table public.holdings add constraint holdings_ter_check check (ter is null or (ter >= 0 and ter < 0.2));

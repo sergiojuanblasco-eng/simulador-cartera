@@ -6,6 +6,7 @@ import { Card, H2, PageHeader, Stat } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { loadBenchmark, yearlyFromPrices } from '@/lib/benchmark';
 import { compute, loadUserData } from '@/lib/data';
+import { effectiveTer } from '@/lib/market/ter-catalog';
 import { eur, eurSigned, pct, pctSigned } from '@/lib/format';
 import { compactSeries } from '@/lib/view-models';
 
@@ -39,8 +40,8 @@ export default async function RendimientoPage() {
     .filter((p) => p.valor > 0 && !['cripto', 'efectivo'].includes(holdings.get(p.holdingId)!.asset.tipo))
     .map((p) => {
       const h = holdings.get(p.holdingId)!;
-      const ter = h.asset.ter === null ? null : Number(h.asset.ter);
-      return { id: p.holdingId, nombre: h.asset.nombre, valor: p.valor, ter, coste: ter === null ? null : p.valor * ter, puedeEditar: h.asset.owner_id !== null };
+      const ter = effectiveTer(h.ter, h.asset);
+      return { id: p.holdingId, nombre: h.asset.nombre, valor: p.valor, ter, coste: ter === null ? null : p.valor * ter, puedeEditar: true };
     })
     .sort((a, b) => (b.coste ?? -1) - (a.coste ?? -1));
 
@@ -147,7 +148,7 @@ export default async function RendimientoPage() {
             ))}
           </ul>
           {comisiones.some((c) => c.ter === null && c.puedeEditar) ? (
-            <p className="text-[13px] text-muted">Donde ves «—», entra en el producto y escribe su TER (lo encuentras en la ficha del fondo). Los fondos enlazados con datos de mercado lo traen solo.</p>
+            <p className="text-[13px] text-muted">Donde ves «—», entra en el producto y escribe su TER (en la ficha del fondo, «gastos corrientes»).</p>
           ) : null}
         </div>
       </Card>

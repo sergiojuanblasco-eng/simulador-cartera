@@ -27,6 +27,8 @@ export interface DashboardViewProps {
   goals: GoalView[];
   warnings: string[];
   baseHref?: string;
+  /** Última actualización de precios (texto ya formateado). */
+  actualizado?: string | null;
   /** Tarjeta «Tu cartera objetivo» (se pinta en el servidor; va al final). */
   objetivo?: React.ReactNode;
 }
@@ -64,7 +66,10 @@ export function DashboardView(p: DashboardViewProps) {
       ) : null}
 
       <section className="flex flex-col gap-4 rounded-[18px] bg-ink p-5 text-white">
-        <span className="text-[13px] text-[#B8B8B0]">Patrimonio {p.selected ? 'de la cartera' : 'total'}</span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[13px] text-[#B8B8B0]">Patrimonio {p.selected ? 'de la cartera' : 'total'}</span>
+          {p.actualizado ? <span className="text-[11px] text-[#8A8A82]">Precios: {p.actualizado}</span> : null}
+        </div>
         <div className="flex flex-col gap-1">
           <span className="text-[38px] leading-none font-bold tracking-tight tabular">{eur(m.valor)}</span>
           <span className={`text-[15px] font-semibold tabular ${up ? 'text-pos-on-dark' : 'text-neg-on-dark'}`}>

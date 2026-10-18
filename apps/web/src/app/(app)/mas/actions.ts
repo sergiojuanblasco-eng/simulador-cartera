@@ -1,8 +1,10 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isAdmin, requireUser } from '@/lib/auth';
-import { publicEnv } from '@/lib/env';
+import { publicEnv, serverEnv } from '@/lib/env';
+import { runDailyIngest } from '@/lib/market/ingest';
 import { newInvitationCode } from '@/lib/invitations';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -45,4 +47,23 @@ export async function inviteFromWaitlist(id: string): Promise<{ link?: string; e
   if (error) return { error: 'No se pudo crear la invitación.' };
   await admin.from('waitlist').update({ invitado_en: new Date().toISOString() }).eq('id', id);
   return { link: `${publicEnv.siteUrl()}/registro?invitacion=${codigo}` };
+}
+
+export interface IngestState {
+  ok?: boolean;
+  error?: string;
+  resumen?: { activos: number; precios: number; enlazados: number; ter: number; tiposCambio: number; errores: string[]; conEodhd: boolean };
+}
+
+/** Admin: lanza ahora el proceso de precios (enlaza productos con EODHD, descarga históricos, TER y divisas). */
+export async function refreshAllPrices(): Promise<IngestState> {
+  const { user } = await requireUser();
+  if (!isAdmin(user.email)) return { error: 'Solo para administradores.' };
+  try {
+    const s = await runDailyIngest({ force: true });
+    revalidatePath('/', 'layout');
+    return { ok: true, resumen: { ...s, errores: s.errores.slice(0, 10), conEodhd: !!serverEnv.eodhdKey() } };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }

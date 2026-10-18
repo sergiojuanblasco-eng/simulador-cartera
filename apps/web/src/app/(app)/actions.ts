@@ -273,6 +273,8 @@ export async function updateProduct(input: {
   tipo?: string;
   terPct?: number | null;
   isin?: string;
+  /** TER propio (en %) para un producto con datos de mercado; null = usar el del proveedor/catálogo. */
+  miTerPct?: number | null;
 }): Promise<ActionResult<{ holdingId: string; enlazado: string | null }>> {
   const { supabase, user } = await requireUser();
   const { data: h } = await supabase.from('holdings').select('*, asset:assets (id, owner_id, nombre, isin, ticker, tipo)')
@@ -286,6 +288,17 @@ export async function updateProduct(input: {
   if (nueva !== ((h as { clase?: string | null }).clase ?? null)) {
     const { error: claseErr } = await supabase.from('holdings').update({ clase: nueva }).eq('id', h.id);
     if (claseErr) return fail(/clase|column/i.test(claseErr.message) ? MIGRATION_MSG : 'No se pudo guardar la clase de activo.');
+  }
+
+  // 2) TER propio (productos con datos de mercado)
+  if (input.miTerPct !== undefined) {
+    const t = input.miTerPct === null ? null : input.miTerPct / 100;
+    if (t !== null && (!Number.isFinite(t) || t < 0 || t >= 0.2)) return fail('El TER debe estar entre 0 % y 20 %.');
+    const actual = (h as { ter?: string | null }).ter ?? null;
+    if (t !== (actual === null ? null : Number(actual))) {
+      const { error: terErr } = await supabase.from('holdings').update({ ter: t === null ? null : Math.round(t * 1e6) / 1e6 }).eq('id', h.id);
+      if (terErr) return fail(/ter|column/i.test(terErr.message) ? MIGRATION_MSG : 'No se pudo guardar el TER.');
+    }
   }
 
   const editaDatos = input.nombre !== undefined;

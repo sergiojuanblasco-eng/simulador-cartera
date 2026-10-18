@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { Alert, Button, Field, Input } from '@/components/ui';
-import { createInvitation, deleteAccount } from './actions';
+import { createInvitation, deleteAccount, refreshAllPrices, type IngestState } from './actions';
 
 export function InviteForm() {
   const [state, action, pending] = useActionState(createInvitation, {});
@@ -39,5 +39,27 @@ export function DeleteAccountForm() {
       {state.error ? <Alert>{state.error}</Alert> : null}
       <Button type="submit" variant="danger" disabled={pending}>{pending ? 'Borrando…' : 'Eliminar mi cuenta y mis datos'}</Button>
     </form>
+  );
+}
+
+export function RefreshPricesButton() {
+  const [state, setState] = useState<IngestState>({});
+  const [pending, setPending] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      <Button type="button" variant="secondary" disabled={pending} onClick={async () => {
+        setPending(true);
+        try { setState(await refreshAllPrices()); } finally { setPending(false); }
+      }}>{pending ? 'Actualizando… (puede tardar un minuto)' : 'Actualizar precios ahora'}</Button>
+      {state.error ? <Alert>{state.error}</Alert> : null}
+      {state.resumen ? (
+        <Alert tone={state.resumen.errores.length ? 'warn' : 'ok'}>
+          {!state.resumen.conEodhd ? 'Aún no hay clave de EODHD: solo se actualizan las cripto. ' : ''}
+          {state.resumen.enlazados} productos enlazados con datos de mercado · {state.resumen.precios} precios nuevos de {state.resumen.activos} productos
+          {state.resumen.ter ? ` · ${state.resumen.ter} TER añadidos` : ''}.
+          {state.resumen.errores.length ? <span className="mt-1 block text-xs">Avisos: {state.resumen.errores.join(' · ')}</span> : null}
+        </Alert>
+      ) : null}
+    </div>
   );
 }

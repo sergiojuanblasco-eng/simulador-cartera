@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, PageHeader } from '@/components/ui';
 import { isAdmin, requireUser } from '@/lib/auth';
+import { RefreshPricesButton } from './forms';
 
 export const metadata: Metadata = { title: 'Más' };
+// La actualización de precios (admin) puede tardar
+export const maxDuration = 300;
 
 function Row({ href, title, sub, external }: { href: string; title: string; sub?: string; external?: boolean }) {
   const inner = (
@@ -35,6 +38,14 @@ export default async function MasPage() {
         <Row href="/interes-compuesto" title="Calculadora de interés compuesto" />
         {isAdmin(user.email) ? <Row href="/mas/invitar" title="Invitaciones y lista de espera" sub="Crea enlaces e invita a quien lo ha pedido" /> : null}
       </ul>
+
+      {isAdmin(user.email) ? (
+        <Card className="flex flex-col gap-2">
+          <span className="font-semibold">Precios y datos de mercado</span>
+          <span className="text-[13px] text-muted">Cada noche se actualizan solos. Usa esto tras conectar EODHD o si ves un precio antiguo.</span>
+          <RefreshPricesButton />
+        </Card>
+      ) : null}
 
       <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
         <Row href="/api/exportar" external title="Descargar mis datos" sub="Todas tus operaciones en CSV (copia de seguridad)" />

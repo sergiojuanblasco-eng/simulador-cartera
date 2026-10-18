@@ -16,6 +16,8 @@ import { Alert, Button, Card, Field, H2, Input, Select } from './ui';
 export function EditAssetCard(p: {
   holdingId: string; propio: boolean; nombre: string; tipo: string; terPct: number | null; isin: string | null;
   sugerencia?: string | null; clase: string; claseAuto: boolean; claseDetectada: string;
+  /** TER puesto por la persona en un producto con datos de mercado (en %). */
+  terPropio?: number | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(!!p.sugerencia);
@@ -24,6 +26,7 @@ export function EditAssetCard(p: {
   const [ter, setTer] = useState(p.terPct === null ? '' : String(p.terPct).replace('.', ','));
   const [isin, setIsin] = useState(p.isin ?? '');
   const [clase, setClase] = useState(p.claseAuto ? 'auto' : p.clase);
+  const [miTer, setMiTer] = useState(p.terPropio == null ? '' : String(p.terPropio).replace('.', ','));
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -32,7 +35,7 @@ export function EditAssetCard(p: {
     return (
       <Card className="flex items-center justify-between gap-3">
         <span className="text-sm text-muted-2">
-          {p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, TER o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. ¿No es correcta?`}
+          {p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, TER o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. Puedes cambiarla o poner tu propio TER.`}
         </span>
         <Button type="button" variant="secondary" onClick={() => setOpen(true)}>Editar</Button>
       </Card>
@@ -51,8 +54,10 @@ export function EditAssetCard(p: {
           setOk(null);
           const terPct = ter.trim() === '' ? null : parseEsNumber(ter.replace('%', ''));
           if (p.propio && ter.trim() !== '' && terPct === null) { setError('Escribe el TER como número, p. ej. 0,20'); return; }
+          const miTerPct = miTer.trim() === '' ? null : parseEsNumber(miTer.replace('%', ''));
+          if (!p.propio && miTer.trim() !== '' && miTerPct === null) { setError('Escribe el TER como número, p. ej. 0,20'); return; }
           start(async () => {
-            const r = await updateProduct({ holdingId: p.holdingId, clase, ...(p.propio ? { nombre, tipo, terPct, isin } : {}) });
+            const r = await updateProduct({ holdingId: p.holdingId, clase, ...(p.propio ? { nombre, tipo, terPct, isin } : { miTerPct }) });
             if (!r.ok) { setError(r.error ?? 'No se pudo guardar.'); return; }
             setOk(r.data?.enlazado ? `Guardado y enlazado con datos de mercado: ${r.data.enlazado}.` : 'Guardado.');
             if (r.data && r.data.holdingId !== p.holdingId) router.replace(`/activos/${r.data.holdingId}`);
@@ -66,6 +71,11 @@ export function EditAssetCard(p: {
             {CLASE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </Select>
         </Field>
+        {!p.propio ? (
+          <Field label="Tu TER (% al año)" htmlFor="ea-miter" hint={p.terPct !== null && p.terPropio == null ? `Ahora usamos ${String(p.terPct).replace('.', ',')} %. Déjalo vacío para usar ese.` : 'Déjalo vacío para usar el de los datos de mercado.'}>
+            <Input id="ea-miter" inputMode="decimal" value={miTer} onChange={(e) => setMiTer(e.target.value)} placeholder={p.terPct !== null ? String(p.terPct).replace('.', ',') : '0,20'} />
+          </Field>
+        ) : null}
         {p.propio ? (
           <>
             <Field label="Nombre" htmlFor="ea-nombre"><Input id="ea-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={200} /></Field>

@@ -118,3 +118,34 @@ export async function ecbRates(currencies: string[], from: string): Promise<{ fe
   }
   return out;
 }
+
+// ---------------------------------------------------------------------------- Precios en vivo
+/**
+ * Último precio (con ~15 min de retraso) de ETFs y acciones en EODHD. Hasta 15 símbolos por llamada.
+ * Los fondos (EUFUND) no tienen precio en vivo: publican un valor liquidativo al día.
+ */
+export async function eodhdLive(symbols: string[]): Promise<Map<string, { precio: number; ts: number }>> {
+  const out = new Map<string, { precio: number; ts: number }>();
+  const key = serverEnv.eodhdKey();
+  if (!key || symbols.length === 0) return out;
+  type Row = { code: string; timestamp: number | 'NA'; close: number | 'NA'; previousClose?: number | 'NA' };
+  for (let i = 0; i < symbols.length; i += 15) {
+    const [first, ...rest] = symbols.slice(i, i + 15);
+    const extra = rest.length ? `&s=${rest.map(encodeURIComponent).join(',')}` : '';
+    const res = await getJson<Row | Row[]>(`${EODHD}/real-time/${encodeURIComponent(first!)}?api_token=${key}&fmt=json${extra}`);
+    for (const r of Array.isArray(res) ? res : [res]) {
+      const precio = typeof r.close === 'number' && r.close > 0 ? r.close : typeof r.previousClose === 'number' && r.previousClose > 0 ? r.previousClose : null;
+      if (precio) out.set(r.code, { precio, ts: typeof r.timestamp === 'number' ? r.timestamp * 1000 : Date.now() });
+    }
+  }
+  return out;
+}
+
+/** Precio actual en euros de varias cripto (CoinGecko, gratis). */
+export async function coingeckoLive(ids: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (ids.length === 0) return out;
+  const res = await getJson<Record<string, { eur?: number }>>(`${CG}/simple/price?ids=${ids.map(encodeURIComponent).join(',')}&vs_currencies=eur`);
+  for (const [id, v] of Object.entries(res)) if (v.eur && v.eur > 0) out.set(id, v.eur);
+  return out;
+}

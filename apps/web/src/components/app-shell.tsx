@@ -1,4 +1,5 @@
 import { BottomNav, SideNav } from '@/components/nav';
+import { PriceRefresher } from '@/components/price-refresher';
 import { LinkButton, Logo } from '@/components/ui';
 
 /** Marco de la app (menú lateral en escritorio, barra inferior en el móvil). */
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="min-w-0 flex-1 px-4 pt-6 pb-28 sm:px-6 lg:px-10 lg:pb-12">{children}</main>
       <BottomNav />
+      <PriceRefresher />
     </div>
   );
 }

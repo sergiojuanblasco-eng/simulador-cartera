@@ -9,6 +9,7 @@ import { detectCrypto } from '@/lib/crypto';
 import { Card, H2, PageHeader, Stat } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
+import { effectiveTer } from '@/lib/market/ter-catalog';
 import { eur, eurSigned, fechaCorta, pct, pctSigned, qty } from '@/lib/format';
 import { TX_LABEL, TX_TONE } from '@/lib/tx-labels';
 import { compactSeries } from '@/lib/view-models';
@@ -33,7 +34,8 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
   const marks = txs
     .filter((t) => (t.tipo === 'compra' || t.tipo === 'venta') && Number(t.cantidad) > 0)
     .map((t) => ({ fecha: t.fecha, precio: t.precio ? Number(t.precio) : Number(t.importe) / Number(t.cantidad), tipo: t.tipo as 'compra' | 'venta' }));
-  const ter = h.asset.ter === null ? null : Number(h.asset.ter);
+  const ter = effectiveTer(h.ter, h.asset);
+  const terPropio = h.ter !== null && h.ter !== undefined;
   const meta = h.asset.metadata as { top10?: { nombre: string; peso: number }[] };
   const propio = h.asset.owner_id !== null;
   const cripto = propio && h.asset.tipo !== 'cripto' ? detectCrypto({ nombre: h.asset.nombre, isin: h.asset.isin, ticker: h.asset.ticker }) : null;
@@ -52,7 +54,8 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
 
       <EditAssetCard holdingId={h.id} propio={propio} nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
         isin={h.asset.isin} sugerencia={cripto ? cripto.symbol : null}
-        clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)} />
+        clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)}
+        terPropio={terPropio ? Math.round(Number(h.ter) * 1e6) / 1e4 : null} />
 
       <Card className="flex flex-col gap-3">
         <div>
