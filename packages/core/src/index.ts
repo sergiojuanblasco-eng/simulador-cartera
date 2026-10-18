@@ -5,7 +5,7 @@ export { xirr, type CashFlow } from './xirr';
 export { runLedger, sortTxs, type Lot, type LedgerResult } from './ledger';
 export { computePortfolio } from './compute';
 export {
-  whatIf, distribution, downsample, monthsToGoal, compoundInterest, sliceByPeriod, TIPO_LABEL,
-  type GroupKey, type DistributionItem,
+  whatIf, distribution, downsample, monthsToGoal, compoundInterest, sliceByPeriod, TIPO_LABEL, CLASE_LABEL, CLASES, vehiculoOf,
+  type GroupKey, type DistributionItem, type Clase,
 } from './analysis';
 export * from './plan';

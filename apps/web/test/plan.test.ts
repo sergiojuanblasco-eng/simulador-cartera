@@ -43,3 +43,27 @@ describe('plan de cartera', () => {
     expect(largo.recortado).not.toBeNull();
   });
 });
+
+describe('clase de activo', () => {
+  it('se deduce de cada producto de la cartera real', async () => {
+    const { detectClase, claseOf } = await import('@/lib/asset-class');
+    const c = (nombre: string, tipo: 'fondo' | 'etf' | 'cripto' | 'monetario' | 'plan_pensiones' | 'accion' = 'fondo', isin: string | null = null) => detectClase({ nombre, tipo, isin });
+    expect(c('Fidelity MSCI World Index P EUR Acc', 'fondo', 'IE00BYX5NX33')).toBe('rv');
+    expect(c('MSCI World Information Technology USD (Acc)', 'etf')).toBe('rv');
+    expect(c('Vanguard Emerging Markets Stock Index EUR Acc')).toBe('rv');
+    expect(c('Vanguard Global Small-Cap Index EUR Acc')).toBe('rv');
+    expect(c('Vanguard Global Bond Index EUR Hedged Acc')).toBe('rf');
+    expect(c('Groupama Tresorerie NC', 'monetario')).toBe('monetario');
+    expect(c('Physical Gold USD (Acc)', 'etf')).toBe('materias_primas');
+    expect(c('Bitcoin', 'cripto')).toBe('cripto');
+    expect(c('21Shares Bitcoin ETP', 'etf', 'CH0454664001')).toBe('cripto');
+    expect(c('Vanguard LifeStrategy 80% Equity')).toBe('mixto');
+    expect(c('Indexa Más Rentabilidad Acciones PP', 'plan_pensiones')).toBe('rv');
+    expect(c('Plan de pensiones Equilibrado', 'plan_pensiones')).toBe('mixto');
+    expect(c('Apple', 'accion')).toBe('rv');
+    expect(c('Fondo raro XYZ')).toBe('otros');
+    // La elección de la persona manda
+    expect(claseOf('rf', { nombre: 'Fidelity MSCI World', tipo: 'fondo' })).toBe('rf');
+    expect(claseOf('basura', { nombre: 'Fidelity MSCI World', tipo: 'fondo' })).toBe('rv');
+  });
+});

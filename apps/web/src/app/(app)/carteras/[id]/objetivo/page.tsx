@@ -7,8 +7,9 @@ import { PlanEditor } from './editor';
 
 export const metadata: Metadata = { title: 'Cartera objetivo' };
 
-export default async function ObjetivoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ObjetivoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ nueva?: string }> }) {
   const { id } = await params;
+  const { nueva } = await searchParams;
   const { supabase } = await requireUser();
   const data = await loadUserData(supabase);
   const p = data.portfolios.find((x) => x.id === id);
@@ -23,8 +24,9 @@ export default async function ObjetivoPage({ params }: { params: Promise<{ id: s
       mensual={view.aportacionMensual ?? (Math.round(result.metrics.aportacionMediaMensual) || null)}
       rows={view.rows.map((r) => ({
         assetId: r.assetId, nombre: r.nombre, tipo: r.tipo, isin: r.isin,
-        pctActual: r.pctActual, pctObjetivo: r.pctObjetivo, proxy: r.proxy, proxyAprox: r.proxyAprox,
+        pctActual: r.pctActual, pctObjetivo: r.pctObjetivo, proxy: r.proxy, proxyAprox: r.proxyAprox, clase: r.clase,
       }))}
+      next={nueva ? `/carteras/${p.id}/invertir?primera=1` : null}
     />
   );
 }

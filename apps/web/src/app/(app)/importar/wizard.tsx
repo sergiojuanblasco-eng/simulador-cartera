@@ -45,7 +45,7 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
   const [fixes, setFixes] = useState<Record<number, TxType | 'ignorar'>>({});
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [assign, setAssign] = useState<Record<string, { portfolio: string; newName: string; broker: string }>>({});
-  const [result, setResult] = useState<{ importadas: number; omitidas: number; avisos: string[] } | null>(null);
+  const [result, setResult] = useState<{ importadas: number; omitidas: number; avisos: string[]; cartera: { id: string; nombre: string; tienePlan: boolean } | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -138,7 +138,7 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
       }
       const r = await commitImport({ source, rows: valid, assignments });
       if (!r.ok) { setError(r.error ?? 'Error'); return; }
-      setResult({ importadas: r.importadas ?? 0, omitidas: r.omitidas ?? 0, avisos: r.avisos ?? [] });
+      setResult({ importadas: r.importadas ?? 0, omitidas: r.omitidas ?? 0, avisos: r.avisos ?? [], cartera: r.cartera ?? null });
       setStep(5);
     });
   }
@@ -157,7 +157,16 @@ export function ImportWizard({ portfolios, initialPortfolio, aiEnabled }: {
             <ul className="mt-2 list-disc pl-5">{result.avisos.slice(0, 20).map((a) => <li key={a}>{a}</li>)}</ul>
           </details>
         ) : null}
-        <LinkButton href="/">Ver mi patrimonio</LinkButton>
+        {result.cartera && !result.cartera.tienePlan ? (
+          <div className="flex flex-col gap-2 rounded-2xl border-2 border-brand bg-surface p-4">
+            <span className="font-semibold">Siguiente paso: tu cartera objetivo</span>
+            <span className="text-sm text-muted-2">Partimos de tu reparto real en «{result.cartera.nombre}». Ajusta los % y te diremos cuánto poner en cada producto cada mes.</span>
+            <LinkButton href={`/carteras/${result.cartera.id}/objetivo`}>Definir mi cartera objetivo</LinkButton>
+          </div>
+        ) : null}
+        <LinkButton href={result.cartera?.tienePlan ? `/carteras/${result.cartera.id}` : '/'} variant={result.cartera && !result.cartera.tienePlan ? 'secondary' : 'primary'}>
+          {result.cartera?.tienePlan ? 'Ver mi cartera' : 'Ver mi patrimonio'}
+        </LinkButton>
       </div>
     );
   }

@@ -27,25 +27,30 @@ export function NewPortfolioWizard({ primera, existentes }: { primera: boolean; 
         <span className="text-[13px] font-semibold text-muted">Nueva cartera · paso 2 de 2</span>
         <Progress step={2} total={2} />
         <div className="flex flex-col gap-1.5">
-          <H1>¿Cómo quieres empezar?</H1>
-          <p className="text-sm text-muted">Cartera <strong className="text-ink">{created.nombre}</strong> creada. Ahora añade lo que ya tienes.</p>
+          <H1>¿Ya tienes inversiones para esta cartera?</H1>
+          <p className="text-sm text-muted">Cartera <strong className="text-ink">{created.nombre}</strong> creada. Después definirás tu cartera objetivo: qué % quieres en cada producto.</p>
         </div>
+        <span className="text-xs font-semibold tracking-wide text-muted uppercase">Sí, ya invierto</span>
         <Link href={`/importar?cartera=${created.id}`} className="flex gap-3.5 rounded-2xl border-2 border-brand bg-surface p-[18px]">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand">
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15 V4 M7 9 L12 4 L17 9" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M4 15 V19 H20 V15" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </span>
           <span className="flex flex-col gap-1">
-            <span className="flex flex-wrap items-center gap-2"><span className="text-[17px] font-bold">Importar movimientos</span><span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-bold text-brand-dark">RECOMENDADO</span></span>
-            <span className="text-sm leading-snug text-muted-2">Si ya inviertes en MyInvestor, Trade Republic u otro bróker. Traemos todo tu histórico de golpe.</span>
+            <span className="flex flex-wrap items-center gap-2"><span className="text-[17px] font-bold">Importar mi extracto</span><span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-bold text-brand-dark">RECOMENDADO</span></span>
+            <span className="text-sm leading-snug text-muted-2">Trade Republic, MyInvestor u otro bróker. Traemos todo tu histórico y luego partes de tu reparto real.</span>
           </span>
         </Link>
         <Link href={`/movimiento/aportacion?cartera=${created.id}`} className="flex gap-3.5 rounded-2xl border border-line bg-surface p-[18px]">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-subtle">
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5 V19 M5 12 H19" stroke="#3F3F3A" strokeWidth="2.2" strokeLinecap="round" /></svg>
           </span>
-          <span className="flex flex-col gap-1"><span className="text-[17px] font-bold">Añadir a mano</span><span className="text-sm text-muted-2">Elige el producto y registra tu primera aportación.</span></span>
+          <span className="flex flex-col gap-1"><span className="text-[17px] font-bold">Añadir mis productos a mano</span><span className="text-sm text-muted-2">Elige el producto y registra lo que llevas invertido.</span></span>
         </Link>
-        <Link href={`/carteras/${created.id}/objetivo`} className="self-center py-2 text-[15px] font-semibold text-brand">Definir primero mi cartera objetivo</Link>
+        <span className="mt-2 text-xs font-semibold tracking-wide text-muted uppercase">No, empiezo de cero</span>
+        <Link href={`/carteras/${created.id}/objetivo?nueva=1`} className="flex gap-3.5 rounded-2xl border border-line bg-surface p-[18px]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-[20px] font-bold text-brand-dark" aria-hidden="true">◔</span>
+          <span className="flex flex-col gap-1"><span className="text-[17px] font-bold">Elegir mis productos y su %</span><span className="text-sm text-muted-2">Define tu cartera objetivo y te decimos cuánto poner en cada uno en tu primera aportación.</span></span>
+        </Link>
         <Link href="/" className="self-center py-3 text-[15px] font-semibold text-brand">Dejarla vacía por ahora</Link>
       </div>
     );

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { TIPO_LABEL } from '@kartera/core';
+import { CLASE_LABEL, TIPO_LABEL, vehiculoOf } from '@kartera/core';
+import { claseOf } from '@/lib/asset-class';
 import { Card, LinkButton, PageHeader } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
@@ -43,7 +44,7 @@ export default async function ActivosPage() {
                     <Link href={`/activos/${h.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-line-strong">
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate font-semibold">{h.asset.nombre}</span>
-                        <span className="text-[13px] text-muted">{TIPO_LABEL[h.asset.tipo]} · {cuentas.get(h.account_id)}</span>
+                        <span className="text-[13px] text-muted">{CLASE_LABEL[claseOf(h.clase, h.asset)]} · {TIPO_LABEL[vehiculoOf(h.asset.tipo)]} · {cuentas.get(h.account_id)}</span>
                       </div>
                       <div className="flex flex-col items-end gap-0.5">
                         <span className="font-semibold tabular">{eur(ps.valor)}</span>

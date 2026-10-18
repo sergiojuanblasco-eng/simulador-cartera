@@ -1,5 +1,5 @@
 import type { ComputeResult, CoreHolding, DailyPoint } from '@kartera/core';
-import { addDays, distribution, monthsToGoal, TIPO_LABEL, type DistributionItem } from '@kartera/core';
+import { addDays, CLASE_LABEL, distribution, monthsToGoal, type DistributionItem } from '@kartera/core';
 import { CHART_COLORS } from '@/components/ui';
 
 /** Series listas para las gráficas: diario el último año, semanal antes (menos datos al navegador). */
@@ -20,12 +20,13 @@ export interface StackSeries {
 }
 
 /** Serie apilada por grupo (producto o tipo); agrupa en "Otros" a partir del 7.º. */
-export function stackBy(series: DailyPoint[], holdings: CoreHolding[], by: 'producto' | 'tipo', today: string): StackSeries {
+export function stackBy(series: DailyPoint[], holdings: CoreHolding[], by: 'producto' | 'clase', today: string): StackSeries {
   const hmap = new Map(holdings.map((h) => [h.id, h]));
   const groupOf = (hid: string) => {
     const h = hmap.get(hid);
     if (!h) return { key: 'otros', label: 'Otros' };
-    return by === 'producto' ? { key: h.assetId, label: h.nombre } : { key: h.tipo, label: TIPO_LABEL[h.tipo] ?? h.tipo };
+    const clase = h.clase && CLASE_LABEL[h.clase] ? h.clase : 'otros';
+    return by === 'producto' ? { key: h.assetId, label: h.nombre } : { key: clase, label: CLASE_LABEL[clase]! };
   };
   const last = series[series.length - 1];
   const totals = new Map<string, { label: string; v: number }>();
@@ -62,6 +63,7 @@ export function stackBy(series: DailyPoint[], holdings: CoreHolding[], by: 'prod
 export interface DistributionSets {
   producto: (DistributionItem & { color: string })[];
   cartera: (DistributionItem & { color: string })[];
+  clase: (DistributionItem & { color: string })[];
   tipo: (DistributionItem & { color: string })[];
   cuenta: (DistributionItem & { color: string })[];
 }
@@ -75,6 +77,7 @@ export function distributions(
   return {
     producto: color(distribution(result.positions, holdings, 'producto')),
     cartera: color(distribution(result.positions, holdings, 'cartera', labels)),
+    clase: color(distribution(result.positions, holdings, 'clase')),
     tipo: color(distribution(result.positions, holdings, 'tipo')),
     cuenta: color(distribution(result.positions, holdings, 'cuenta', labels)),
   };

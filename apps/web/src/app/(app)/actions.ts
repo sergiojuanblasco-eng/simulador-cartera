@@ -3,6 +3,7 @@
 import { isIsoDate, type AssetType } from '@kartera/core';
 import { revalidatePath } from 'next/cache';
 import type { AssetChoice, SearchResult } from '@/lib/asset-choice';
+import { isClase } from '@/lib/asset-class';
 import { requireUser } from '@/lib/auth';
 import { GOAL_PRESETS, type PortfolioGoal } from '@/lib/db';
 import { hoyMadrid } from '@/lib/format';
@@ -255,34 +256,52 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-// ============================================================================ Productos propios
+// ============================================================================ Productos
 
 const ASSET_TYPES = new Set(['fondo', 'etf', 'accion', 'cripto', 'monetario', 'plan_pensiones', 'efectivo', 'otro']);
+const MIGRATION_MSG = 'Falta un paso en la base de datos: ejecuta la actualización en Supabase (SQL Editor) y vuelve a intentarlo.';
 
 /**
- * Edita un producto propio (nombre, tipo, TER, ISIN). Si con los datos nuevos se reconoce
+ * Edita un producto: la clase de activo siempre (se guarda en tu posición);
+ * nombre, vehículo, TER e ISIN solo si es un producto propio. Si con los datos nuevos se reconoce
  * (cripto → CoinGecko, ISIN → EODHD) se enlaza con datos de mercado.
  */
-export async function updateOwnAsset(input: {
+export async function updateProduct(input: {
   holdingId: string;
-  nombre: string;
-  tipo: string;
-  terPct: number | null;
-  isin: string;
+  clase: string;
+  nombre?: string;
+  tipo?: string;
+  terPct?: number | null;
+  isin?: string;
 }): Promise<ActionResult<{ holdingId: string; enlazado: string | null }>> {
   const { supabase, user } = await requireUser();
-  const { data: h } = await supabase.from('holdings').select('id, asset:assets (id, owner_id, nombre, isin, ticker, tipo)')
+  const { data: h } = await supabase.from('holdings').select('*, asset:assets (id, owner_id, nombre, isin, ticker, tipo)')
     .eq('id', input.holdingId).maybeSingle();
   const asset = (h?.asset ?? null) as unknown as { id: string; owner_id: string | null; ticker: string | null } | null;
   if (!h || !asset) return fail('Producto no encontrado.');
+  if (input.clase !== 'auto' && !isClase(input.clase)) return fail('Clase de activo no válida.');
+
+  // 1) Clase de activo: es una decisión tuya, vale para cualquier producto.
+  const nueva = input.clase === 'auto' ? null : input.clase;
+  if (nueva !== ((h as { clase?: string | null }).clase ?? null)) {
+    const { error: claseErr } = await supabase.from('holdings').update({ clase: nueva }).eq('id', h.id);
+    if (claseErr) return fail(/clase|column/i.test(claseErr.message) ? MIGRATION_MSG : 'No se pudo guardar la clase de activo.');
+  }
+
+  const editaDatos = input.nombre !== undefined;
+  if (!editaDatos) {
+    refresh();
+    revalidatePath(`/activos/${h.id}`);
+    return { ok: true, data: { holdingId: h.id, enlazado: null } };
+  }
   if (asset.owner_id !== user.id) return fail('Este producto tiene datos de mercado y se actualiza solo.');
 
-  const nombre = input.nombre.trim().slice(0, 200);
+  const nombre = (input.nombre ?? '').trim().slice(0, 200);
   if (!nombre) return fail('Escribe el nombre del producto.');
-  if (!ASSET_TYPES.has(input.tipo)) return fail('Tipo de producto no válido.');
-  const ter = input.terPct === null ? null : input.terPct / 100;
+  if (!ASSET_TYPES.has(input.tipo ?? '')) return fail('Vehículo no válido.');
+  const ter = input.terPct == null ? null : input.terPct / 100;
   if (ter !== null && (!Number.isFinite(ter) || ter < 0 || ter >= 0.2)) return fail('El TER debe estar entre 0 % y 20 %.');
-  const isin = input.isin.trim().toUpperCase().replace(/\s/g, '');
+  const isin = (input.isin ?? '').trim().toUpperCase().replace(/\s/g, '');
   if (isin && !/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)) return fail('El ISIN tiene 12 caracteres: 2 letras de país, 9 letras o números y 1 número (p. ej. IE00B4L5Y983).');
 
   const tipo = input.tipo as AssetType;

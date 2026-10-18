@@ -1,18 +1,19 @@
 'use client';
 
-import type { AssetType } from '@kartera/core';
+import { CLASE_LABEL, type AssetType } from '@kartera/core';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { ProductPicker } from '@/components/product-picker';
 import { Alert, Button, Card, CHART_COLORS, Field, Input, PageHeader } from '@/components/ui';
 import type { AssetChoice } from '@/lib/asset-choice';
+import { detectClase } from '@/lib/asset-class';
 import { parseEsNumber } from '@/lib/format';
 import { guessProxy, PROXY_OPTIONS } from '@/lib/plan';
 import { savePlan } from '../../plan-actions';
 
 interface InRow {
   assetId: string; nombre: string; tipo: AssetType; isin: string | null;
-  pctActual: number; pctObjetivo: number | null; proxy: string; proxyAprox: boolean;
+  pctActual: number; pctObjetivo: number | null; proxy: string; proxyAprox: boolean; clase: string;
 }
 
 interface Row {
@@ -24,6 +25,7 @@ interface Row {
   pct: string;
   proxy: string;
   proxyAprox: boolean;
+  clase: string;
 }
 
 const fmt = (n: number) => (Math.round(n * 100) / 100).toLocaleString('es-ES', { maximumFractionDigits: 2 });
@@ -48,12 +50,12 @@ function to100(w: number[]): number[] {
   return out;
 }
 
-export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tienePlan: boolean; mensual: number | null; rows: InRow[] }) {
+export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tienePlan: boolean; mensual: number | null; rows: InRow[]; next?: string | null }) {
   const router = useRouter();
   const hayActual = p.rows.some((r) => r.pctActual > 0);
   const [rows, setRows] = useState<Row[]>(() => {
     const base = p.rows.map((r) => ({
-      key: r.assetId, assetId: r.assetId, asset: null, nombre: r.nombre, pctActual: r.pctActual,
+      key: r.assetId, assetId: r.assetId, asset: null, nombre: r.nombre, pctActual: r.pctActual, clase: r.clase,
       pct: r.pctObjetivo !== null ? fmt(r.pctObjetivo) : '0', proxy: r.proxy, proxyAprox: r.proxyAprox,
     }));
     if (p.tienePlan) return base;
@@ -61,11 +63,14 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
     return base.map((r, i) => ({ ...r, pct: String(start[i]) }));
   });
   const [mensual, setMensual] = useState(p.mensual ? String(p.mensual) : '');
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(p.rows.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const total = rows.reduce((a, r) => a + val(r.pct), 0);
+  const porClaseMap = new Map<string, number>();
+  for (const r of rows) if (val(r.pct) > 0) porClaseMap.set(r.clase, (porClaseMap.get(r.clase) ?? 0) + val(r.pct));
+  const porClase = [...porClaseMap.entries()].sort((a, b) => b[1] - a[1]);
   const ok = Math.abs(total - 100) < 0.05;
   const set = (key: string, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const bump = (key: string, d: number) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, pct: fmt(Math.min(100, Math.max(0, val(r.pct) + d))) } : r)));
@@ -79,7 +84,7 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
     const tipo: AssetType = c.kind === 'local' ? 'fondo' : c.tipo;
     const isin = c.kind === 'external' ? c.isin : c.kind === 'manual' ? c.isin ?? null : null;
     const g = guessProxy({ nombre: c.nombre, tipo, isin });
-    setRows((rs) => [...rs, { key: `n${Date.now()}`, assetId: id, asset: id ? null : c, nombre: c.nombre, pctActual: 0, pct: '0', proxy: g.id, proxyAprox: g.aproximado }]);
+    setRows((rs) => [...rs, { key: `n${Date.now()}`, assetId: id, asset: id ? null : c, nombre: c.nombre, pctActual: 0, pct: rs.length === 0 ? '100' : '0', proxy: g.id, proxyAprox: g.aproximado, clase: detectClase({ nombre: c.nombre, tipo, isin }) }]);
     setAdding(false);
   }
 
@@ -93,7 +98,7 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
         rows: rows.map((x) => ({ assetId: x.assetId, asset: x.asset, pct: val(x.pct), proxy: x.proxy })),
       });
       if (!r.ok) { setError(r.error ?? 'No se pudo guardar.'); return; }
-      router.push(`/carteras/${p.portfolio.id}`);
+      router.push(p.next ?? `/carteras/${p.portfolio.id}`);
       router.refresh();
     });
   }
@@ -122,13 +127,19 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
           {rows.map((r, i) => <div key={r.key} style={{ width: `${Math.min(100, val(r.pct))}%`, background: colorOf(i) }} />)}
         </div>
 
-        {rows.length === 0 ? <p className="text-sm text-muted">Esta cartera aún no tiene productos. Añade los que quieras tener.</p> : null}
+        {porClase.length ? (
+          <p className="text-[13px] text-muted-2">{porClase.map(([c, v]) => `${CLASE_LABEL[c]} ${fmt(v)} %`).join(' · ')}</p>
+        ) : null}
+        {rows.length === 0 ? <p className="text-sm text-muted">Elige los productos en los que vas a invertir y qué % quieres en cada uno.</p> : null}
         <ul className="flex flex-col divide-y divide-line">
           {rows.map((r, i) => (
             <li key={r.key} className="flex flex-col gap-2 py-3">
               <div className="flex items-start gap-2.5">
                 <span className="mt-1 h-3 w-3 shrink-0 rounded-sm" style={{ background: colorOf(i) }} aria-hidden="true" />
-                <span className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold">{r.nombre}</span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="line-clamp-2 text-sm font-semibold">{r.nombre}</span>
+                  <span className="text-xs text-muted">{CLASE_LABEL[r.clase]}</span>
+                </span>
               </div>
               <div className="flex items-center justify-between gap-3 pl-5">
                 <span className="text-xs text-muted">{r.pctActual > 0 ? `Hoy: ${fmt(Math.round(r.pctActual * 1000) / 10)} %` : 'Aún no lo tienes'}</span>

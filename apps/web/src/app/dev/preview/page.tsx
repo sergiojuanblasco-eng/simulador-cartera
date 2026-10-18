@@ -21,7 +21,7 @@ export default function PreviewPage() {
         metrics={result.metrics}
         value={compactSeries(result.series, today).map((p) => ({ fecha: p.fecha, valor: p.valor, aportado: p.aportado }))}
         byProduct={stackBy(result.series, holdings, 'producto', today)}
-        byType={stackBy(result.series, holdings, 'tipo', today)}
+        byClass={stackBy(result.series, holdings, 'clase', today)}
         dists={distributions(result, holdings, labels)}
         goals={[{ id: 'p1', nombre: 'Largo plazo', valor: lp, objetivo: 100000, anio: 2035, eta: goalEta(lp, 100000, 550, today) }]}
         warnings={result.warnings}

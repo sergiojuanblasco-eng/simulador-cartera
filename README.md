@@ -26,6 +26,7 @@ Beta privada: se entra con invitación y es gratis.
 | Movimientos | Botón **+**: invertir según mi plan, aportación, retirada, rebalanceo (traspaso o venta/compra) y nueva cartera |
 | Cartera (`/carteras/[id]`) | Cartera objetivo frente a la real, reparto de la aportación del mes (equilibrar o fijo), «Invertir ahora» que registra las compras, y simulación con datos históricos (plazo según el objetivo y probabilidad de llegar a la meta) |
 | Importar | MyInvestor, Trade Republic, plantilla CSV/Excel e IA (también PDF), con revisión y detección de duplicados |
+| Clasificación | Cada producto tiene **clase de activo** (renta variable, renta fija, monetario, materias primas, cripto, inmobiliario, mixto, otros; deducida y editable) y **vehículo** (fondo, ETF/ETC, acción, plan de pensiones, cripto directa, cuenta) |
 | Análisis | Activos y ficha con el valor liquidativo, Rendimiento (por año, frente al índice, comisiones, FIFO para la renta) y Mes |
 | Más | Carteras, historial, exportar CSV, simulador, invitaciones y lista de espera (admin), borrar cuenta |
 
@@ -38,7 +39,7 @@ packages/core        Motor de cálculo (XIRR, FIFO, traspasos, TWR, drawdown…)
 apps/web             App Next.js 15: web pública + app privada
 apps/web/src/kartera Simulador y calculadoras originales de Kartera (+ datos de 31 activos)
 apps/web/public/landing.html  Landing original de kartera.pro (el «Avísame» ya guarda emails)
-supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 permisos · 0004 cartera objetivo
+supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 permisos · 0004 cartera objetivo · 0005 clase de activo
 ```
 
 ## Puesta en marcha
@@ -47,7 +48,7 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 pe
 1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
 2. En **SQL Editor**, ejecuta `supabase/instalar-todo.sql` (todas las migraciones; se puede repetir sin riesgo).
-   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000004_cartera_objetivo.sql`).
+   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000005_clase_activo.sql`, que incluye la 0004).
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
 4. En **Authentication → URL Configuration**:
    - Site URL: `https://www.kartera.pro`

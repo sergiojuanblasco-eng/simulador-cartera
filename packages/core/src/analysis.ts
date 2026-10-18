@@ -32,7 +32,7 @@ export function whatIf(
   return { valor: serie[serie.length - 1]?.valor ?? 0, serie };
 }
 
-export type GroupKey = 'producto' | 'cartera' | 'tipo' | 'cuenta';
+export type GroupKey = 'producto' | 'cartera' | 'clase' | 'tipo' | 'cuenta';
 
 export interface DistributionItem {
   key: string;
@@ -41,7 +41,7 @@ export interface DistributionItem {
   pct: number;
 }
 
-/** Reparto del valor actual por producto, cartera, tipo de activo o bróker. */
+/** Reparto del valor actual por producto, cartera, clase de activo, vehículo (tipo) o bróker. */
 export function distribution(
   positions: PositionResult[],
   holdings: CoreHolding[],
@@ -65,9 +65,13 @@ export function distribution(
         key = h.portfolioId;
         label = labels.carteras?.[h.portfolioId] ?? 'Cartera';
         break;
+      case 'clase':
+        key = h.clase && CLASE_LABEL[h.clase] ? h.clase : 'otros';
+        label = CLASE_LABEL[key]!;
+        break;
       case 'tipo':
-        key = h.tipo;
-        label = TIPO_LABEL[h.tipo] ?? h.tipo;
+        key = vehiculoOf(h.tipo);
+        label = TIPO_LABEL[key] ?? key;
         break;
       case 'cuenta':
         key = h.accountId;
@@ -84,15 +88,35 @@ export function distribution(
     .sort((a, b) => b.valor - a.valor);
 }
 
+/** Vehículo (cómo está empaquetada la inversión). Un fondo monetario es un fondo. */
+export function vehiculoOf(tipo: string): string {
+  return tipo === 'monetario' ? 'fondo' : tipo;
+}
+
 export const TIPO_LABEL: Record<string, string> = {
   fondo: 'Fondos',
-  etf: 'ETFs',
+  etf: 'ETF / ETC',
   accion: 'Acciones',
-  cripto: 'Cripto',
-  monetario: 'Monetario',
+  cripto: 'Cripto directa',
+  monetario: 'Fondos',
   plan_pensiones: 'Planes de pensiones',
-  efectivo: 'Efectivo',
+  efectivo: 'Cuentas y efectivo',
   otro: 'Otros',
+};
+
+/** Clase de activo: qué riesgo tiene la inversión. */
+export const CLASES = ['rv', 'rf', 'monetario', 'materias_primas', 'cripto', 'inmobiliario', 'mixto', 'otros'] as const;
+export type Clase = (typeof CLASES)[number];
+
+export const CLASE_LABEL: Record<string, string> = {
+  rv: 'Renta variable',
+  rf: 'Renta fija',
+  monetario: 'Monetario',
+  materias_primas: 'Materias primas',
+  cripto: 'Cripto',
+  inmobiliario: 'Inmobiliario',
+  mixto: 'Mixto',
+  otros: 'Otros',
 };
 
 /** Reduce una serie larga a ~maxPoints puntos (conserva siempre el último). */

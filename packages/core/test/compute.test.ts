@@ -239,7 +239,16 @@ describe('análisis', () => {
       [H('A'), H('B', { tipo: 'cripto' })],
       'tipo',
     );
-    expect(d.map((x) => [x.label, x.pct])).toEqual([['Fondos', 0.75], ['Cripto', 0.25]]);
+    expect(d.map((x) => [x.label, x.pct])).toEqual([['Fondos', 0.75], ['Cripto directa', 0.25]]);
+  });
+
+  it('distribución por clase de activo y por vehículo', () => {
+    const pos = (id: string, valor: number) => ({ holdingId: id, cantidad: 1, precio: 1, fechaPrecio: null, valor, coste: 0, ganancia: 0, gananciaPct: null, precioMedio: null, comisiones: 0 });
+    const hs = [H('A', { clase: 'rv' }), H('B', { clase: 'rv', tipo: 'etf' }), H('C', { clase: 'rf' }), H('D', { tipo: 'monetario', clase: 'monetario' }), H('E', { clase: null })];
+    const ps = [pos('A', 50), pos('B', 20), pos('C', 20), pos('D', 5), pos('E', 5)];
+    expect(distribution(ps, hs, 'clase').map((x) => [x.label, x.pct])).toEqual([['Renta variable', 0.7], ['Renta fija', 0.2], ['Monetario', 0.05], ['Otros', 0.05]]);
+    // Un fondo monetario es, como vehículo, un fondo
+    expect(distribution(ps, hs, 'tipo').map((x) => [x.label, x.pct])).toEqual([['Fondos', 0.8], ['ETF / ETC', 0.2]]);
   });
 
   it('meses hasta objetivo', () => {

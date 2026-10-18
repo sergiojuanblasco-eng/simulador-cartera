@@ -69,7 +69,7 @@ export async function investPlan(portfolioId: string, input: {
   fecha: string;
   comisionPorOrden: number;
   broker: string;
-  lines: { assetId: string; importe: number }[];
+  lines: { assetId: string; importe: number; cantidad?: number | null }[];
 }): Promise<Result<{ registradas: number; sinPrecio: string[] }>> {
   const { supabase } = await requireUser();
   if (!isIsoDate(input.fecha) || input.fecha > hoyMadrid() || input.fecha < '1990-01-01') return fail('La fecha no es válida.');
@@ -88,7 +88,8 @@ export async function investPlan(portfolioId: string, input: {
     for (const l of lines) {
       const { data: asset } = await supabase.from('assets').select('id, nombre').eq('id', l.assetId).maybeSingle();
       if (!asset) continue;
-      const precio = await priceOn(supabase, asset.id, input.fecha);
+      const cantidadDada = l.cantidad && Number.isFinite(l.cantidad) && l.cantidad > 0 ? l.cantidad : null;
+      const precio = cantidadDada ? l.importe / cantidadDada : await priceOn(supabase, asset.id, input.fecha);
       if (!precio) { sinPrecio.push(asset.nombre); continue; }
       let holdingId = holdings.find((h) => h.asset_id === asset.id)?.id;
       if (!holdingId) {

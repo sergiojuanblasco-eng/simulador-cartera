@@ -20,16 +20,16 @@ function cut<T extends { fecha: string | number }>(rows: T[], period: Period, to
   return rows.filter((r) => String(r.fecha) >= from);
 }
 
-export function DashboardCharts({ today, value, byProduct, byType }: {
+export function DashboardCharts({ today, value, byProduct, byClass }: {
   today: string;
   value: { fecha: string; valor: number; aportado: number }[];
   byProduct: StackSeries;
-  byType: StackSeries;
+  byClass: StackSeries;
 }) {
   const [period, setPeriod] = useState<Period>('Todo');
-  const [view, setView] = useState<'producto' | 'tipo'>('producto');
+  const [view, setView] = useState<'producto' | 'clase'>('clase');
   const v = useMemo(() => cut(value, period, today), [value, period, today]);
-  const stack = view === 'producto' ? byProduct : byType;
+  const stack = view === 'producto' ? byProduct : byClass;
   const s = useMemo(() => cut(stack.rows as { fecha: string }[], period, today), [stack, period, today]);
 
   return (
@@ -50,9 +50,9 @@ export function DashboardCharts({ today, value, byProduct, byType }: {
         <Card className="flex flex-col gap-3">
           <div>
             <H2>Evolución de tu cartera</H2>
-            <p className="text-[13px] text-muted">Cuánto vale cada fondo, ETF o cripto en el tiempo</p>
+            <p className="text-[13px] text-muted">Cuánto vale cada clase de activo o producto en el tiempo</p>
           </div>
-          <Segmented label="Agrupar" value={view} onChange={setView} options={[{ value: 'producto', label: 'Por producto' }, { value: 'tipo', label: 'Por tipo' }]} />
+          <Segmented label="Agrupar" value={view} onChange={setView} options={[{ value: 'clase', label: 'Por clase' }, { value: 'producto', label: 'Por producto' }]} />
           <StackedChart keys={stack.keys} rows={s} />
           <div className="grid grid-cols-2 gap-2 text-[13px]">
             {stack.keys.map((k) => (
@@ -66,14 +66,15 @@ export function DashboardCharts({ today, value, byProduct, byType }: {
 }
 
 const TABS = [
+  { value: 'clase', label: 'Clase de activo' },
   { value: 'producto', label: 'Producto' },
   { value: 'cartera', label: 'Cartera' },
-  { value: 'tipo', label: 'Tipo' },
+  { value: 'tipo', label: 'Vehículo' },
   { value: 'cuenta', label: 'Bróker' },
 ] as const;
 
 export function DistributionCard({ sets }: { sets: DistributionSets }) {
-  const [tab, setTab] = useState<keyof DistributionSets>('producto');
+  const [tab, setTab] = useState<keyof DistributionSets>('clase');
   const items = sets[tab];
   return (
     <Card className="flex flex-col gap-4">

@@ -8,10 +8,14 @@ import { BROKERS } from '@/lib/db';
 import { eur, parseEsNumber, pct } from '@/lib/format';
 import { investPlan } from '../../plan-actions';
 
-interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean }
+interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean; sinPrecio: boolean }
 
-export function InvestPlan(p: { portfolio: { id: string; nombre: string }; mensual: number; today: string; broker: string; slots: Slot[] }) {
-  const [importe, setImporte] = useState(p.mensual ? String(p.mensual) : '');
+export function InvestPlan(p: {
+  portfolio: { id: string; nombre: string }; importe: number; aportadoMes: number; mensual: number; primera: boolean;
+  today: string; broker: string; slots: Slot[];
+}) {
+  const [importe, setImporte] = useState(p.importe ? String(p.importe) : '');
+  const [cantidades, setCantidades] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<SplitMode>('equilibrar');
   const [registrar, setRegistrar] = useState(false);
   const [fecha, setFecha] = useState(p.today);
@@ -46,7 +50,8 @@ export function InvestPlan(p: { portfolio: { id: string; nombre: string }; mensu
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
-      <PageHeader back={`/carteras/${p.portfolio.id}`} title="¿Cuánto pongo en cada uno?" subtitle={p.portfolio.nombre} />
+      <PageHeader back={`/carteras/${p.portfolio.id}`} title={p.primera ? 'Tu primera aportación' : '¿Cuánto pongo en cada uno?'}
+        subtitle={p.aportadoMes > 0 && p.mensual > 0 ? `${p.portfolio.nombre} · este mes llevas ${eur(p.aportadoMes)} de ${eur(p.mensual)}` : p.portfolio.nombre} />
 
       <Card className="flex flex-col gap-4">
         <Field label="¿Cuánto vas a invertir ahora?" htmlFor="importe">
@@ -105,14 +110,24 @@ export function InvestPlan(p: { portfolio: { id: string; nombre: string }; mensu
               </select>
             </Field>
           ) : null}
-          <p className="text-xs text-muted">Usamos el último precio conocido de cada producto para calcular las participaciones.</p>
+          {conDinero.some((l) => p.slots.find((x) => x.assetId === l.key)?.sinPrecio) ? (
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] text-muted-2">Aún no tenemos el precio de estos productos: indica las participaciones que has comprado (las ves en tu bróker).</span>
+              {conDinero.filter((l) => p.slots.find((x) => x.assetId === l.key)?.sinPrecio).map((l) => (
+                <Field key={l.key} label={`Participaciones de ${name(l.key)}`} htmlFor={`q-${l.key}`}>
+                  <Input id={`q-${l.key}`} inputMode="decimal" value={cantidades[l.key] ?? ''} onChange={(e) => setCantidades({ ...cantidades, [l.key]: e.target.value })} placeholder="p. ej. 12,345" />
+                </Field>
+              ))}
+            </div>
+          ) : null}
+          <p className="text-xs text-muted">Para el resto usamos el último precio conocido de cada producto.</p>
           {error ? <Alert>{error}</Alert> : null}
           <div className="flex gap-2">
             <Button type="button" disabled={pending} onClick={() => start(async () => {
               setError(null);
               const r = await investPlan(p.portfolio.id, {
                 fecha, broker, comisionPorOrden: parseEsNumber(comision) ?? 0,
-                lines: conDinero.map((l) => ({ assetId: l.key, importe: l.importe })),
+                lines: conDinero.map((l) => ({ assetId: l.key, importe: l.importe, cantidad: parseEsNumber(cantidades[l.key] ?? '') })),
               });
               if (!r.ok || !r.data) { setError(r.error ?? 'No se pudo guardar.'); return; }
               setDone(r.data);

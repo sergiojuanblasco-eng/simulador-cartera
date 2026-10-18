@@ -1,4 +1,5 @@
 import 'server-only';
+import { claseOf } from '@/lib/asset-class';
 import {
   addDays, computePortfolio, type ComputeInput, type ComputeResult, type CoreHolding, type PricePoint,
 } from '@kartera/core';
@@ -40,7 +41,7 @@ export async function loadUserData(supabase: ServerSupabase): Promise<UserData> 
     // '*': así funciona antes y después de la migración 0004 (cartera objetivo)
     supabase.from('portfolios').select('*').order('orden').order('created_at'),
     supabase.from('accounts').select('id, nombre, entidad').order('nombre'),
-    supabase.from('holdings').select('id, portfolio_id, account_id, asset_id, asset:assets (*)'),
+    supabase.from('holdings').select('*, asset:assets (*)'),
     fetchAll<TxRow>((from, to) =>
       supabase.from('transactions')
         .select('id, holding_id, tipo, fecha, cantidad, precio, importe, comision, moneda, fx_eur, grupo_id, notas, created_at')
@@ -92,6 +93,7 @@ export function toCoreHoldings(data: UserData): CoreHolding[] {
     tipo: h.asset.tipo,
     moneda: h.asset.moneda,
     ter: h.asset.ter === null ? null : Number(h.asset.ter),
+    clase: claseOf(h.clase, h.asset),
   }));
 }
 

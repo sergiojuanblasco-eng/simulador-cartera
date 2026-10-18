@@ -26,6 +26,8 @@ export interface CoreHolding {
   moneda: string;
   /** TER como fracción (0.0012 = 0,12 %). */
   ter?: number | null;
+  /** Clase de activo (rv, rf, monetario, materias_primas, cripto, inmobiliario, mixto, otros). */
+  clase?: string | null;
 }
 
 export interface CoreTx {

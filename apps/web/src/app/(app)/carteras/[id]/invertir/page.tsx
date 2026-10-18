@@ -2,13 +2,15 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
-import { planView } from '@/lib/plan-view';
+import { priceOn } from '@/lib/movements';
+import { monthlyPlan, planView } from '@/lib/plan-view';
 import { InvestPlan } from './invest';
 
 export const metadata: Metadata = { title: 'Invertir según mi plan' };
 
-export default async function InvertirPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function InvertirPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ primera?: string }> }) {
   const { id } = await params;
+  const { primera } = await searchParams;
   const { supabase } = await requireUser();
   const data = await loadUserData(supabase);
   const p = data.portfolios.find((x) => x.id === id);
@@ -25,15 +27,23 @@ export default async function InvertirPage({ params }: { params: Promise<{ id: s
   }
   const broker = [...uso.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Trade Republic';
 
+  const month = await monthlyPlan(supabase, data, p, result);
+  const slots = await Promise.all(view.rows.filter((r) => r.pctObjetivo !== null).map(async (r) => ({
+    assetId: r.assetId, nombre: r.nombre, pct: r.pctObjetivo!, actual: r.valor, nuevo: r.holdingId === null,
+    // Sin precio conocido hay que indicar las participaciones al registrar
+    sinPrecio: !(await priceOn(supabase, r.assetId, data.today)),
+  })));
+
   return (
     <InvestPlan
       portfolio={{ id: p.id, nombre: p.nombre }}
-      mensual={view.aportacionMensual ?? (Math.round(result.metrics.aportacionMediaMensual) || 0)}
+      importe={month.restante > 0 ? month.restante : month.mensual}
+      aportadoMes={month.aportadoMes}
+      mensual={month.mensual}
+      primera={!!primera}
       today={data.today}
       broker={broker}
-      slots={view.rows.filter((r) => r.pctObjetivo !== null).map((r) => ({
-        assetId: r.assetId, nombre: r.nombre, pct: r.pctObjetivo!, actual: r.valor, nuevo: r.holdingId === null,
-      }))}
+      slots={slots}
     />
   );
 }

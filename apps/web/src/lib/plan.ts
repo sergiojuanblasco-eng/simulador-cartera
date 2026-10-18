@@ -83,6 +83,9 @@ export function guessProxy(p: { nombre: string; isin?: string | null; tipo: Asse
   const n = p.nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const rule = (id: string) => ({ id, aproximado: false });
   if (p.tipo === 'cripto') return /ether/.test(n) ? rule('eth') : { id: 'btc', aproximado: !/bitcoin|btc/.test(n) };
+  // ETP/ETN de cripto: vehículo cotizado, pero se comporta como la cripto
+  if (/bitcoin|\bbtc\b/.test(n)) return rule('btc');
+  if (/ethereum|\beth\b/.test(n)) return rule('eth');
   if (p.tipo === 'efectivo' || p.tipo === 'monetario' || /monetari|money market|tresorer|tesorer|liquidit/.test(n)) return rule('cash');
   if (/\bgold\b|\boro\b/.test(n)) return rule('gold');
   if (/emerg/.test(n)) return rule('msci_em');

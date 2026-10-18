@@ -7,6 +7,7 @@ import type { AssetChoice } from '@/lib/asset-choice';
 import { requireUser } from '@/lib/auth';
 import { hoyMadrid } from '@/lib/format';
 import { productKey, rowIssues, type NormalizedRow } from '@/lib/import/parse';
+import { parsePlan } from '@/lib/plan';
 import { detectCrypto, guessAssetType } from '@/lib/crypto';
 import { cryptoTarget, relinkAsset } from '@/lib/market/asset-fix';
 import { eodhdSearch } from '@/lib/market/providers';
@@ -174,7 +175,11 @@ export interface CommitInput {
   assignments: Record<string, { portfolioId?: string; newPortfolio?: string; broker: string; match: AssetChoice }>;
 }
 
-export async function commitImport(input: CommitInput): Promise<{ ok: boolean; error?: string; importadas?: number; omitidas?: number; avisos?: string[] }> {
+export async function commitImport(input: CommitInput): Promise<{
+  ok: boolean; error?: string; importadas?: number; omitidas?: number; avisos?: string[];
+  /** Si todo fue a una sola cartera: para proponer definir (o revisar) su cartera objetivo. */
+  cartera?: { id: string; nombre: string; tienePlan: boolean } | null;
+}> {
   const { supabase, user } = await requireUser();
   if (!SOURCES.includes(input.source)) return { ok: false, error: 'Origen no válido.' };
   const rows = cleanRows(input.rows);
@@ -193,6 +198,7 @@ export async function commitImport(input: CommitInput): Promise<{ ok: boolean; e
 
     const holdingByKey = new Map<string, string>();
     const assetByKey = new Map<string, string>();
+    const carterasUsadas = new Set<string>();
     for (const [key, a] of Object.entries(input.assignments)) {
       let portfolioId = a.portfolioId ?? null;
       if (!portfolioId) {
@@ -220,6 +226,7 @@ export async function commitImport(input: CommitInput): Promise<{ ok: boolean; e
       }
       const accountId = await ensureAccount(supabase, a.broker || 'Otro');
       holdingByKey.set(key, await ensureHolding(supabase, portfolioId as string, accountId, assetId));
+      carterasUsadas.add(portfolioId as string);
       assetByKey.set(key, assetId);
     }
 
@@ -301,7 +308,12 @@ export async function commitImport(input: CommitInput): Promise<{ ok: boolean; e
     if (actualizadas) avisos.unshift(`${actualizadas} ${actualizadas === 1 ? 'compra ya estaba registrada a mano: se ha corregido' : 'compras ya estaban registradas a mano: se han corregido'} con los datos exactos del bróker.`);
     await supabase.from('imports').update({ estado: 'completado', resumen: { importadas, omitidas, actualizadas, avisos: avisos.slice(0, 50) } }).eq('id', imp.id);
     for (const p of ['/', '/activos', '/movimientos', '/rendimiento', '/mes', '/carteras']) revalidatePath(p);
-    return { ok: true, importadas, omitidas, avisos };
+    let cartera: { id: string; nombre: string; tienePlan: boolean } | null = null;
+    if (carterasUsadas.size === 1) {
+      const { data: pf } = await supabase.from('portfolios').select('*').eq('id', [...carterasUsadas][0]!).maybeSingle();
+      if (pf) cartera = { id: pf.id, nombre: pf.nombre, tienePlan: parsePlan(pf.reparto_objetivo).length > 0 };
+    }
+    return { ok: true, importadas, omitidas, avisos, cartera };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { TIPO_LABEL } from '@kartera/core';
+import { CLASE_LABEL, TIPO_LABEL, vehiculoOf } from '@kartera/core';
+import { claseOf, detectClase, isClase } from '@/lib/asset-class';
 import { PriceChart } from '@/components/charts';
 import { DeleteTxButton } from '@/components/delete-tx';
 import { EditAssetCard } from '@/components/edit-asset';
@@ -39,7 +40,7 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader back="/activos" title={h.asset.nombre} subtitle={[TIPO_LABEL[h.asset.tipo], h.asset.isin, cartera, cuenta].filter(Boolean).join(' · ')} />
+      <PageHeader back="/activos" title={h.asset.nombre} subtitle={[CLASE_LABEL[claseOf(h.clase, h.asset)], TIPO_LABEL[vehiculoOf(h.asset.tipo)], h.asset.isin, cartera, cuenta].filter(Boolean).join(' · ')} />
 
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         <Stat label="Valor" value={eur(p?.valor ?? 0)} sub={p?.fechaPrecio ? `Precio a ${fechaCorta(p.fechaPrecio)}` : undefined} />
@@ -49,10 +50,9 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
           sub={[ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : null, p?.comisiones ? `${eur(p.comisiones, 2)} pagadas al operar` : null].filter(Boolean).join(' · ') || 'Sin dato de TER'} />
       </div>
 
-      {propio ? (
-        <EditAssetCard holdingId={h.id} nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
-          isin={h.asset.isin} sugerencia={cripto ? cripto.symbol : null} />
-      ) : null}
+      <EditAssetCard holdingId={h.id} propio={propio} nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
+        isin={h.asset.isin} sugerencia={cripto ? cripto.symbol : null}
+        clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)} />
 
       <Card className="flex flex-col gap-3">
         <div>

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { DashboardView, type GoalView } from '@/components/dashboard-view';
+import { MonthlyCard } from '@/components/monthly-card';
+import { monthlyPlan } from '@/lib/plan-view';
 import { Card, H2, LinkButton } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, labelMaps, loadUserData, toCoreHoldings } from '@/lib/data';
@@ -49,8 +51,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       };
     });
 
+  const plans = await Promise.all(
+    data.portfolios.filter((p) => !selected || p.id === selected).map((p) => monthlyPlan(supabase, data, p, p.id === selected ? result : undefined)),
+  );
+
   return (
     <DashboardView
+      monthly={<MonthlyCard plans={plans} mes={data.today.slice(0, 7)} />}
       nombre={nombre}
       today={data.today}
       carteras={data.portfolios.map((p) => ({ id: p.id, nombre: p.nombre }))}
@@ -58,7 +65,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       metrics={result.metrics}
       value={compactSeries(result.series, data.today).map((p) => ({ fecha: p.fecha, valor: p.valor, aportado: p.aportado }))}
       byProduct={stackBy(result.series, holdings, 'producto', data.today)}
-      byType={stackBy(result.series, holdings, 'tipo', data.today)}
+      byClass={stackBy(result.series, holdings, 'clase', data.today)}
       dists={distributions(result, holdings, labelMaps(data))}
       goals={goals}
       warnings={result.warnings}
