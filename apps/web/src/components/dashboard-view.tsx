@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metrics } from '@kartera/core';
 import { DashboardCharts, DistributionCard } from '@/components/dashboard';
+import { InstallApp } from '@/components/install-app';
 import { Card, H2, LinkButton, Stat } from '@/components/ui';
 import { eur, eurSigned, mesLargo, pct, pctSigned } from '@/lib/format';
 import type { DistributionSets, StackSeries } from '@/lib/view-models';
@@ -124,6 +125,8 @@ export function DashboardView(p: DashboardViewProps) {
       </div>
 
       {p.objetivo}
+
+      <InstallApp compact />
 
       {p.warnings.length ? (
         <details className="rounded-xl border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn-ink">

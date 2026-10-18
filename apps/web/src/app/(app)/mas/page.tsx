@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card, PageHeader } from '@/components/ui';
 import { isAdmin, requireUser } from '@/lib/auth';
+import { InstallApp } from '@/components/install-app';
 import { RefreshPricesButton } from './forms';
 
 export const metadata: Metadata = { title: 'Más' };
@@ -29,6 +30,8 @@ export default async function MasPage() {
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft font-display text-lg font-bold text-brand-dark">{(nombre || user.email || '?').slice(0, 1).toUpperCase()}</span>
         <div className="flex min-w-0 flex-col"><span className="font-semibold">{nombre}</span><span className="truncate text-sm text-muted">{user.email}</span></div>
       </Card>
+
+      <InstallApp />
 
       <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
         <Row href="/carteras" title="Mis carteras" sub="Nombres, objetivos e importes meta" />
