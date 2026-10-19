@@ -157,7 +157,9 @@ export function DashboardView(p: DashboardViewProps) {
         <Stat label="Aportación media" value={`${eur(m.aportacionMediaMensual)}/mes`} sub={m.racha > 0 ? `Racha: ${m.racha} ${m.racha === 1 ? 'mes' : 'meses seguidos'}` : 'Sin racha activa'} tone={m.racha > 0 ? 'brand' : undefined} />
         <Stat label="Caída máxima" value={pct(m.maxDrawdown)} sub="Peor bache (drawdown)" tone={m.maxDrawdown < -0.0005 ? 'neg' : undefined} />
         <Stat label="Comisiones" value={eur(m.comisionesPagadas, 2)}
-          sub={`Pagadas en compras y ventas · ${m.terMedio === null ? 'TER de los fondos: pendiente' : `TER ${pct(m.terMedio, 2)} ≈ ${eur(m.costeAnual)}/año`}`} />
+          sub={`Ya pagadas · ${m.costeAnual > 0
+            ? `${m.terMedio !== null ? `TER ${pct(m.terMedio, 2)}` : ''}${m.terMedio !== null && m.comisionesFijas > 0 ? ' + ' : ''}${m.comisionesFijas > 0 ? `${eur(m.comisionesFijas)} fijos` : ''} ≈ ${eur(m.costeAnual)}/año`
+            : 'TER de los fondos: pendiente'}`} />
       </div>
 
       <Card className="flex flex-col gap-4">

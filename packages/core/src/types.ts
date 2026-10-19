@@ -26,6 +26,8 @@ export interface CoreHolding {
   moneda: string;
   /** TER como fracción (0.0012 = 0,12 %). */
   ter?: number | null;
+  /** Comisión fija al año en EUR (custodia, mantenimiento…), aparte del TER. */
+  comisionFija?: number | null;
   /** Clase de activo (rv, rf, monetario, materias_primas, cripto, inmobiliario, mixto, otros). */
   clase?: string | null;
   /**
@@ -175,7 +177,10 @@ export interface Metrics {
   racha: number;
   /** TER medio ponderado por valor. null si no hay datos de TER. */
   terMedio: number | null;
+  /** Coste anual estimado: TER sobre el valor + comisiones fijas (EUR). */
   costeAnual: number;
+  /** Parte de `costeAnual` que son comisiones fijas (custodia, mantenimiento…). */
+  comisionesFijas: number;
   costeMensual: number;
   mesActual: { aportado: number; ganancia: number; comisiones: number };
   /** Comisiones de compra/venta/custodia pagadas en total (EUR). */

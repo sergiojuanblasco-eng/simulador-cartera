@@ -49,6 +49,13 @@ export default async function RendimientoPage() {
     })
     .sort((a, b) => (b.coste ?? -1) - (a.coste ?? -1));
 
+  // Comisiones fijas al año (custodia, mantenimiento…) de lo que tienes hoy
+  const fijas = result.positions
+    .filter((p) => p.valor > 0 && Number(holdings.get(p.holdingId)?.comision_fija ?? 0) > 0)
+    .map((p) => ({ id: p.holdingId, nombre: holdings.get(p.holdingId)!.asset.nombre, importe: Number(holdings.get(p.holdingId)!.comision_fija) }))
+    .sort((a, b) => b.importe - a.importe);
+  const costeTer = Math.max(0, m.costeAnual - m.comisionesFijas);
+
   const feesByProduct = result.positions
     .filter((p) => p.comisiones > 0)
     .map((p) => ({ id: p.holdingId, nombre: holdings.get(p.holdingId)!.asset.nombre, importe: p.comisiones }))
@@ -114,18 +121,18 @@ export default async function RendimientoPage() {
 
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="text-[15px] font-semibold">Comisiones de compra y venta</h3>
+            <h3 className="text-[15px] font-semibold">Comisiones ya pagadas</h3>
             <span className="font-semibold tabular">{eur(m.comisionesPagadas, 2)}</span>
           </div>
-          <p className="text-[13px] text-muted">Lo que te cobra el bróker en cada operación (por ejemplo, 1 € por orden en Trade Republic). Ya está restado de tu ganancia, pero no cuenta como pérdida del mercado.</p>
+          <p className="text-[13px] text-muted">Lo que te ha cobrado el bróker o el banco: por operar (por ejemplo, 1 € por orden en Trade Republic) o de custodia. Ya está restado de tu ganancia, pero no cuenta como pérdida del mercado.</p>
           {m.comisionesPagadas > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ul className="flex flex-col divide-y divide-line text-sm">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <ul className="flex min-w-0 flex-col divide-y divide-line text-sm">
                 {[...m.comisionesPorAnio].reverse().map((y) => (
                   <li key={y.anio} className="flex justify-between py-2"><span>{y.anio}</span><span className="tabular">{eur(y.importe, 2)}</span></li>
                 ))}
               </ul>
-              <ul className="flex flex-col divide-y divide-line text-sm">
+              <ul className="flex min-w-0 flex-col divide-y divide-line text-sm">
                 {feesByProduct.map((c) => (
                   <li key={c.id} className="flex justify-between gap-3 py-2"><span className="min-w-0 truncate">{c.nombre}</span><span className="tabular">{eur(c.importe, 2)}</span></li>
                 ))}
@@ -137,11 +144,11 @@ export default async function RendimientoPage() {
         <div className="flex flex-col gap-2 border-t border-line pt-4">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="text-[15px] font-semibold">Gastos de los fondos (TER)</h3>
-            <span className="font-semibold tabular">{m.terMedio === null ? '—' : `≈ ${eur(m.costeAnual)}/año`}</span>
+            <span className="font-semibold tabular">{m.terMedio === null ? '—' : `≈ ${eur(costeTer)}/año`}</span>
           </div>
           <p className="text-[13px] text-muted">
             El fondo o ETF se lo cobra cada día dentro de su precio: no aparece como un cargo, pero te cuesta.
-            {m.terMedio !== null ? <> TER medio: <strong className="text-ink">{pct(m.terMedio, 2)}</strong> · {eur(m.costeMensual, 2)} al mes.</> : null}
+            {m.terMedio !== null ? <> TER medio: <strong className="text-ink">{pct(m.terMedio, 2)}</strong> · {eur(costeTer / 12, 2)} al mes.</> : null}
           </p>
           <ul className="flex flex-col divide-y divide-line text-sm">
             {comisiones.map((c) => (
@@ -153,7 +160,31 @@ export default async function RendimientoPage() {
             ))}
           </ul>
           {comisiones.some((c) => c.ter === null && c.puedeEditar) ? (
-            <p className="text-[13px] text-muted">Donde ves «—», entra en el producto y escribe su TER (en la ficha del fondo, «gastos corrientes»).</p>
+            <p className="text-[13px] text-muted">Donde ves «—», entra en el producto y escribe su TER (en la ficha del fondo, «gastos corrientes»). Las acciones no tienen TER.</p>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-line pt-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="text-[15px] font-semibold">Comisiones fijas (custodia, mantenimiento…)</h3>
+            <span className="font-semibold tabular">{fijas.length ? `${eur(m.comisionesFijas)}/año` : '—'}</span>
+          </div>
+          <p className="text-[13px] text-muted">
+            Lo que te cobra el banco o el bróker cada año aunque no sea un %, por ejemplo la custodia de tus acciones.
+            Ponla en la ficha del producto («Editar») y, cada vez que te la cobren, regístrala en <Link href="/movimiento/comision" className="font-semibold text-brand">Nuevo movimiento → Comisión</Link>.
+          </p>
+          {fijas.length ? (
+            <ul className="flex flex-col divide-y divide-line text-sm">
+              {fijas.map((c) => (
+                <li key={c.id} className="flex items-center gap-3 py-2.5">
+                  <Link href={`/activos/${c.id}`} className="min-w-0 flex-1 truncate hover:underline">{c.nombre}</Link>
+                  <span className="font-semibold tabular">{eur(c.importe)}/año</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {m.costeAnual > 0 ? (
+            <p className="text-sm">En total, mantener tu cartera te cuesta <strong className="tabular">≈ {eur(m.costeAnual)} al año</strong> ({eur(m.costeMensual, 2)} al mes).</p>
           ) : null}
         </div>
       </Card>

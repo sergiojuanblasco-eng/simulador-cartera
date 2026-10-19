@@ -144,3 +144,29 @@ describe('hitos', () => {
     expect(milestones([]).siguiente).toEqual({ importe: 1000, falta: 1000, progreso: 0 });
   });
 });
+
+describe('comisiones fijas', () => {
+  it('custodia de 25 €/año: entra en el coste anual y, cuando se cobra en efectivo, cuenta como dinero tuyo', () => {
+    const r = computePortfolio({
+      holdings: [H('SAB', { tipo: 'accion', ter: null, comisionFija: 25 }), H('F', { ter: 0.002 })],
+      txs: [
+        T({ holdingId: 'SAB', tipo: 'compra', fecha: '2026-01-10', cantidad: 300, importe: 900 }),
+        T({ holdingId: 'F', tipo: 'compra', fecha: '2026-01-10', cantidad: 100, importe: 1000 }),
+        // El banco cobra la custodia del semestre de la cuenta: sin participaciones
+        T({ holdingId: 'SAB', tipo: 'comision', fecha: '2026-06-30', cantidad: 0, importe: 12.5 }),
+      ],
+      prices: { 'asset-SAB': [{ fecha: '2026-01-10', precio: 3 }], 'asset-F': [{ fecha: '2026-01-10', precio: 10 }] },
+      today: '2026-07-15',
+    });
+    expect(r.metrics.comisionesFijas).toBe(25);
+    expect(r.metrics.costeAnual).toBe(27); // 1000 × 0,2 % + 25
+    expect(r.metrics.terMedio).toBeCloseTo(0.002, 10);
+    // Pagar la custodia sube lo aportado y baja la ganancia; no es «mercado»
+    expect(r.metrics.aportado).toBe(1912.5);
+    expect(r.metrics.ganancia).toBe(-12.5);
+    expect(r.metrics.comisionesPagadas).toBe(12.5);
+    const jun = r.months.find((m) => m.mes === '2026-06')!;
+    expect([jun.aportado, jun.comisiones, jun.ganancia]).toEqual([12.5, 12.5, 0]);
+    expect(r.positions.find((p) => p.holdingId === 'SAB')!.cantidad).toBe(300);
+  });
+});

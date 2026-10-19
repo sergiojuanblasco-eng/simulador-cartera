@@ -129,6 +129,7 @@ export function toCoreHoldings(data: UserData): CoreHolding[] {
     tipo: h.asset.tipo,
     moneda: h.asset.moneda,
     ter: effectiveTer(h.ter, h.asset),
+    comisionFija: h.comision_fija != null ? Number(h.comision_fija) : null,
     clase: claseOf(h.clase, h.asset),
     manual: isValorAnotado(h.asset),
   }));

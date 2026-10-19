@@ -47,6 +47,8 @@ export interface HoldingRow {
   clase?: string | null;
   /** TER puesto por la persona (migración 0006; puede faltar). */
   ter?: string | null;
+  /** Comisión fija al año en EUR: custodia, mantenimiento… (migración 0008; puede faltar). */
+  comision_fija?: string | null;
   asset: AssetRow;
 }
 

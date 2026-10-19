@@ -29,7 +29,7 @@ export default async function MovimientosPage() {
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${TX_TONE[t.tipo]}`}>{TX_LABEL[t.tipo]}</span>
                     <span className="truncate text-sm font-semibold">{h?.asset.nombre}</span>
                   </div>
-                  <span className="text-xs text-muted">{fechaCorta(t.fecha)} · {h ? ps.get(h.portfolio_id) : ''} · {qty(Number(t.cantidad))} part.</span>
+                  <span className="text-xs text-muted">{fechaCorta(t.fecha)} · {h ? ps.get(h.portfolio_id) : ''} · {t.tipo === 'comision' && Number(t.cantidad) === 0 ? (t.notas ?? 'Cobrada en efectivo') : `${qty(Number(t.cantidad))} part.`}</span>
                 </div>
                 <span className="font-semibold tabular">{eur(Number(t.importe), 2)}</span>
                 <DeleteTxButton id={t.id} grouped={!!t.grupo_id} />

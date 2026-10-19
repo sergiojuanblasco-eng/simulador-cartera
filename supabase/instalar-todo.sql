@@ -567,3 +567,11 @@ create policy valuations_owner on public.valuations
 grant select, insert, update, delete on public.valuations to authenticated;
 grant all on public.valuations to service_role;
 revoke all on public.valuations from anon;
+
+-- =============================================================================
+-- Kartera · Migración 0008 · Comisión fija al año por producto (custodia, mantenimiento…)
+-- =============================================================================
+alter table public.holdings add column if not exists comision_fija numeric(10,2);
+alter table public.holdings drop constraint if exists holdings_comision_fija_check;
+alter table public.holdings add constraint holdings_comision_fija_check
+  check (comision_fija is null or (comision_fija >= 0 and comision_fija < 100000));

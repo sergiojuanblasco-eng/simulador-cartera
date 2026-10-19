@@ -34,6 +34,10 @@ function externalFlow(tx: CoreTx, internal: boolean): Decimal {
   const importe = toEur(tx.importe, tx.fxEur);
   const comision = toEur(tx.comision ?? 0, tx.fxEur);
   switch (tx.tipo) {
+    case 'comision':
+      // Cobrada vendiendo participaciones: baja el valor, no es dinero de fuera.
+      // Cobrada en efectivo (sin participaciones, p. ej. la custodia del banco): es dinero que pones tú.
+      return dec(tx.cantidad).gt(0) ? new Decimal(0) : importe.plus(comision);
     case 'compra':
       return importe.plus(comision);
     case 'venta':
@@ -195,6 +199,7 @@ function holdingFlowOf(tx: CoreTx): { aportado: number; traspaso: number } {
     case 'dividendo': return { aportado: -importe, traspaso: 0 };
     case 'traspaso_salida': return { aportado: 0, traspaso: -importe };
     case 'traspaso_entrada': return { aportado: 0, traspaso: importe };
+    case 'comision': return { aportado: dec(tx.cantidad).gt(0) ? 0 : importe + comision, traspaso: 0 };
     default: return { aportado: 0, traspaso: 0 };
   }
 }
@@ -202,7 +207,7 @@ function holdingFlowOf(tx: CoreTx): { aportado: number; traspaso: number } {
 function emptyMetrics(): Metrics {
   return {
     valor: 0, aportado: 0, ganancia: 0, gananciaPct: null, tir: null, maxDrawdown: 0,
-    aportacionMediaMensual: 0, racha: 0, terMedio: null, costeAnual: 0, costeMensual: 0,
+    aportacionMediaMensual: 0, racha: 0, terMedio: null, costeAnual: 0, comisionesFijas: 0, costeMensual: 0,
     mesActual: { aportado: 0, ganancia: 0, comisiones: 0 }, rentabilidadAnual: [],
     comisionesPagadas: 0, comisionesPorAnio: [],
   };
@@ -442,12 +447,17 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
 
   // Comisiones: TER medio ponderado y coste estimado
   let valorConTer = 0;
-  let costeAnual = 0;
+  let costeTer = 0;
+  let comisionesFijas = 0;
   for (const p of positions) {
-    const ter = holdings.get(p.holdingId)?.ter;
-    if (ter === null || ter === undefined || p.valor <= 0) continue;
+    if (p.valor <= 0) continue;
+    const h = holdings.get(p.holdingId);
+    const fija = Number(h?.comisionFija ?? 0);
+    if (Number.isFinite(fija) && fija > 0) comisionesFijas += fija;
+    const ter = h?.ter;
+    if (ter === null || ter === undefined) continue;
     valorConTer += p.valor;
-    costeAnual += p.valor * Number(ter);
+    costeTer += p.valor * Number(ter);
   }
   const totalPos = positions.reduce((a, p) => a + Math.max(0, p.valor), 0);
 
@@ -520,9 +530,10 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
       maxDrawdown,
       aportacionMediaMensual,
       racha,
-      terMedio: valorConTer > 0 && totalPos > 0 ? costeAnual / valorConTer : null,
-      costeAnual: round2(costeAnual),
-      costeMensual: round2(costeAnual / 12),
+      terMedio: valorConTer > 0 && totalPos > 0 ? costeTer / valorConTer : null,
+      costeAnual: round2(costeTer + comisionesFijas),
+      comisionesFijas: round2(comisionesFijas),
+      costeMensual: round2((costeTer + comisionesFijas) / 12),
       mesActual,
       rentabilidadAnual,
       comisionesPagadas: round2(feesTotal),

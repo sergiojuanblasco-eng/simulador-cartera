@@ -22,6 +22,8 @@ export function EditAssetCard(p: {
   terPropio?: number | null;
   /** Cuenta, plan o depósito con valor anotado a mano: sin ISIN ni datos de mercado. */
   manual?: boolean;
+  /** Comisión fija al año en EUR (custodia, mantenimiento…). */
+  comisionFija?: number | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(!!p.sugerencia);
@@ -31,6 +33,7 @@ export function EditAssetCard(p: {
   const [isin, setIsin] = useState(p.isin ?? '');
   const [clase, setClase] = useState(p.claseAuto ? 'auto' : p.clase);
   const [miTer, setMiTer] = useState(p.terPropio == null ? '' : String(p.terPropio).replace('.', ','));
+  const [fija, setFija] = useState(p.comisionFija == null ? '' : String(p.comisionFija).replace('.', ','));
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -39,7 +42,7 @@ export function EditAssetCard(p: {
     return (
       <Card className="flex items-center justify-between gap-3">
         <span className="text-sm text-muted-2">
-          {p.manual ? 'Puedes cambiar su nombre, su clase de activo o, si tiene, su comisión anual (TER).' : p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, TER o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. Puedes cambiarla o poner tu propio TER.`}
+          {p.manual ? 'Puedes cambiar su nombre, su clase de activo o sus comisiones.' : p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, comisiones o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. Puedes cambiarla o poner tus comisiones (TER o custodia).`}
         </span>
         <Button type="button" variant="secondary" onClick={() => setOpen(true)}>Editar</Button>
       </Card>
@@ -60,8 +63,10 @@ export function EditAssetCard(p: {
           if (p.propio && ter.trim() !== '' && terPct === null) { setError('Escribe el TER como número, p. ej. 0,20'); return; }
           const miTerPct = miTer.trim() === '' ? null : parseEsNumber(miTer.replace('%', ''));
           if (!p.propio && miTer.trim() !== '' && miTerPct === null) { setError('Escribe el TER como número, p. ej. 0,20'); return; }
+          const comisionFija = fija.trim() === '' ? null : parseEsNumber(fija.replace('€', ''));
+          if (fija.trim() !== '' && (comisionFija === null || comisionFija < 0)) { setError('Escribe la comisión fija en euros, p. ej. 25'); return; }
           start(async () => {
-            const r = await updateProduct({ holdingId: p.holdingId, clase, ...(p.propio ? { nombre, tipo, terPct, isin: p.manual ? '' : isin } : { miTerPct }) });
+            const r = await updateProduct({ holdingId: p.holdingId, clase, comisionFija, ...(p.propio ? { nombre, tipo, terPct, isin: p.manual ? '' : isin } : { miTerPct }) });
             if (!r.ok) { setError(r.error ?? 'No se pudo guardar.'); return; }
             setOk(r.data?.enlazado ? `Guardado y enlazado con datos de mercado: ${r.data.enlazado}.` : 'Guardado.');
             if (r.data && r.data.holdingId !== p.holdingId) router.replace(`/activos/${r.data.holdingId}`);
@@ -76,7 +81,7 @@ export function EditAssetCard(p: {
           </Select>
         </Field>
         {!p.propio ? (
-          <Field label="Tu TER (% al año)" htmlFor="ea-miter" hint={p.terPct !== null && p.terPropio == null ? `Ahora usamos ${String(p.terPct).replace('.', ',')} %. Déjalo vacío para usar ese.` : 'Déjalo vacío para usar el de los datos de mercado.'}>
+          <Field label="TER (% al año)" htmlFor="ea-miter" hint={p.terPct !== null && p.terPropio == null ? `Ahora usamos ${String(p.terPct).replace('.', ',')} %. Déjalo vacío para usar ese.` : 'Déjalo vacío para usar el de los datos de mercado.'}>
             <Input id="ea-miter" inputMode="decimal" value={miTer} onChange={(e) => setMiTer(e.target.value)} placeholder={p.terPct !== null ? String(p.terPct).replace('.', ',') : '0,20'} />
           </Field>
         ) : null}
@@ -100,6 +105,9 @@ export function EditAssetCard(p: {
             </div>
           </>
         ) : null}
+        <Field label="Comisión fija al año (€)" htmlFor="ea-fija" hint="Lo que te cobra el banco o el bróker aunque no sea un %: custodia, mantenimiento… Si no hay, déjalo vacío.">
+          <Input id="ea-fija" inputMode="decimal" value={fija} onChange={(e) => setFija(e.target.value)} placeholder="Ninguna" className="sm:max-w-[200px]" />
+        </Field>
         {error ? <Alert>{error}</Alert> : null}
         {ok ? <Alert tone="ok">{ok}</Alert> : null}
         <div className="flex gap-2">

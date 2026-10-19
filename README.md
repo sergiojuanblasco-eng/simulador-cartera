@@ -50,7 +50,7 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 pe
 1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
 2. En **SQL Editor**, ejecuta `supabase/instalar-todo.sql` (todas las migraciones; se puede repetir sin riesgo).
-   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261019000007_valores_anotados.sql`, que incluye de la 0004 a la 0006).
+   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261019000008_comision_fija.sql`, que incluye de la 0004 a la 0007).
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
 4. En **Authentication → URL Configuration**:
    - Site URL: `https://www.kartera.pro`

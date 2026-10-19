@@ -256,6 +256,25 @@ export async function rebalance(input: RebalanceInput): Promise<ActionResult> {
   }
 }
 
+/** Comisión que te cobra el banco o el bróker en efectivo (custodia, mantenimiento…). */
+export async function addFee(input: { holdingId: string; fecha: string; importe: number; notas?: string | null }): Promise<ActionResult> {
+  const { supabase } = await requireUser();
+  if (!validDate(input.fecha)) return fail('La fecha no es válida.');
+  if (!(input.importe > 0) || input.importe > 1e7) return fail('Indica un importe mayor que cero.');
+  const { data: h } = await supabase.from('holdings').select('id').eq('id', input.holdingId).maybeSingle();
+  if (!h) return fail('Ese producto ya no existe.');
+  if (await anyAnotado(supabase, [h.id])) return fail(SALDOS_MSG);
+  const { error } = await supabase.from('transactions').insert({
+    holding_id: h.id, tipo: 'comision', fecha: input.fecha, cantidad: 0, precio: null,
+    importe: Math.round(input.importe * 100) / 100, comision: 0,
+    notas: (input.notas ?? '').trim().slice(0, 200) || 'Comisión cobrada en efectivo',
+  });
+  if (error) return fail('No se pudo guardar la comisión.');
+  refresh();
+  revalidatePath(`/activos/${h.id}`);
+  return { ok: true };
+}
+
 /** Borra un movimiento (y su pareja si es un traspaso o rebalanceo). */
 export async function deleteTransaction(id: string): Promise<ActionResult> {
   const { supabase } = await requireUser();
@@ -291,6 +310,8 @@ export async function updateProduct(input: {
   isin?: string;
   /** TER propio (en %) para un producto con datos de mercado; null = usar el del proveedor/catálogo. */
   miTerPct?: number | null;
+  /** Comisión fija al año en EUR (custodia, mantenimiento…); null = ninguna. */
+  comisionFija?: number | null;
 }): Promise<ActionResult<{ holdingId: string; enlazado: string | null }>> {
   const { supabase, user } = await requireUser();
   const { data: h } = await supabase.from('holdings').select('*, asset:assets (id, owner_id, nombre, isin, ticker, tipo, proveedor)')
@@ -314,6 +335,17 @@ export async function updateProduct(input: {
     if (t !== (actual === null ? null : Number(actual))) {
       const { error: terErr } = await supabase.from('holdings').update({ ter: t === null ? null : Math.round(t * 1e6) / 1e6 }).eq('id', h.id);
       if (terErr) return fail(/ter|column/i.test(terErr.message) ? MIGRATION_MSG : 'No se pudo guardar el TER.');
+    }
+  }
+
+  // 3) Comisión fija al año (custodia, mantenimiento…): vale para cualquier producto
+  if (input.comisionFija !== undefined) {
+    const f = input.comisionFija === null ? null : Math.round(input.comisionFija * 100) / 100;
+    if (f !== null && (!Number.isFinite(f) || f < 0 || f >= 100000)) return fail('La comisión fija no es válida.');
+    const actual = (h as { comision_fija?: string | null }).comision_fija ?? null;
+    if (f !== (actual === null ? null : Number(actual))) {
+      const { error: fErr } = await supabase.from('holdings').update({ comision_fija: f }).eq('id', h.id);
+      if (fErr) return fail(/comision_fija|column/i.test(fErr.message) ? 'Falta un paso en la base de datos: ejecuta la actualización «comisión fija» (0008) en Supabase y vuelve a intentarlo.' : 'No se pudo guardar la comisión fija.');
     }
   }
 

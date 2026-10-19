@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CLASE_LABEL, TIPO_LABEL, vehiculoOf } from '@kartera/core';
 import { claseOf, detectClase, isClase } from '@/lib/asset-class';
@@ -46,6 +47,7 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
   }
 
   const ter = effectiveTer(h.ter, h.asset);
+  const fija = h.comision_fija != null ? Number(h.comision_fija) : null;
   const terPropio = h.ter !== null && h.ter !== undefined;
   const meta = h.asset.metadata as { top10?: { nombre: string; peso: number }[] };
   const propio = h.asset.owner_id !== null;
@@ -59,14 +61,21 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
         <Stat label="Valor" value={eur(p?.valor ?? 0)} sub={p?.fechaPrecio ? `Precio a ${fechaCorta(p.fechaPrecio)}` : undefined} />
         <Stat label="Ganancia" value={eurSigned(p?.ganancia ?? 0)} sub={pctSigned(p?.gananciaPct)} tone={(p?.ganancia ?? 0) >= 0 ? 'pos' : 'neg'} />
         <Stat label="Participaciones" value={qty(p?.cantidad ?? 0)} sub={p?.precioMedio ? `Coste medio ${p.precioMedio.toLocaleString('es-ES', { maximumFractionDigits: 4 })} €` : undefined} />
-        <Stat label="Comisiones" value={ter === null ? (p?.comisiones ? eur(p.comisiones, 2) : '—') : `TER ${pct(ter, 2)}`}
-          sub={[ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : null, p?.comisiones ? `${eur(p.comisiones, 2)} pagadas al operar` : null].filter(Boolean).join(' · ') || 'Sin dato de TER'} />
+        <Stat label="Comisiones"
+          value={ter !== null ? `TER ${pct(ter, 2)}` : fija ? `${eur(fija)}/año` : p?.comisiones ? eur(p.comisiones, 2) : '—'}
+          sub={[
+            ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : null,
+            ter !== null && fija ? `+ ${eur(fija)}/año fijos` : null,
+            p?.comisiones ? `${eur(p.comisiones, 2)} ya pagadas` : null,
+          ].filter(Boolean).join(' · ') || 'Sin datos: ponlas en «Editar»'} />
       </div>
 
       <EditAssetCard holdingId={h.id} propio={propio} nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
         isin={h.asset.isin} sugerencia={cripto ? cripto.symbol : null}
         clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)}
-        terPropio={terPropio ? Math.round(Number(h.ter) * 1e6) / 1e4 : null} />
+        terPropio={terPropio ? Math.round(Number(h.ter) * 1e6) / 1e4 : null} comisionFija={fija} />
+
+      <Link href={`/movimiento/comision?producto=${h.id}`} className="self-start py-1 text-sm font-semibold text-brand">Registrar una comisión que te han cobrado →</Link>
 
       <Card className="flex flex-col gap-3">
         <div>
@@ -102,7 +111,7 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
               <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${TX_TONE[t.tipo]}`}>{TX_LABEL[t.tipo]}</span>
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="text-sm font-semibold tabular">{eur(Number(t.importe), 2)}</span>
-                <span className="text-xs text-muted">{fechaCorta(t.fecha)} · {qty(Number(t.cantidad))} part.{Number(t.comision) > 0 ? ` · comisión ${eur(Number(t.comision), 2)}` : ''}</span>
+                <span className="text-xs text-muted">{fechaCorta(t.fecha)} · {t.tipo === 'comision' && Number(t.cantidad) === 0 ? (t.notas ?? 'Cobrada en efectivo') : `${qty(Number(t.cantidad))} part.`}{Number(t.comision) > 0 ? ` · comisión ${eur(Number(t.comision), 2)}` : ''}</span>
               </div>
               <DeleteTxButton id={t.id} grouped={!!t.grupo_id} />
             </li>
@@ -120,6 +129,7 @@ function ManualFicha({ data, h, p, cartera, cuenta }: { data: UserData; h: Holdi
   const ultimo = lastValuation(vals);
   const ter = effectiveTer(h.ter, h.asset);
   const conAportado = !!p?.conAportado;
+  const fijaM = h.comision_fija != null ? Number(h.comision_fija) : null;
   // Serie para la gráfica: cada anotación (y hoy, con el último valor)
   let aport: number | null = null;
   const rows = vals.map((v) => {
@@ -140,7 +150,8 @@ function ManualFicha({ data, h, p, cartera, cuenta }: { data: UserData; h: Holdi
             <Stat label="Aportado" value={conAportado ? eur(p?.coste ?? 0) : '—'} sub={conAportado ? 'Lo que has metido en total' : 'Anótalo para ver lo que ganas'} />
             <Stat label="Ganancia" value={conAportado ? eurSigned(p?.ganancia ?? 0) : '—'} sub={conAportado ? pctSigned(p?.gananciaPct) : undefined}
               tone={conAportado ? ((p?.ganancia ?? 0) >= 0 ? 'pos' : 'neg') : undefined} />
-            <Stat label="Comisiones" value={ter === null ? '—' : `TER ${pct(ter, 2)}`} sub={ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : 'Ponlo en «Editar»'} />
+            <Stat label="Comisiones" value={ter !== null ? `TER ${pct(ter, 2)}` : fijaM ? `${eur(fijaM)}/año` : '—'}
+              sub={[ter !== null && p ? `≈ ${eur(p.valor * ter)}/año` : null, ter !== null && fijaM ? `+ ${eur(fijaM)}/año fijos` : null].filter(Boolean).join(' · ') || 'Ponlas en «Editar»'} />
           </>
         ) : (
           <Stat label="Desde la anotación anterior" value={prev === null ? '—' : eurSigned((p?.valor ?? 0) - prev)} sub="Dinero que has metido o sacado" />
@@ -180,7 +191,7 @@ function ManualFicha({ data, h, p, cartera, cuenta }: { data: UserData; h: Holdi
       </Card>
 
       <EditAssetCard holdingId={h.id} propio manual nombre={h.asset.nombre} tipo={h.asset.tipo} terPct={ter === null ? null : Math.round(ter * 1e6) / 1e4}
-        isin={null} clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)} />
+        isin={null} clase={claseOf(h.clase, h.asset)} claseAuto={!isClase(h.clase)} claseDetectada={detectClase(h.asset)} comisionFija={fijaM} />
 
       <DeleteManualProductButton holdingId={h.id} nombre={h.asset.nombre} />
     </div>
