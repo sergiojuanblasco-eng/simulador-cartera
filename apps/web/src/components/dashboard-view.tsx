@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { Metrics, Milestones } from '@kartera/core';
 import { DashboardCharts, DistributionCard } from '@/components/dashboard';
+import { ScenarioChart } from '@/components/charts';
+import { SCENARIO_COLORS } from '@/lib/scenario-colors';
 import { InstallApp } from '@/components/install-app';
 import { Card, H2, LinkButton, Stat } from '@/components/ui';
 import { eur, eurSigned, fechaCorta, mesLargo, pct, pctSigned } from '@/lib/format';
@@ -48,6 +50,8 @@ export interface SimResumenProps {
   goal: number | null;
   conPlan: boolean;
   anio: number;
+  /** Año a año para la gráfica. */
+  filas: { anio: number; pesimista: number; esperado: number; optimista: number; aportado: number }[];
   /** true = todas las carteras juntas. */
   todo: boolean;
   href: string;
@@ -282,6 +286,16 @@ function SimResumen(s: SimResumenProps) {
           </p>
         </div>
         <Link href={s.href} className="shrink-0 text-sm font-semibold text-brand">Ver más</Link>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <ScenarioChart rows={s.filas} startYear={s.anio - r.years} />
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-2">
+          <span className="flex items-center gap-1.5"><span className="h-[3px] w-4 rounded" style={{ background: SCENARIO_COLORS.optimista }} />Optimista</span>
+          <span className="flex items-center gap-1.5"><span className="h-[3px] w-4 rounded" style={{ background: SCENARIO_COLORS.esperado }} />Esperado</span>
+          <span className="flex items-center gap-1.5"><span className="h-[3px] w-4 rounded" style={{ background: SCENARIO_COLORS.pesimista }} />Pesimista</span>
+          <span className="flex items-center gap-1.5"><span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: SCENARIO_COLORS.aportado }} />Lo que aportas</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">

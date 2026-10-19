@@ -6,6 +6,7 @@ import {
   Scatter, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { eur, fechaCorta, mesCorto, numEs, pctSigned } from '@/lib/format';
+import { SCENARIO_COLORS } from '@/lib/scenario-colors';
 
 /**
  * Mide el ancho disponible y pasa tamaños explícitos a la gráfica
@@ -33,6 +34,7 @@ const GRID = '#EFEEE9';
 
 const kfmt = (v: number) => {
   const a = Math.abs(v);
+  if (a >= 1e6) return `${numEs(v / 1e6, 1)}M`;
   if (a >= 10000) return `${Math.round(v / 1000)}k`;
   if (a >= 1000) return `${numEs(v / 1000, 1)}k`;
   return String(Math.round(v));
@@ -213,6 +215,48 @@ export function MonthBars({ data: raw, height = 220 }: { data: { mes: string; ap
           </Bar>
           {hasFees ? <Bar dataKey="comisionNeg" stackId="m" fill="#71717A" isAnimationActive={false} /> : null}
         </BarChart>
+      )}
+    </Sized>
+  );
+}
+
+
+/** Simulación año a año: banda entre el escenario pesimista y el optimista, el esperado y lo aportado. */
+export function ScenarioChart({ rows, startYear, height = 210 }: {
+  rows: { anio: number; pesimista: number; esperado: number; optimista: number; aportado: number }[];
+  startYear: number;
+  height?: number;
+}) {
+  const data = rows.map((r) => ({ ...r, banda: [r.pesimista, r.optimista] as [number, number] }));
+  const last = rows[rows.length - 1]?.anio ?? 0;
+  const ticks = Array.from({ length: Math.floor(last) + 1 }, (_, i) => i);
+  return (
+    <Sized height={height} label="Simulación: escenarios pesimista, esperado y optimista frente a lo aportado">
+      {(w) => (
+        <ComposedChart width={w} height={height} data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
+          <CartesianGrid stroke={GRID} vertical={false} />
+          <XAxis dataKey="anio" type="number" domain={[0, last]} ticks={ticks} tick={AXIS} tickFormatter={(a: number) => String(startYear + a)} axisLine={false} tickLine={false} minTickGap={24} />
+          <YAxis tick={AXIS} tickFormatter={kfmt} width={42} axisLine={false} tickLine={false} domain={last <= 3 ? ['auto', 'auto'] : [0, 'auto']} />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null;
+              const d = payload[0]!.payload as (typeof data)[number];
+              const a = Number(label);
+              const titulo = Number.isInteger(a) ? `${startYear + a} · año ${a}` : `Mes ${Math.round(a * 12)}`;
+              return <TooltipBox title={titulo} rows={[
+                { label: 'Optimista', value: eur(d.optimista), color: SCENARIO_COLORS.optimista },
+                { label: 'Esperado', value: eur(d.esperado), color: SCENARIO_COLORS.esperado },
+                { label: 'Pesimista', value: eur(d.pesimista), color: SCENARIO_COLORS.pesimista },
+                { label: 'Aportado', value: eur(d.aportado), color: SCENARIO_COLORS.aportado },
+              ]} />;
+            }}
+          />
+          <Area type="monotone" dataKey="banda" stroke="none" fill={SCENARIO_COLORS.esperado} fillOpacity={0.08} isAnimationActive={false} />
+          <Line type="monotone" dataKey="optimista" stroke={SCENARIO_COLORS.optimista} strokeWidth={1.8} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="pesimista" stroke={SCENARIO_COLORS.pesimista} strokeWidth={1.8} dot={false} isAnimationActive={false} />
+          <Line type="monotone" dataKey="esperado" stroke={SCENARIO_COLORS.esperado} strokeWidth={2.8} dot={false} isAnimationActive={false} />
+          <Line type="linear" dataKey="aportado" stroke={SCENARIO_COLORS.aportado} strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
+        </ComposedChart>
       )}
     </Sized>
   );

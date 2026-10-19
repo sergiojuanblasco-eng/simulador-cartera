@@ -3,6 +3,7 @@ import { DashboardView, type GoalView } from '@/components/dashboard-view';
 import { TargetCard } from '@/components/target-table';
 import { combineSimInputs, targetSummary } from '@/lib/plan-view';
 import { simulatePlan } from '@/lib/plan';
+import { cP } from '@/kartera/engine';
 import { Card, H2, LinkButton } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, labelMaps, loadUserData, toCoreHoldings } from '@/lib/data';
@@ -73,8 +74,27 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   // Simulación resumida: la cartera elegida o todas juntas según su peso
   const simIn = selected ? objetivos.find((o) => o.portfolioId === selected)?.sim ?? null : combineSimInputs(objetivos.map((o) => o.sim).filter((x) => x !== null));
   const sim = simIn ? simulatePlan({ weights: simIn.weights, initial: simIn.initial, monthly: simIn.monthly, years: simIn.horizon, goal: simIn.goal }) : null;
+  // Para la gráfica: cada escenario a su rentabilidad anual (mes a mes si el plazo es corto)
+  const serie = (rate: number) => {
+    const years = sim?.years ?? 0;
+    if (years > 3) return cP(simIn?.initial ?? 0, simIn?.monthly ?? 0, years, rate * 100) as { y: number; v: number; inv: number }[];
+    const mr = rate / 12;
+    let v = simIn?.initial ?? 0;
+    let inv = v;
+    const out = [{ y: 0, v, inv }];
+    for (let m = 1; m <= years * 12; m++) {
+      v = v * (1 + mr) + (simIn?.monthly ?? 0);
+      inv += simIn?.monthly ?? 0;
+      out.push({ y: m / 12, v, inv });
+    }
+    return out;
+  };
   const simulacion = simIn && sim ? {
     sim, initial: simIn.initial, monthly: simIn.monthly, goal: simIn.goal, conPlan: simIn.conPlan,
+    filas: (() => {
+      const pe = serie(sim.rentPesimista), es = serie(sim.rentEsperada), op = serie(sim.rentOptimista);
+      return es.map((x, i) => ({ anio: x.y, esperado: Math.round(x.v), pesimista: Math.round(pe[i]!.v), optimista: Math.round(op[i]!.v), aportado: Math.round(x.inv) }));
+    })(),
     anio: Number(data.today.slice(0, 4)) + sim.years,
     todo: !selected && data.portfolios.length > 1,
     href: selected ? `/carteras/${selected}` : data.portfolios.length === 1 ? `/carteras/${data.portfolios[0]!.id}` : '/carteras',
