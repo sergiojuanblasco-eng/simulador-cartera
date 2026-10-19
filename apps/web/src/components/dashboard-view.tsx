@@ -5,6 +5,7 @@ import { InstallApp } from '@/components/install-app';
 import { Card, H2, LinkButton, Stat } from '@/components/ui';
 import { eur, eurSigned, fechaCorta, mesLargo, pct, pctSigned } from '@/lib/format';
 import type { DistributionSets, StackSeries } from '@/lib/view-models';
+import type { PlanSimulation } from '@/lib/plan';
 
 export interface GoalView {
   id: string;
@@ -36,6 +37,20 @@ export interface DashboardViewProps {
   hitos?: Milestones;
   /** Cuentas, planes y depósitos anotados a mano: recordatorio si este mes aún no se han anotado. */
   saldos?: { total: number; pendientes: number } | null;
+  /** Simulación resumida con datos históricos (la cartera elegida o todo junto). */
+  simulacion?: SimResumenProps | null;
+}
+
+export interface SimResumenProps {
+  sim: PlanSimulation;
+  initial: number;
+  monthly: number;
+  goal: number | null;
+  conPlan: boolean;
+  anio: number;
+  /** true = todas las carteras juntas. */
+  todo: boolean;
+  href: string;
 }
 
 function saludo(): string {
@@ -194,6 +209,8 @@ export function DashboardView(p: DashboardViewProps) {
         )}
       </Card>
 
+      {p.simulacion ? <SimResumen {...p.simulacion} /> : null}
+
       <DashboardCharts today={p.today} value={p.value} byProduct={p.byProduct} byClass={p.byClass} />
 
       <div className="grid items-start gap-4 xl:grid-cols-2">
@@ -245,6 +262,51 @@ function HitosCard({ hitos }: { hitos: Milestones }) {
         ) : null}
       </ol>
       {hitos.logrados.length === 0 ? <p className="text-[13px] text-muted">Tu primer hito llega con los primeros {eur(sig?.importe ?? 1000)}. ¡A por él!</p> : null}
+    </Card>
+  );
+}
+
+const pctTxt = (v: number) => (v >= 0.995 ? '> 99 %' : v < 0.005 ? '< 1 %' : `${Math.round(v * 100)} %`);
+
+/** «Si sigues así»: escenarios, rentabilidad esperada y probabilidad de perder dinero, en corto. */
+function SimResumen(s: SimResumenProps) {
+  const r = s.sim;
+  return (
+    <Card className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <H2>{s.todo ? 'Si sigues así, todo junto' : s.conPlan ? 'Si sigues tu plan' : 'Si sigues así'}</H2>
+          <p className="text-[13px] text-muted">
+            En {r.years} {r.years === 1 ? 'año' : 'años'} ({s.anio}), con {eur(s.initial)} de hoy{s.monthly > 0 ? ` y ${eur(s.monthly)} al mes` : ''}
+            {s.todo ? ', cada cartera con su peso y sus %' : ''}.
+          </p>
+        </div>
+        <Link href={s.href} className="shrink-0 text-sm font-semibold text-brand">Ver más</Link>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[
+          { k: 'Pesimista', v: r.pesimista, t: r.rentPesimista, cls: 'bg-warn-bg text-warn-ink' },
+          { k: 'Esperado', v: r.esperado, t: r.rentEsperada, cls: 'bg-brand-soft text-brand-dark' },
+          { k: 'Optimista', v: r.optimista, t: r.rentOptimista, cls: 'bg-subtle text-ink' },
+        ].map((x) => (
+          <div key={x.k} className={`flex flex-col gap-0.5 rounded-xl px-1.5 py-3 ${x.cls}`}>
+            <span className="text-xs">{x.k}</span>
+            <span className="text-[16px] font-bold tabular sm:text-[19px]">{eur(x.v)}</span>
+            <span className="text-[11px] opacity-80 tabular">{pctSigned(x.t)} al año</span>
+          </div>
+        ))}
+      </div>
+
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+        <div className="flex flex-col"><dt className="text-xs text-muted">Rentabilidad esperada</dt><dd className="font-semibold tabular">{pctSigned(r.rentEsperada)} al año</dd></div>
+        <div className="flex flex-col"><dt className="text-xs text-muted">Probabilidad de perder dinero</dt><dd className="font-semibold tabular">{pctTxt(r.probPerdida)}</dd></div>
+        <div className="flex flex-col"><dt className="text-xs text-muted">Habrás aportado</dt><dd className="font-semibold tabular">{eur(r.invertido)}</dd></div>
+        {s.goal && r.probMeta !== null ? (
+          <div className="flex flex-col"><dt className="text-xs text-muted">Llegar a {eur(s.goal)}</dt><dd className="font-semibold tabular text-brand-dark">{pctTxt(r.probMeta)}</dd></div>
+        ) : null}
+      </dl>
+      <p className="text-xs text-muted">Con lo que pasó de verdad en los mercados entre {r.desde} y {r.hasta} ({r.ventanas} periodos de {r.recortado ?? r.years} {(r.recortado ?? r.years) === 1 ? 'año' : 'años'}). Pesimista y optimista: el 10 % peor y el 10 % mejor. Lo pasado no garantiza lo futuro.</p>
     </Card>
   );
 }

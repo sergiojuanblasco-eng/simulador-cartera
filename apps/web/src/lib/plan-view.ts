@@ -3,7 +3,7 @@ import { rebalanceGap, type AssetType, type ComputeResult } from '@kartera/core'
 import type { PortfolioRow } from '@/lib/db';
 import { compute, type UserData } from '@/lib/data';
 import { claseOf } from '@/lib/asset-class';
-import { guessProxy, parsePlan } from '@/lib/plan';
+import { defaultHorizon, guessProxy, parsePlan } from '@/lib/plan';
 import type { ServerSupabase } from '@/lib/supabase/server';
 
 export interface PlanRow {
@@ -84,6 +84,62 @@ export async function planView(supabase: ServerSupabase, data: UserData, result:
   };
 }
 
+/** Lo que necesita la simulación con datos históricos para una cartera. */
+export interface SimInput {
+  /** Peso de cada índice (proxy) en la cartera, en %. */
+  weights: Record<string, number>;
+  initial: number;
+  monthly: number;
+  horizon: number;
+  goal: number | null;
+  conPlan: boolean;
+}
+
+/** Simulación de la cartera: su plan si lo tiene; si no, lo que tiene hoy. */
+export function simInputOf(view: PlanView, p: PortfolioRow, valor: number, mensual: number, thisYear: number): SimInput | null {
+  const weights: Record<string, number> = {};
+  for (const r of view.rows) {
+    const w = view.tienePlan ? r.pctObjetivo ?? 0 : r.pctActual * 100;
+    if (w > 0) weights[r.proxy] = (weights[r.proxy] ?? 0) + w;
+  }
+  if (!Object.keys(weights).length) return null;
+  return {
+    weights,
+    initial: Math.round(Math.max(0, valor)),
+    monthly: Math.max(0, Math.round(mensual)),
+    horizon: defaultHorizon(p.objetivo, p.objetivo_anio, thisYear),
+    goal: p.objetivo_importe ? Number(p.objetivo_importe) : null,
+    conPlan: view.tienePlan,
+  };
+}
+
+/**
+ * Todas las carteras juntas: cada una pesa lo que tiene hoy más un año de aportaciones,
+ * y dentro de cada una se respetan sus %. El plazo es la media ponderada de los plazos.
+ */
+export function combineSimInputs(items: SimInput[]): SimInput | null {
+  if (!items.length) return null;
+  if (items.length === 1) return { ...items[0]!, goal: null };
+  const peso = (s: SimInput) => s.initial + s.monthly * 12;
+  const tot = items.reduce((a, s) => a + peso(s), 0);
+  const weights: Record<string, number> = {};
+  let horizon = 0;
+  for (const s of items) {
+    const f = tot > 0 ? peso(s) / tot : 1 / items.length;
+    const sw = Object.values(s.weights).reduce((a, w) => a + w, 0) || 1;
+    for (const [id, w] of Object.entries(s.weights)) weights[id] = (weights[id] ?? 0) + (f * w * 100) / sw;
+    horizon += f * s.horizon;
+  }
+  return {
+    weights,
+    initial: items.reduce((a, s) => a + s.initial, 0),
+    monthly: items.reduce((a, s) => a + s.monthly, 0),
+    horizon: Math.max(1, Math.min(30, Math.round(horizon))),
+    goal: null,
+    conPlan: items.some((s) => s.conPlan),
+  };
+}
+
 export interface TargetLine {
   assetId: string;
   nombre: string;
@@ -109,6 +165,8 @@ export interface TargetSummary {
   lines: TargetLine[];
   /** Productos que tienes pero no están en el objetivo (no cuentan para el reparto). */
   fuera: { nombre: string; valor: number }[];
+  /** Datos para simular la cartera (null si aún no tiene productos). */
+  sim: SimInput | null;
 }
 
 /** Cartera objetivo frente a la real: por producto, % y euros para cuadrar. */
@@ -117,9 +175,11 @@ export async function targetSummary(supabase: ServerSupabase, data: UserData, p:
   const view = await planView(supabase, data, r, p);
   const planRows = view.rows.filter((x) => x.pctObjetivo !== null);
   const gap = rebalanceGap(planRows.map((x) => ({ key: x.assetId, peso: x.pctObjetivo!, actual: x.valor })));
+  const mensual = view.aportacionMensual ?? Math.round(r.metrics.aportacionMediaMensual);
   return {
     portfolioId: p.id, nombre: p.nombre, objetivo: p.objetivo, tienePlan: view.tienePlan, valor: r.metrics.valor,
-    mensual: view.aportacionMensual ?? Math.round(r.metrics.aportacionMediaMensual),
+    sim: simInputOf(view, p, r.metrics.valor, mensual, Number(data.today.slice(0, 4))),
+    mensual,
     mensualDelPlan: view.aportacionMensual !== null,
     lines: planRows.map((x, i) => ({
       assetId: x.assetId, nombre: x.nombre, clase: x.clase, holdingId: x.holdingId, valor: x.valor,

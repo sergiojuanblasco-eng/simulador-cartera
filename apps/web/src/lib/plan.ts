@@ -123,6 +123,10 @@ export interface PlanSimulation {
   esperado: number;
   optimista: number;
   probPerdida: number;
+  /** Rentabilidad anual (CAGR) en el caso esperado, pesimista y optimista (fracción: 0.068 = 6,8 %). */
+  rentEsperada: number;
+  rentPesimista: number;
+  rentOptimista: number;
   /** Probabilidad histórica de llegar a la meta (0–1), si hay meta. */
   probMeta: number | null;
   ventanas: number;
@@ -150,12 +154,18 @@ export function simulatePlan(p: { weights: Record<string, number>; initial: numb
   }
   const years = Math.round(p.years);
   const fv = (rate: number) => (cP(p.initial, p.monthly, years, rate) as { v: number }[]).at(-1)!.v;
+  const r10 = pc(cagrs, 10) as number;
+  const r50 = pc(cagrs, 50) as number;
+  const r90 = pc(cagrs, 90) as number;
   return {
     years,
     invertido: p.initial + p.monthly * 12 * years,
-    pesimista: fv(pc(cagrs, 10)),
-    esperado: fv(pc(cagrs, 50)),
-    optimista: fv(pc(cagrs, 90)),
+    pesimista: fv(r10),
+    esperado: fv(r50),
+    optimista: fv(r90),
+    rentEsperada: r50 / 100,
+    rentPesimista: r10 / 100,
+    rentOptimista: r90 / 100,
     probPerdida: cagrs.filter((c) => c < 0).length / cagrs.length,
     probMeta: p.goal && p.goal > 0 ? cagrs.filter((c) => fv(c) >= p.goal!).length / cagrs.length : null,
     ventanas: cagrs.length,

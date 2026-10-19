@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { DashboardView, type GoalView } from '@/components/dashboard-view';
 import { TargetCard } from '@/components/target-table';
-import { targetSummary } from '@/lib/plan-view';
+import { combineSimInputs, targetSummary } from '@/lib/plan-view';
+import { simulatePlan } from '@/lib/plan';
 import { Card, H2, LinkButton } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, labelMaps, loadUserData, toCoreHoldings } from '@/lib/data';
@@ -69,6 +70,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     ? new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(ultima))
     : null;
 
+  // Simulación resumida: la cartera elegida o todas juntas según su peso
+  const simIn = selected ? objetivos.find((o) => o.portfolioId === selected)?.sim ?? null : combineSimInputs(objetivos.map((o) => o.sim).filter((x) => x !== null));
+  const sim = simIn ? simulatePlan({ weights: simIn.weights, initial: simIn.initial, monthly: simIn.monthly, years: simIn.horizon, goal: simIn.goal }) : null;
+  const simulacion = simIn && sim ? {
+    sim, initial: simIn.initial, monthly: simIn.monthly, goal: simIn.goal, conPlan: simIn.conPlan,
+    anio: Number(data.today.slice(0, 4)) + sim.years,
+    todo: !selected && data.portfolios.length > 1,
+    href: selected ? `/carteras/${selected}` : data.portfolios.length === 1 ? `/carteras/${data.portfolios[0]!.id}` : '/carteras',
+  } : null;
+
   // Recordatorio mensual: cuentas, planes y depósitos sin anotar este mes
   const anotados = data.holdings.filter((h) => isValorAnotado(h.asset) && (!selected || h.portfolio_id === selected));
   const mesActual = data.today.slice(0, 7);
@@ -78,6 +89,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <DashboardView
       actualizado={actualizado}
       hitos={milestones(result.series)}
+      simulacion={simulacion}
       saldos={anotados.length ? { total: anotados.length, pendientes } : null}
       objetivo={<TargetCard summaries={objetivos} />}
       nombre={nombre}
