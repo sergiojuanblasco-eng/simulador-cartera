@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { Alert, Button, Field, Input, Select } from '@/components/ui';
+import { Alert, Button, Field, Input, Select, AmountInput } from '@/components/ui';
 import { eur, parseEsNumber } from '@/lib/format';
 import { addFee } from '../../actions';
 
@@ -57,7 +57,7 @@ export function FeeForm({ grupos, inicial, today }: {
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Importe (€)" htmlFor="fe-importe">
-          <Input id="fe-importe" inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="12,50" className="tabular" required />
+          <AmountInput id="fe-importe" value={importe} onValueChange={setImporte} placeholder="12,50" className="tabular" required />
         </Field>
         <Field label="Fecha" htmlFor="fe-fecha">
           <Input id="fe-fecha" type="date" value={fecha} max={today} onChange={(e) => setFecha(e.target.value)} required />

@@ -5,6 +5,7 @@ import ASSETS from "./data/assets.json";
 import R from "./data/returns.json";
 import SIMS from "./data/simulations.json";
 import { gY, pc, cP, capExtremeReturn, computePortfolioScenarios, filledSim } from "./engine";
+import { numEs, parseEsNumber } from "../lib/format";
 
 const CATS=[{id:"idx",name:{es:"Índices",en:"Indices"}},{id:"stk",name:{es:"Acciones",en:"Stocks"}},{id:"fi",name:{es:"Renta Fija",en:"Fixed Income"}},{id:"cry",name:{es:"Cripto",en:"Crypto"}},{id:"alt",name:{es:"Otros",en:"Others"}},{id:"etf",name:{es:"ETF Sect.",en:"Sector ETFs"}}];
 const CATCO={idx:"#3b82f6",stk:"#16754E",fi:"#1e40af",cry:"#d97706",alt:"#92400e",etf:"#7c3aed"};
@@ -148,8 +149,8 @@ const T={
 /* ══════════════════════════════════════════════
    UTILITY
    ══════════════════════════════════════════════ */
-const fm=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString("es-ES",{maximumFractionDigits:0});
-const fp=n=>(n>=0?"+":"")+n.toFixed(1)+"%";
+const fm=n=>n>=1e6?numEs(n/1e6,1)+"M":numEs(n,0);
+const fp=n=>(n>=0?"+":"")+numEs(n,1,1)+"%";
 
 function generateShareImage({profileLabel,horizon,initial,monthly,freq,assets,scenarios,probLoss,lang}){
   const W=750;
@@ -157,7 +158,7 @@ function generateShareImage({profileLabel,horizon,initial,monthly,freq,assets,sc
   const H=590+assetsH;
   const c=document.createElement("canvas");c.width=W;c.height=H;
   const x=c.getContext("2d");
-  const fmE=n=>n>=1e6?(n/1e6).toFixed(1)+"M€":n.toLocaleString("es-ES",{maximumFractionDigits:0})+"€";
+  const fmE=n=>n>=1e6?numEs(n/1e6,1)+"M€":numEs(n,0)+"€";
 
   x.fillStyle="#fff";x.fillRect(0,0,W,H);
   x.fillStyle="#16754E";x.fillRect(0,0,W,5);
@@ -497,7 +498,7 @@ function SvgChart({lines,years,labels,colors,fill,yearLabel}){
   const allV=lines.flatMap(d=>d.map(p=>p.v));const mx=Math.max(...allV)*1.05;
   const sx=yr=>pad.l+(yr/years)*w,sy=val=>pad.t+h-(val/mx)*h;
   const ml=pts=>pts.map((p,i)=>(i===0?"M":"L")+sx(p.y).toFixed(1)+","+sy(p.v).toFixed(1)).join(" ");
-  const ft=v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?(v/1e3).toFixed(0)+"k":v.toFixed(0);
+  const ft=v=>v>=1e6?numEs(v/1e6,1)+"M":v>=1e3?numEs(v/1e3,0)+"k":numEs(v,0);
   const[hover,setHover]=useState(null);
   const svgRef=useRef(null);
   const getYear=e=>{
@@ -548,12 +549,22 @@ function Donut({items,size}){
   })}</svg>;
 }
 
+/* Campo numérico con separador de miles (10.000): mientras escribes deja el texto tal cual. */
+function NumBox({value,min=0,max,step,onChange,style}){
+  const dec=step&&step<1?(String(step).split(".")[1]||"").length:0;
+  const [txt,setTxt]=useState(null);
+  return<input type="text" inputMode={dec?"decimal":"numeric"} value={txt??numEs(value,dec)}
+    onFocus={()=>setTxt(numEs(value,dec))}
+    onChange={e=>{const t=e.target.value;setTxt(t);const n=parseEsNumber(t);if(n!==null)onChange(Math.max(min,Math.min(max,n)));else if(!t.trim())onChange(min);}}
+    onBlur={()=>setTxt(null)} style={style}/>;
+}
+
 function Inputs({params}){return(
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(140px, 1fr))",gap:10,marginBottom:14}}>
     {params.map(p=><div key={p.l} style={{background:"#fff",borderRadius:12,padding:14,border:`1px solid ${TH.border}`}}>
       <div style={{fontSize:11,color:TH.light,marginBottom:4}}>{p.l}</div>
       <div style={{display:"flex",alignItems:"baseline",gap:4}}>
-        <input type="number" value={p.v} min={p.mi||0} max={p.mx} step={p.st} onChange={e=>p.fn(Math.max(p.mi||0,Math.min(p.mx,Number(e.target.value)||0)))} style={{width:"100%",border:"none",fontSize:18,fontWeight:800,outline:"none",fontFamily:"monospace",color:TH.dark}}/>
+        <NumBox value={p.v} min={p.mi||0} max={p.mx} step={p.st} onChange={p.fn} style={{width:"100%",border:"none",fontSize:18,fontWeight:800,outline:"none",fontFamily:"monospace",color:TH.dark}}/>
         {p.tog?<select value={p.freq} onChange={e=>p.sF(e.target.value)} style={{border:`1.5px solid ${TH.border}`,borderRadius:6,padding:"3px 4px",fontSize:11,color:TH.muted,background:TH.bg2,cursor:"pointer",fontWeight:600,outline:"none"}}><option value="mes">{p.lMes}</option><option value="ano">{p.lAno}</option></select>
         :<span style={{fontSize:11,color:TH.light,whiteSpace:"nowrap"}}>{p.u}</span>}
       </div>
@@ -702,7 +713,7 @@ function PortfolioSim({t,lang,cfg}){
           <div style={{fontSize:10,fontWeight:700,color:COL[i],textTransform:"uppercase",marginBottom:5,marginTop:i===1?6:0}}>{s.l} <span style={{fontWeight:500,opacity:0.7}}>({s.prob}%)</span></div>
           <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:TH.dark}}>{fm(fin)} EUR</div>
           <div style={{fontSize:14,fontWeight:700,fontFamily:"monospace",color:s.r>=0?"#16754E":"#ef4444",marginTop:3}}>{fp(s.r)} <span style={{fontSize:10,fontWeight:500,color:TH.light}}>{t.ano}</span></div>
-          <div style={{fontSize:11,color:pr>=0?"#16754E":"#ef4444",fontWeight:600,marginTop:6,paddingTop:6,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{mu.toFixed(1)}</div>
+          <div style={{fontSize:11,color:pr>=0?"#16754E":"#ef4444",fontWeight:600,marginTop:6,paddingTop:6,borderTop:"1px solid #f3f4f6"}}>{pr>=0?"+":""}{fm(pr)} | x{numEs(mu,1,1)}</div>
         </div>;})}
       </div>
 

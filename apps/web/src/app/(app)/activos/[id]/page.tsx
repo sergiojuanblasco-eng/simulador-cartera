@@ -11,7 +11,7 @@ import { Card, H2, PageHeader, Stat } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
 import { effectiveTer } from '@/lib/market/ter-catalog';
-import { eur, eurSigned, fechaCorta, pct, pctSigned, qty } from '@/lib/format';
+import { eur, eurSigned, fechaCorta, numEs, pct, pctSigned, qty } from '@/lib/format';
 import { TX_LABEL, TX_TONE } from '@/lib/tx-labels';
 import { compactSeries } from '@/lib/view-models';
 import { isValorAnotado } from '@/lib/db';
@@ -60,7 +60,7 @@ export default async function FichaPage({ params }: { params: Promise<{ id: stri
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         <Stat label="Valor" value={eur(p?.valor ?? 0)} sub={p?.fechaPrecio ? `Precio a ${fechaCorta(p.fechaPrecio)}` : undefined} />
         <Stat label="Ganancia" value={eurSigned(p?.ganancia ?? 0)} sub={pctSigned(p?.gananciaPct)} tone={(p?.ganancia ?? 0) >= 0 ? 'pos' : 'neg'} />
-        <Stat label="Participaciones" value={qty(p?.cantidad ?? 0)} sub={p?.precioMedio ? `Coste medio ${p.precioMedio.toLocaleString('es-ES', { maximumFractionDigits: 4 })} €` : undefined} />
+        <Stat label="Participaciones" value={qty(p?.cantidad ?? 0)} sub={p?.precioMedio ? `Coste medio ${numEs(p.precioMedio, 4)} €` : undefined} />
         <Stat label="Comisiones"
           value={ter !== null ? `TER ${pct(ter, 2)}` : fija ? `${eur(fija)}/año` : p?.comisiones ? eur(p.comisiones, 2) : '—'}
           sub={[

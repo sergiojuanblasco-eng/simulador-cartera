@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { Alert, Button, Field, Input } from '@/components/ui';
-import { eur, parseEsNumber, pct } from '@/lib/format';
+import { Alert, Button, Field, Input, AmountInput } from '@/components/ui';
+import { eur, numEs, parseEsNumber, pct } from '@/lib/format';
 import { deletePortfolio, updatePortfolio } from '../actions';
 
 export function PortfolioCard(p: {
@@ -12,7 +12,7 @@ export function PortfolioCard(p: {
 }) {
   const [editing, setEditing] = useState(false);
   const [nombre, setNombre] = useState(p.nombre);
-  const [importe, setImporte] = useState(p.objetivoImporte ? String(p.objetivoImporte) : '');
+  const [importe, setImporte] = useState(p.objetivoImporte ? numEs(p.objetivoImporte, 2) : '');
   const [anio, setAnio] = useState(p.objetivoAnio ? String(p.objetivoAnio) : '');
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -40,7 +40,7 @@ export function PortfolioCard(p: {
     <div className="flex flex-col gap-3 rounded-2xl border-2 border-brand bg-surface p-4">
       <Field label="Nombre" htmlFor={`n-${p.id}`}><Input id={`n-${p.id}`} value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} /></Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Objetivo (€)" htmlFor={`i-${p.id}`}><Input id={`i-${p.id}`} inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="Opcional" /></Field>
+        <Field label="Objetivo (€)" htmlFor={`i-${p.id}`}><AmountInput id={`i-${p.id}`} value={importe} onValueChange={setImporte} placeholder="Opcional" /></Field>
         <Field label="Para el año" htmlFor={`a-${p.id}`}><Input id={`a-${p.id}`} inputMode="numeric" value={anio} onChange={(e) => setAnio(e.target.value)} placeholder="Opcional" /></Field>
       </div>
       {error ? <Alert>{error}</Alert> : null}

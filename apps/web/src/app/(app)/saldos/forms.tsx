@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { Alert, Button, Field, Input, Select } from '@/components/ui';
-import { eur, fechaCorta, parseEsNumber } from '@/lib/format';
+import { Alert, Button, Field, Input, Select, AmountInput } from '@/components/ui';
+import { eur, fechaCorta, numEs, parseEsNumber } from '@/lib/format';
 import { SALDO_KINDS, type SaldoKind } from '@/lib/saldos';
 import { createManualProduct, deleteManualProduct, deleteValuation, saveValuations } from './actions';
 
-const fmt = (v: number | null) => (v === null ? '' : String(v).replace('.', ','));
+const fmt = (v: number | null) => (v === null ? '' : numEs(v, 2));
 
 export interface SaldoRow {
   holdingId: string;
@@ -89,13 +89,13 @@ export function SaldosForm({ rows, today }: { rows: SaldoRow[]; today: string })
               <div className={`grid gap-2 ${r.pideAportado ? 'grid-cols-2 sm:w-[300px]' : 'grid-cols-1 sm:w-[146px]'}`}>
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-semibold text-muted-2">{r.pideAportado ? 'Valor hoy (€)' : 'Saldo hoy (€)'}</span>
-                  <Input inputMode="decimal" value={f.valor} onChange={(e) => set(r.holdingId, { valor: e.target.value })}
+                  <AmountInput value={f.valor} onValueChange={(v) => set(r.holdingId, { valor: v })}
                     placeholder={fmt(r.valor)} className="h-11 text-right tabular" aria-label={`Valor de ${r.nombre}`} />
                 </label>
                 {r.pideAportado ? (
                   <label className="flex flex-col gap-1">
                     <span className="text-xs font-semibold text-muted-2">Aportado total (€)</span>
-                    <Input inputMode="decimal" value={f.aportado} onChange={(e) => set(r.holdingId, { aportado: e.target.value })}
+                    <AmountInput value={f.aportado} onValueChange={(v) => set(r.holdingId, { aportado: v })}
                       placeholder={r.aportado === null ? 'Opcional' : fmt(r.aportado)} className="h-11 text-right tabular" aria-label={`Aportado en ${r.nombre}`} />
                   </label>
                 ) : null}
@@ -190,11 +190,11 @@ export function NewSaldoForm({ portfolios, entidades, today, initialKind }: {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label={k.kind === 'cuenta' ? 'Saldo (€)' : 'Valor hoy (€)'} htmlFor="ns-valor">
-              <Input id="ns-valor" inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" className="tabular" required />
+              <AmountInput id="ns-valor" value={valor} onValueChange={setValor} placeholder="0,00" className="tabular" required />
             </Field>
             {k.pideAportado ? (
               <Field label="Aportado en total (€)" htmlFor="ns-aportado" hint="Opcional. Con él calculamos lo que has ganado.">
-                <Input id="ns-aportado" inputMode="decimal" value={aportado} onChange={(e) => setAportado(e.target.value)} placeholder="Si lo sabes" className="tabular" />
+                <AmountInput id="ns-aportado" value={aportado} onValueChange={setAportado} placeholder="Si lo sabes" className="tabular" />
               </Field>
             ) : null}
             <Field label="Fecha" htmlFor="ns-fecha">
@@ -249,11 +249,11 @@ export function ValuationQuickForm({ holdingId, today, pideAportado: pide, ultim
     >
       <div className={`grid gap-3 ${pide ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <Field label={pide ? 'Valor (€)' : 'Saldo (€)'} htmlFor="vq-valor">
-          <Input id="vq-valor" inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder={ultimo ? fmt(ultimo.valor) : '0,00'} className="tabular" required />
+          <AmountInput id="vq-valor" value={valor} onValueChange={setValor} placeholder={ultimo ? fmt(ultimo.valor) : '0,00'} className="tabular" required />
         </Field>
         {pide ? (
           <Field label="Aportado en total (€)" htmlFor="vq-aportado">
-            <Input id="vq-aportado" inputMode="decimal" value={aportado} onChange={(e) => setAportado(e.target.value)} placeholder={ultimo?.aportado != null ? fmt(ultimo.aportado) : 'Opcional'} className="tabular" />
+            <AmountInput id="vq-aportado" value={aportado} onValueChange={setAportado} placeholder={ultimo?.aportado != null ? fmt(ultimo.aportado) : 'Opcional'} className="tabular" />
           </Field>
         ) : null}
         <Field label="Fecha" htmlFor="vq-fecha">

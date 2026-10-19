@@ -6,7 +6,7 @@ import type { AssetChoice, SearchResult } from '@/lib/asset-choice';
 import { isClase } from '@/lib/asset-class';
 import { requireUser } from '@/lib/auth';
 import { GOAL_PRESETS, isValorAnotado, type PortfolioGoal } from '@/lib/db';
-import { hoyMadrid } from '@/lib/format';
+import { hoyMadrid, numEs } from '@/lib/format';
 import { ensureAccount, ensureHolding, positionOf, priceOn, resolveAsset } from '@/lib/movements';
 import { marketTargetFor, relinkAsset } from '@/lib/market/asset-fix';
 import { ensureGlobalAsset, syncAssetPrices } from '@/lib/market/ingest';
@@ -169,7 +169,7 @@ export async function addMovement(input: MovementInput): Promise<ActionResult<{ 
 
     if (input.tipo === 'retirada') {
       const pos = await positionOf(supabase, holdingId);
-      if (cantidad > pos * 1.01 + 1e-9) return fail(`Solo tienes ${pos.toLocaleString('es-ES', { maximumFractionDigits: 4 })} participaciones.`);
+      if (cantidad > pos * 1.01 + 1e-9) return fail(`Solo tienes ${numEs(pos, 4)} participaciones.`);
       cantidad = Math.min(cantidad, pos);
     }
 

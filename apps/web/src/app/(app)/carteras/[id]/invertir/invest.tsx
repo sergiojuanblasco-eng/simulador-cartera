@@ -3,9 +3,9 @@
 import { splitContribution, type SplitMode } from '@kartera/core';
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
-import { Alert, Button, Card, Field, Input, LinkButton, PageHeader, Segmented } from '@/components/ui';
+import { Alert, Button, Card, Field, Input, LinkButton, PageHeader, Segmented, AmountInput } from '@/components/ui';
 import { BROKERS } from '@/lib/db';
-import { eur, parseEsNumber, pct } from '@/lib/format';
+import { eur, numEs, parseEsNumber, pct } from '@/lib/format';
 import { investPlan } from '../../plan-actions';
 
 interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean; sinPrecio: boolean; anotado?: boolean }
@@ -14,7 +14,7 @@ export function InvestPlan(p: {
   portfolio: { id: string; nombre: string }; importe: number; primera: boolean;
   today: string; broker: string; slots: Slot[];
 }) {
-  const [importe, setImporte] = useState(p.importe ? String(p.importe) : '');
+  const [importe, setImporte] = useState(p.importe ? numEs(p.importe, 2) : '');
   const [compras, setCompras] = useState<Record<string, { importe: string; cantidad: string; comision: string }>>({});
   const [mode, setMode] = useState<SplitMode>('equilibrar');
   const [registrar, setRegistrar] = useState(false);
@@ -43,7 +43,7 @@ export function InvestPlan(p: {
   const faltanCantidades = compradas.filter((x) => x.s.sinPrecio && !(parseEsNumber(fila(x.s.assetId).cantidad) ?? 0));
   const usarSugerencia = () => {
     const next: typeof compras = {};
-    for (const l of lines) next[l.key] = { ...fila(l.key), importe: l.importe > 0 ? String(l.importe).replace('.', ',') : '' };
+    for (const l of lines) next[l.key] = { ...fila(l.key), importe: l.importe > 0 ? numEs(l.importe, 2) : '' };
     setCompras(next);
   };
 
@@ -67,7 +67,7 @@ export function InvestPlan(p: {
       <Card className="flex flex-col gap-4">
         <Field label="¿Cuánto vas a invertir ahora?" htmlFor="importe">
           <div className="relative">
-            <Input id="importe" inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="300" className="pr-10 text-lg font-semibold" />
+            <AmountInput id="importe" value={importe} onValueChange={setImporte} placeholder="300" className="pr-10 text-lg font-semibold" />
             <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted">€</span>
           </div>
         </Field>
@@ -124,19 +124,19 @@ export function InvestPlan(p: {
                   <div className="grid grid-cols-3 gap-2">
                     <label className="flex flex-col gap-1 text-xs text-muted">
                       Importe (€)
-                      <Input inputMode="decimal" value={f.importe} onChange={(e) => setFila(s.assetId, { importe: e.target.value })} placeholder="0" className="h-11 text-right font-semibold tabular" aria-label={`Importe comprado de ${s.nombre}`} />
+                      <AmountInput value={f.importe} onValueChange={(v) => setFila(s.assetId, { importe: v })} placeholder="0" className="h-11 text-right font-semibold tabular" aria-label={`Importe comprado de ${s.nombre}`} />
                     </label>
                     {s.anotado ? (
                       <span className="flex items-end pb-3 text-xs leading-snug text-muted">Se suma a su último valor</span>
                     ) : (
                       <label className="flex flex-col gap-1 text-xs text-muted">
                         {s.sinPrecio ? 'Participaciones *' : 'Participaciones'}
-                        <Input inputMode="decimal" value={f.cantidad} onChange={(e) => setFila(s.assetId, { cantidad: e.target.value })} placeholder={s.sinPrecio ? 'Obligatorio' : 'Opcional'} className="h-11 text-right tabular" aria-label={`Participaciones de ${s.nombre}`} />
+                        <AmountInput value={f.cantidad} onValueChange={(v) => setFila(s.assetId, { cantidad: v })} placeholder={s.sinPrecio ? 'Obligatorio' : 'Opcional'} className="h-11 text-right tabular" aria-label={`Participaciones de ${s.nombre}`} />
                       </label>
                     )}
                     <label className="flex flex-col gap-1 text-xs text-muted">
                       Comisión (€)
-                      <Input inputMode="decimal" value={f.comision} onChange={(e) => setFila(s.assetId, { comision: e.target.value })} placeholder="0" className="h-11 text-right tabular" aria-label={`Comisión de ${s.nombre}`} />
+                      <AmountInput value={f.comision} onValueChange={(v) => setFila(s.assetId, { comision: v })} placeholder="0" className="h-11 text-right tabular" aria-label={`Comisión de ${s.nombre}`} />
                     </label>
                   </div>
                 </li>

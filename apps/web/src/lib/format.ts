@@ -1,11 +1,40 @@
 /** Formato numérico en español de España. */
 
-const eur0 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const eur2 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const pct0 = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 0 });
-const pct1 = new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const pct2 = new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const num = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 4 });
+/**
+ * Separador de miles SIEMPRE, también con 4 cifras (6.589 €). La norma del español lo omite en
+ * números de 4 cifras, pero en una app de dinero mezclar «6589 €» y «16.183 €» confunde.
+ * Si el navegador no entiende `useGrouping: 'always'`, se usa el formato alemán, que es idéntico
+ * al español (1.234,56 €, 12,3 %) y sí agrupa siempre.
+ */
+const GROUP_ALWAYS = (() => {
+  try {
+    return new Intl.NumberFormat('es-ES', { useGrouping: 'always' } as unknown as Intl.NumberFormatOptions).format(1234) === '1.234';
+  } catch {
+    return false;
+  }
+})();
+
+export function nf(opts: Intl.NumberFormatOptions = {}): Intl.NumberFormat {
+  return GROUP_ALWAYS
+    ? new Intl.NumberFormat('es-ES', { ...opts, useGrouping: 'always' } as unknown as Intl.NumberFormatOptions)
+    : new Intl.NumberFormat('de-DE', opts);
+}
+
+const eur0 = nf({ style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const eur2 = nf({ style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct0 = nf({ style: 'percent', maximumFractionDigits: 0 });
+const pct1 = nf({ style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pct2 = nf({ style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = nf({ maximumFractionDigits: 4 });
+
+const numCache = new Map<string, Intl.NumberFormat>();
+/** Número con separador de miles y entre `minDec` y `maxDec` decimales: 1.234,5 */
+export function numEs(v: number, maxDec = 2, minDec = 0): string {
+  const k = `${minDec}-${maxDec}`;
+  let f = numCache.get(k);
+  if (!f) { f = nf({ minimumFractionDigits: minDec, maximumFractionDigits: maxDec }); numCache.set(k, f); }
+  return f.format(v);
+}
 
 export function eur(v: number, decimals: 0 | 2 = 0): string {
   return (decimals === 2 ? eur2 : eur0).format(v);
@@ -78,3 +107,21 @@ export function parseEsNumber(input: string | number | null | undefined): number
   if (!Number.isFinite(n)) return null;
   return neg ? -n : n;
 }
+
+/**
+ * Pone el separador de miles a lo que alguien ha escrito en un campo («6300,5» → «6.300,5»),
+ * respetando los decimales que escribió. Si no es un número, lo deja como está.
+ */
+export function groupEs(input: string): string {
+  const raw = input.trim();
+  if (!raw) return input;
+  const n = parseEsNumber(raw);
+  if (n === null) return input;
+  const clean = raw.replace(/\s|€/g, '');
+  let dec = 0;
+  const comma = clean.match(/,(\d*)$/);
+  if (comma) dec = comma[1]!.length;
+  else if (/\.\d+$/.test(clean) && !/^-?\d{1,3}(\.\d{3})+$/.test(clean)) dec = clean.split('.').pop()!.length;
+  return numEs(n, Math.min(dec, 10), Math.min(dec, 10));
+}
+

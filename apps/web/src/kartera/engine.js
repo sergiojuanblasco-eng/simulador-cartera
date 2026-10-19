@@ -2,6 +2,7 @@
  * Motor del simulador de Kartera (rentabilidades históricas por ventanas móviles).
  * Extraído de Tools.jsx para poder usarlo también en el servidor y en tests.
  */
+import { numEs } from "../lib/format";
 import ASSETS from "./data/assets.json";
 import R from "./data/returns.json";
 
@@ -111,7 +112,7 @@ export function simFacts(cfg) {
   const fin = (rate) => cP(cfg.initial, cfg.monthly, cfg.horizon, rate).at(-1).v;
   const invertido = cfg.initial + cfg.monthly * 12 * cfg.horizon;
   const round1000 = (n) => Math.round(n / 1000) * 1000;
-  const fmtEur = (n) => n.toLocaleString("es-ES") + " €";
+  const fmtEur = (n) => numEs(n, 2) + " €";
   const fmtPct = (n) => (n >= 0 ? "+" : "") + n.toFixed(1).replace(".", ",") + " %";
   const years = annual.map((y) => y.year);
   const facts = {

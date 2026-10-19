@@ -6,8 +6,8 @@ import { useState, useTransition } from 'react';
 import { updateProduct } from '@/app/(app)/actions';
 import { ASSET_TYPE_OPTIONS } from '@/lib/asset-choice';
 import { CLASE_OPTIONS } from '@/lib/asset-class';
-import { parseEsNumber } from '@/lib/format';
-import { Alert, Button, Card, Field, H2, Input, Select } from './ui';
+import { numEs, parseEsNumber } from '@/lib/format';
+import { Alert, Button, Card, Field, H2, Input, Select, AmountInput } from './ui';
 
 const MANUAL_TYPES = ASSET_TYPE_OPTIONS.filter((o) => ['efectivo', 'plan_pensiones', 'deposito', 'otro'].includes(o.value));
 
@@ -33,7 +33,7 @@ export function EditAssetCard(p: {
   const [isin, setIsin] = useState(p.isin ?? '');
   const [clase, setClase] = useState(p.claseAuto ? 'auto' : p.clase);
   const [miTer, setMiTer] = useState(p.terPropio == null ? '' : String(p.terPropio).replace('.', ','));
-  const [fija, setFija] = useState(p.comisionFija == null ? '' : String(p.comisionFija).replace('.', ','));
+  const [fija, setFija] = useState(p.comisionFija == null ? '' : numEs(p.comisionFija, 2));
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -82,7 +82,7 @@ export function EditAssetCard(p: {
         </Field>
         {!p.propio ? (
           <Field label="TER (% al año)" htmlFor="ea-miter" hint={p.terPct !== null && p.terPropio == null ? `Ahora usamos ${String(p.terPct).replace('.', ',')} %. Déjalo vacío para usar ese.` : 'Déjalo vacío para usar el de los datos de mercado.'}>
-            <Input id="ea-miter" inputMode="decimal" value={miTer} onChange={(e) => setMiTer(e.target.value)} placeholder={p.terPct !== null ? String(p.terPct).replace('.', ',') : '0,20'} />
+            <AmountInput id="ea-miter" value={miTer} onValueChange={setMiTer} placeholder={p.terPct !== null ? String(p.terPct).replace('.', ',') : '0,20'} />
           </Field>
         ) : null}
         {p.propio ? (
@@ -95,7 +95,7 @@ export function EditAssetCard(p: {
                 </Select>
               </Field>
               <Field label="TER (% al año)" htmlFor="ea-ter" hint="En la ficha del fondo: «gastos corrientes».">
-                <Input id="ea-ter" inputMode="decimal" value={ter} onChange={(e) => setTer(e.target.value)} placeholder="0,20" />
+                <AmountInput id="ea-ter" value={ter} onValueChange={setTer} placeholder="0,20" />
               </Field>
               {p.manual ? null : (
                 <Field label="ISIN" htmlFor="ea-isin" hint="Con el ISIN buscamos su precio diario.">
@@ -106,7 +106,7 @@ export function EditAssetCard(p: {
           </>
         ) : null}
         <Field label="Comisión fija al año (€)" htmlFor="ea-fija" hint="Lo que te cobra el banco o el bróker aunque no sea un %: custodia, mantenimiento… Si no hay, déjalo vacío.">
-          <Input id="ea-fija" inputMode="decimal" value={fija} onChange={(e) => setFija(e.target.value)} placeholder="Ninguna" className="sm:max-w-[200px]" />
+          <AmountInput id="ea-fija" value={fija} onValueChange={setFija} placeholder="Ninguna" className="sm:max-w-[200px]" />
         </Field>
         {error ? <Alert>{error}</Alert> : null}
         {ok ? <Alert tone="ok">{ok}</Alert> : null}

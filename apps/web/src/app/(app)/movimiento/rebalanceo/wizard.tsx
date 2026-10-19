@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { ProductPicker } from '@/components/product-picker';
-import { Alert, Button, Field, Input, Segmented, Select } from '@/components/ui';
+import { Alert, Button, Field, Input, Segmented, Select, AmountInput } from '@/components/ui';
 import { Done, PortfolioList, StepTitle, WizardHeader } from '@/components/wizard-parts';
 import type { AssetChoice } from '@/lib/asset-choice';
-import { eur, parseEsNumber } from '@/lib/format';
+import { eur, numEs, parseEsNumber } from '@/lib/format';
 import type { WizardData } from '@/lib/wizard-data';
 import { rebalance } from '../../actions';
 
@@ -62,10 +62,10 @@ export function RebalanceWizard({ data }: { data: WizardData }) {
           </Field>
           {to === OTHER ? <ProductPicker value={asset} onChange={setAsset} label="Producto de destino" /> : null}
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Importe (€)" htmlFor="rimp"><Input id="rimp" inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="2.000,00" /></Field>
+            <Field label="Importe (€)" htmlFor="rimp"><AmountInput id="rimp" value={importe} onValueChange={setImporte} placeholder="2.000,00" /></Field>
             <Field label="Fecha" htmlFor="rfecha"><Input id="rfecha" type="date" value={fecha} max={data.today} onChange={(e) => setFecha(e.target.value)} /></Field>
           </div>
-          {fromH ? <button type="button" className="-mt-2 self-start py-1 text-sm font-semibold text-brand" onClick={() => setImporte(fromH.valor.toFixed(2).replace('.', ','))}>Moverlo todo ({eur(fromH.valor)})</button> : null}
+          {fromH ? <button type="button" className="-mt-2 self-start py-1 text-sm font-semibold text-brand" onClick={() => setImporte(numEs(fromH.valor, 2, 2))}>Moverlo todo ({eur(fromH.valor)})</button> : null}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-semibold">¿Cómo se ha hecho?</span>
             <Segmented label="Modo" value={modo} onChange={setModo} options={[{ value: 'traspaso', label: 'Traspaso entre fondos' }, { value: 'venta', label: 'Venta y compra' }]} />

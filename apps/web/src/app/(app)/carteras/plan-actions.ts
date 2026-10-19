@@ -4,7 +4,7 @@ import { isIsoDate } from '@kartera/core';
 import { revalidatePath } from 'next/cache';
 import type { AssetChoice } from '@/lib/asset-choice';
 import { requireUser } from '@/lib/auth';
-import { hoyMadrid } from '@/lib/format';
+import { hoyMadrid, numEs } from '@/lib/format';
 import { ensureAccount, ensureHolding, priceOn, resolveAsset } from '@/lib/movements';
 import { PROXY_OPTIONS, type PlanItem } from '@/lib/plan';
 import { isValorAnotado } from '@/lib/db';
@@ -35,7 +35,7 @@ export async function savePlan(portfolioId: string, input: { aportacionMensual: 
   if (rows.length === 0) return fail('Pon un % a al menos un producto.');
   if (rows.length > 50) return fail('Como mucho 50 productos.');
   const total = rows.reduce((a, r) => a + r.pct, 0);
-  if (Math.abs(total - 100) > 0.05) return fail(`Los porcentajes deben sumar 100 % (ahora suman ${total.toLocaleString('es-ES', { maximumFractionDigits: 2 })} %).`);
+  if (Math.abs(total - 100) > 0.05) return fail(`Los porcentajes deben sumar 100 % (ahora suman ${numEs(total, 2)} %).`);
   const mensual = input.aportacionMensual;
   if (mensual !== null && (!Number.isFinite(mensual) || mensual < 0 || mensual >= 1e7)) return fail('La aportación mensual no es válida.');
 

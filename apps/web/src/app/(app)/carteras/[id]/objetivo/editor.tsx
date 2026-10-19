@@ -4,10 +4,10 @@ import { CLASE_LABEL, type AssetType } from '@kartera/core';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { ProductPicker } from '@/components/product-picker';
-import { Alert, Button, Card, CHART_COLORS, Field, Input, PageHeader } from '@/components/ui';
+import { Alert, Button, Card, CHART_COLORS, Field, Input, PageHeader, AmountInput } from '@/components/ui';
 import type { AssetChoice } from '@/lib/asset-choice';
 import { detectClase } from '@/lib/asset-class';
-import { parseEsNumber } from '@/lib/format';
+import { groupEs, numEs, parseEsNumber } from '@/lib/format';
 import { guessProxy, PROXY_OPTIONS } from '@/lib/plan';
 import { savePlan } from '../../plan-actions';
 
@@ -28,7 +28,7 @@ interface Row {
   clase: string;
 }
 
-const fmt = (n: number) => (Math.round(n * 100) / 100).toLocaleString('es-ES', { maximumFractionDigits: 2 });
+const fmt = (n: number) => numEs(Math.round(n * 100) / 100, 2);
 const val = (s: string) => Math.max(0, parseEsNumber(s.replace('%', '')) ?? 0);
 
 /** Reparte 100 en enteros en proporción a `w` (método del mayor resto). */
@@ -62,7 +62,7 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
     const start = to100(p.rows.map((r) => (hayActual ? r.pctActual : 1)));
     return base.map((r, i) => ({ ...r, pct: String(start[i]) }));
   });
-  const [mensual, setMensual] = useState(p.mensual ? String(p.mensual) : '');
+  const [mensual, setMensual] = useState(p.mensual ? numEs(p.mensual, 2) : '');
   const [adding, setAdding] = useState(p.rows.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -110,7 +110,7 @@ export function PlanEditor(p: { portfolio: { id: string; nombre: string }; tiene
       <Card className="flex flex-col gap-3">
         <Field label="¿Cuánto vas a aportar cada mes?" htmlFor="mensual" hint="Lo usamos para decirte cuánto poner en cada producto y para la simulación.">
           <div className="relative">
-            <Input id="mensual" inputMode="decimal" value={mensual} onChange={(e) => setMensual(e.target.value)} placeholder="300" className="pr-10" />
+            <AmountInput id="mensual" value={mensual} onValueChange={setMensual} placeholder="300" className="pr-10" />
             <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-muted">€</span>
           </div>
         </Field>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
+import { groupEs } from '@/lib/format';
 
 /** Componentes base del sistema visual (fondo claro, azul de marca, Space Grotesk en titulares). */
 
@@ -48,6 +49,22 @@ const inputCls = 'h-12 w-full min-w-0 rounded-xl border border-line-strong bg-su
 
 export function Input({ className, ...p }: ComponentProps<'input'>) {
   return <input className={cx(inputCls, className)} {...p} />;
+}
+
+/**
+ * Campo para importes y cantidades: al salir del campo pone el separador de miles
+ * («6300» → «6.300»). Guarda texto; se lee con parseEsNumber.
+ */
+export function AmountInput({ value, onValueChange, onBlur, className, ...p }: Omit<ComponentProps<'input'>, 'value' | 'onChange'> & {
+  value: string;
+  onValueChange: (v: string) => void;
+}) {
+  return (
+    <input inputMode="decimal" autoComplete="off" className={cx(inputCls, className)} value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+      onBlur={(e) => { const g = groupEs(e.target.value); if (g !== e.target.value) onValueChange(g); onBlur?.(e); }}
+      {...p} />
+  );
 }
 
 export function Select({ className, ...p }: ComponentProps<'select'>) {

@@ -5,7 +5,7 @@ import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, ReferenceLine,
   Scatter, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { eur, fechaCorta, mesCorto, pctSigned } from '@/lib/format';
+import { eur, fechaCorta, mesCorto, numEs, pctSigned } from '@/lib/format';
 
 /**
  * Mide el ancho disponible y pasa tamaños explícitos a la gráfica
@@ -34,7 +34,7 @@ const GRID = '#EFEEE9';
 const kfmt = (v: number) => {
   const a = Math.abs(v);
   if (a >= 10000) return `${Math.round(v / 1000)}k`;
-  if (a >= 1000) return `${(v / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })}k`;
+  if (a >= 1000) return `${numEs(v / 1000, 1)}k`;
   return String(Math.round(v));
 };
 
@@ -143,15 +143,15 @@ export function PriceChart({ rows, marks, height = 240 }: {
         <ComposedChart width={w} height={height} data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis dataKey="fecha" tick={AXIS} tickFormatter={mesCorto} minTickGap={40} axisLine={false} tickLine={false} />
-          <YAxis tick={AXIS} width={44} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={(v: number) => v.toLocaleString('es-ES', { maximumFractionDigits: 2 })} />
+          <YAxis tick={AXIS} width={44} axisLine={false} tickLine={false} domain={['auto', 'auto']} tickFormatter={(v: number) => numEs(v, 2)} />
           <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null;
               const p = payload[0]!.payload as { precio: number | null; compra: number | null; venta: number | null };
               const rows2 = [];
-              if (p.precio) rows2.push({ label: 'Precio', value: p.precio.toLocaleString('es-ES', { maximumFractionDigits: 4 }) });
-              if (p.compra) rows2.push({ label: 'Compraste a', value: p.compra.toLocaleString('es-ES', { maximumFractionDigits: 4 }), color: '#16754E' });
-              if (p.venta) rows2.push({ label: 'Vendiste a', value: p.venta.toLocaleString('es-ES', { maximumFractionDigits: 4 }), color: '#D9822B' });
+              if (p.precio) rows2.push({ label: 'Precio', value: numEs(p.precio, 4) });
+              if (p.compra) rows2.push({ label: 'Compraste a', value: numEs(p.compra, 4), color: '#16754E' });
+              if (p.venta) rows2.push({ label: 'Vendiste a', value: numEs(p.venta, 4), color: '#D9822B' });
               return <TooltipBox title={fechaCorta(String(label))} rows={rows2} />;
             }}
           />

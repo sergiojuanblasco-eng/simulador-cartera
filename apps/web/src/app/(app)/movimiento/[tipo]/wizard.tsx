@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { ProductPicker } from '@/components/product-picker';
-import { Alert, Button, Field, Input } from '@/components/ui';
+import { Alert, Button, Field, Input, AmountInput } from '@/components/ui';
 import { BrokerChips, Done, HoldingList, PortfolioList, StepTitle, WizardHeader } from '@/components/wizard-parts';
 import type { AssetChoice } from '@/lib/asset-choice';
-import { eur, parseEsNumber } from '@/lib/format';
+import { eur, numEs, parseEsNumber } from '@/lib/format';
 import type { WizardData } from '@/lib/wizard-data';
 import { addMovement } from '../../actions';
 
@@ -79,13 +79,13 @@ export function MovementWizard({ tipo, data, initialPortfolio }: {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Fecha" htmlFor="fecha"><Input id="fecha" type="date" value={fecha} max={data.today} onChange={(e) => setFecha(e.target.value)} /></Field>
-            <Field label={isA ? 'Importe (€)' : 'Importe retirado (€)'} htmlFor="imp"><Input id="imp" inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="300,00" /></Field>
-            <Field label="Participaciones" htmlFor="part"><Input id="part" inputMode="decimal" value={cantidad} onChange={(e) => setCantidad(e.target.value)} placeholder="Opcional" /></Field>
-            <Field label="Comisión (€)" htmlFor="com"><Input id="com" inputMode="decimal" value={comision} onChange={(e) => setComision(e.target.value)} placeholder="0,00" /></Field>
+            <Field label={isA ? 'Importe (€)' : 'Importe retirado (€)'} htmlFor="imp"><AmountInput id="imp" value={importe} onValueChange={setImporte} placeholder="300,00" /></Field>
+            <Field label="Participaciones" htmlFor="part"><AmountInput id="part" value={cantidad} onValueChange={setCantidad} placeholder="Opcional" /></Field>
+            <Field label="Comisión (€)" htmlFor="com"><AmountInput id="com" value={comision} onValueChange={setComision} placeholder="0,00" /></Field>
           </div>
           {!isA && h ? (
             <button type="button" className="self-start py-1 text-sm font-semibold text-brand"
-              onClick={() => { setImporte(h.valor.toFixed(2).replace('.', ',')); setCantidad(String(h.cantidad).replace('.', ',')); }}>
+              onClick={() => { setImporte(numEs(h.valor, 2, 2)); setCantidad(numEs(h.cantidad, 10)); }}>
               Retirarlo todo ({eur(h.valor)})
             </button>
           ) : null}

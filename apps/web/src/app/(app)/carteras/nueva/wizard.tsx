@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { Alert, Button, Chip, Field, H1, Input, Progress } from '@/components/ui';
+import { Alert, Button, Chip, Field, H1, Input, Progress, AmountInput } from '@/components/ui';
 import { GOAL_PRESETS, type PortfolioGoal } from '@/lib/db';
 import { parseEsNumber } from '@/lib/format';
 import { createPortfolio } from '../../actions';
@@ -82,7 +82,7 @@ export function NewPortfolioWizard({ primera, existentes }: { primera: boolean; 
       <div className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-4">
         <span className="text-sm font-semibold">Objetivo <span className="font-normal text-muted">(opcional)</span></span>
         <div className="grid grid-cols-2 gap-2.5">
-          <Field label="Importe meta (€)" htmlFor="obj"><Input id="obj" inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="100.000" /></Field>
+          <Field label="Importe meta (€)" htmlFor="obj"><AmountInput id="obj" value={importe} onValueChange={setImporte} placeholder="100.000" /></Field>
           <Field label="Para el año" htmlFor="plazo"><Input id="plazo" inputMode="numeric" value={anio} onChange={(e) => setAnio(e.target.value)} placeholder="2040" /></Field>
         </div>
       </div>
