@@ -278,14 +278,27 @@ export async function addFee(input: { holdingId: string; fecha: string; importe:
 /** Borra un movimiento (y su pareja si es un traspaso o rebalanceo). */
 export async function deleteTransaction(id: string): Promise<ActionResult> {
   const { supabase } = await requireUser();
-  const { data: tx } = await supabase.from('transactions').select('id, grupo_id').eq('id', id).maybeSingle();
+  const { data: tx } = await supabase.from('transactions').select('id, grupo_id, holding_id').eq('id', id).maybeSingle();
   if (!tx) return fail('Ese movimiento ya no existe.');
+  // Posiciones afectadas: la del movimiento (y la de su pareja si es un traspaso o rebalanceo)
+  const afectadas = new Set<string>([tx.holding_id]);
+  if (tx.grupo_id) {
+    const { data: pareja } = await supabase.from('transactions').select('holding_id').eq('grupo_id', tx.grupo_id);
+    for (const t of pareja ?? []) afectadas.add(t.holding_id);
+  }
   const q = supabase.from('transactions').delete();
   const { error } = tx.grupo_id ? await q.eq('grupo_id', tx.grupo_id) : await q.eq('id', id);
   if (error) return fail('No se pudo borrar.');
-  // Limpia posiciones que se quedan sin ninguna operación.
-  const { data: empty } = await supabase.from('v_positions').select('holding_id').is('primera_operacion', null);
-  if (empty?.length) await supabase.from('holdings').delete().in('id', empty.map((e) => e.holding_id));
+  // Limpia SOLO esas posiciones si se han quedado sin ninguna operación. Nunca las cuentas,
+  // planes y depósitos anotados a mano: no tienen operaciones, su valor está en «Saldos».
+  for (const hid of afectadas) {
+    const { count } = await supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('holding_id', hid);
+    if (count !== 0) continue;
+    if (await anyAnotado(supabase, [hid])) continue;
+    const { count: vals } = await supabase.from('valuations').select('id', { count: 'exact', head: true }).eq('holding_id', hid);
+    if (vals) continue;
+    await supabase.from('holdings').delete().eq('id', hid);
+  }
   refresh();
   return { ok: true };
 }
