@@ -189,8 +189,8 @@ describe('computePortfolio', () => {
       today: '2026-02-28',
     });
     expect(r.months).toEqual([
-      { mes: '2026-01', aportado: 100, ganancia: 10, comisiones: 0, valorFin: 110 },
-      { mes: '2026-02', aportado: 110, ganancia: 20, comisiones: 0, valorFin: 240 },
+      { mes: '2026-01', aportado: 100, nuevo: 0, ganancia: 10, comisiones: 0, valorFin: 110 },
+      { mes: '2026-02', aportado: 110, nuevo: 0, ganancia: 20, comisiones: 0, valorFin: 240 },
     ]);
   });
 
@@ -207,8 +207,8 @@ describe('computePortfolio', () => {
       today: '2026-02-28',
     });
     expect(r.months).toEqual([
-      { mes: '2026-01', aportado: 101, ganancia: 0, comisiones: 1, valorFin: 100 },
-      { mes: '2026-02', aportado: -49, ganancia: 0, comisiones: 2, valorFin: 49 },
+      { mes: '2026-01', aportado: 101, nuevo: 0, ganancia: 0, comisiones: 1, valorFin: 100 },
+      { mes: '2026-02', aportado: -49, nuevo: 0, ganancia: 0, comisiones: 2, valorFin: 49 },
     ]);
     expect(r.metrics.comisionesPagadas).toBe(3);
     expect(r.metrics.comisionesPorAnio).toEqual([{ anio: 2026, importe: 3 }]);

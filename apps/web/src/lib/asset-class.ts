@@ -19,7 +19,7 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
 export function detectClase(a: { nombre: string; isin?: string | null; tipo: AssetType }): Clase {
   const n = norm(a.nombre);
   if (a.tipo === 'cripto') return 'cripto';
-  if (a.tipo === 'efectivo' || a.tipo === 'monetario') return 'monetario';
+  if (a.tipo === 'efectivo' || a.tipo === 'monetario' || a.tipo === 'deposito') return 'monetario';
   if (/mixto|mixed|balanced|equilibrad|multi.?asset|multiactivo|lifestrategy|life strategy|perfilad|\b\d{2}\s?\/\s?\d{2}\b/.test(n)) return 'mixto';
   if (/socimi|inmobiliari|real estate|\breit/.test(n)) return 'inmobiliario';
   if (a.tipo === 'accion') return 'rv';

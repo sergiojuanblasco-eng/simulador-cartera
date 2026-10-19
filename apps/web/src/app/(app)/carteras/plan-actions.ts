@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/auth';
 import { hoyMadrid } from '@/lib/format';
 import { ensureAccount, ensureHolding, priceOn, resolveAsset } from '@/lib/movements';
 import { PROXY_OPTIONS, type PlanItem } from '@/lib/plan';
+import { isValorAnotado } from '@/lib/db';
 
 type Result<T = undefined> = { ok: boolean; error?: string; data?: T };
 const fail = (error: string) => ({ ok: false as const, error });
@@ -14,7 +15,7 @@ const PROXIES = new Set(PROXY_OPTIONS.map((p) => p.id));
 const MIGRATION_MSG = 'Falta un paso en la base de datos: ejecuta la actualización «cartera objetivo» en Supabase (SQL Editor) y vuelve a intentarlo.';
 
 function refresh(portfolioId: string) {
-  for (const p of ['/', '/carteras', `/carteras/${portfolioId}`, '/movimiento', '/activos', '/movimientos', '/mes', '/rendimiento']) revalidatePath(p);
+  for (const p of ['/', '/carteras', `/carteras/${portfolioId}`, '/movimiento', '/activos', '/movimientos', '/mes', '/rendimiento', '/saldos']) revalidatePath(p);
 }
 
 export interface PlanRowInput {
@@ -83,11 +84,28 @@ export async function investPlan(portfolioId: string, input: {
   if (!portfolio) return fail('Cartera no encontrada.');
 
   const toInsert: Record<string, unknown>[] = [];
+  const valuations: { holding_id: string; fecha: string; valor: number; aportado: number | null }[] = [];
   const sinPrecio: string[] = [];
   try {
     for (const l of lines) {
-      const { data: asset } = await supabase.from('assets').select('id, nombre').eq('id', l.assetId).maybeSingle();
+      const { data: asset } = await supabase.from('assets').select('id, nombre, proveedor').eq('id', l.assetId).maybeSingle();
       if (!asset) continue;
+      if (isValorAnotado(asset)) {
+        // Cuenta, plan o depósito: se suma al último valor anotado
+        const holdingId = holdings.find((h) => h.asset_id === asset.id)?.id;
+        if (!holdingId) continue;
+        const { data: prev } = await supabase.from('valuations').select('valor, aportado')
+          .eq('holding_id', holdingId).lte('fecha', input.fecha).order('fecha', { ascending: false }).limit(1).maybeSingle();
+        const { data: conAp } = await supabase.from('valuations').select('aportado')
+          .eq('holding_id', holdingId).lte('fecha', input.fecha).not('aportado', 'is', null).order('fecha', { ascending: false }).limit(1).maybeSingle();
+        const importe = Math.round(l.importe * 100) / 100;
+        valuations.push({
+          holding_id: holdingId, fecha: input.fecha,
+          valor: Math.round((Number(prev?.valor ?? 0) + importe) * 100) / 100,
+          aportado: conAp ? Math.round((Number(conAp.aportado) + importe) * 100) / 100 : null,
+        });
+        continue;
+      }
       const cantidadDada = l.cantidad && Number.isFinite(l.cantidad) && l.cantidad > 0 ? l.cantidad : null;
       const precio = cantidadDada ? l.importe / cantidadDada : await priceOn(supabase, asset.id, input.fecha);
       if (!precio) { sinPrecio.push(asset.nombre); continue; }
@@ -109,8 +127,12 @@ export async function investPlan(portfolioId: string, input: {
       const { error } = await supabase.from('transactions').insert(toInsert);
       if (error) return fail('No se pudieron guardar las compras.');
     }
+    if (valuations.length) {
+      const { error } = await supabase.from('valuations').upsert(valuations, { onConflict: 'holding_id,fecha' });
+      if (error) return fail('No se pudieron anotar las aportaciones a tus cuentas o planes.');
+    }
     refresh(portfolioId);
-    return { ok: true, data: { registradas: toInsert.length, sinPrecio } };
+    return { ok: true, data: { registradas: toInsert.length + valuations.length, sinPrecio } };
   } catch (e) {
     return fail((e as Error).message || 'Algo ha fallado.');
   }

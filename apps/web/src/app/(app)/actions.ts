@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import type { AssetChoice, SearchResult } from '@/lib/asset-choice';
 import { isClase } from '@/lib/asset-class';
 import { requireUser } from '@/lib/auth';
-import { GOAL_PRESETS, type PortfolioGoal } from '@/lib/db';
+import { GOAL_PRESETS, isValorAnotado, type PortfolioGoal } from '@/lib/db';
 import { hoyMadrid } from '@/lib/format';
 import { ensureAccount, ensureHolding, positionOf, priceOn, resolveAsset } from '@/lib/movements';
 import { marketTargetFor, relinkAsset } from '@/lib/market/asset-fix';
@@ -82,16 +82,18 @@ export async function searchAssets(q: string): Promise<SearchResult[]> {
   if (term.length < 2) return [];
   const safe = term.replace(/[%_,()]/g, ' ');
 
-  const { data: local } = await supabase.from('assets')
-    .select('id, nombre, isin, ticker, tipo, moneda')
+  const { data: found } = await supabase.from('assets')
+    .select('id, nombre, isin, ticker, tipo, moneda, proveedor')
     .or(`nombre.ilike.%${safe}%,isin.ilike.${safe.toUpperCase()}%,ticker.ilike.${safe}%`)
-    .limit(8);
-  const results: SearchResult[] = (local ?? []).map((a) => ({
+    .limit(12);
+  // Las cuentas, planes y depósitos anotados a mano se actualizan en «Saldos», no con movimientos
+  const local = (found ?? []).filter((a) => !isValorAnotado(a)).slice(0, 8);
+  const results: SearchResult[] = local.map((a) => ({
     choice: { kind: 'local', id: a.id, nombre: a.nombre },
     nombre: a.nombre,
     detalle: [a.isin, a.ticker, a.moneda].filter(Boolean).join(' · '),
   }));
-  const knownIsins = new Set((local ?? []).map((a) => a.isin).filter(Boolean));
+  const knownIsins = new Set(local.map((a) => a.isin).filter(Boolean));
 
   if (term.length >= 3) {
     const [eod, yh, cg] = await Promise.allSettled([eodhdSearch(term), yahooSearch(term), coingeckoSearch(term)]);
@@ -105,6 +107,14 @@ export async function searchAssets(q: string): Promise<SearchResult[]> {
     }
   }
   return results.slice(0, 20);
+}
+
+const SALDOS_MSG = 'Las cuentas, planes y depósitos se actualizan anotando su valor en «Saldos y valores».';
+
+/** ¿Alguna de estas posiciones es una cuenta, plan o depósito con valor anotado? */
+async function anyAnotado(supabase: Awaited<ReturnType<typeof requireUser>>['supabase'], ids: string[]): Promise<boolean> {
+  const { data } = await supabase.from('holdings').select('id, asset:assets (proveedor)').in('id', ids);
+  return ((data ?? []) as unknown as { asset: { proveedor: string | null } | null }[]).some((h) => !!h.asset && isValorAnotado(h.asset));
 }
 
 function validDate(fecha: string): boolean {
@@ -137,6 +147,7 @@ export async function addMovement(input: MovementInput): Promise<ActionResult<{ 
     if (holdingId) {
       const { data: h } = await supabase.from('holdings').select('id, asset_id').eq('id', holdingId).single();
       if (!h) return fail('Ese producto ya no existe.');
+      if (await anyAnotado(supabase, [h.id])) return fail(SALDOS_MSG);
       assetId = h.asset_id;
     } else {
       if (!input.asset) return fail('Elige un producto.');
@@ -211,6 +222,7 @@ export async function rebalance(input: RebalanceInput): Promise<ActionResult> {
       toHoldingId = await ensureHolding(supabase, from.portfolio_id, accountId, toAssetId);
     }
     if (toHoldingId === from.id) return fail('El origen y el destino son el mismo producto.');
+    if (await anyAnotado(supabase, [from.id, toHoldingId])) return fail(SALDOS_MSG);
 
     const pFrom = await priceOn(supabase, from.asset_id, input.fecha);
     const pTo = await priceOn(supabase, toAssetId, input.fecha);
@@ -261,7 +273,8 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
 
 // ============================================================================ Productos
 
-const ASSET_TYPES = new Set(['fondo', 'etf', 'accion', 'cripto', 'monetario', 'plan_pensiones', 'efectivo', 'otro']);
+const ASSET_TYPES = new Set(['fondo', 'etf', 'accion', 'cripto', 'monetario', 'plan_pensiones', 'efectivo', 'deposito', 'otro']);
+const MANUAL_TYPES = new Set(['efectivo', 'plan_pensiones', 'deposito', 'otro']);
 const MIGRATION_MSG = 'Falta un paso en la base de datos: ejecuta la actualización en Supabase (SQL Editor) y vuelve a intentarlo.';
 
 /**
@@ -280,9 +293,9 @@ export async function updateProduct(input: {
   miTerPct?: number | null;
 }): Promise<ActionResult<{ holdingId: string; enlazado: string | null }>> {
   const { supabase, user } = await requireUser();
-  const { data: h } = await supabase.from('holdings').select('*, asset:assets (id, owner_id, nombre, isin, ticker, tipo)')
+  const { data: h } = await supabase.from('holdings').select('*, asset:assets (id, owner_id, nombre, isin, ticker, tipo, proveedor)')
     .eq('id', input.holdingId).maybeSingle();
-  const asset = (h?.asset ?? null) as unknown as { id: string; owner_id: string | null; ticker: string | null } | null;
+  const asset = (h?.asset ?? null) as unknown as { id: string; owner_id: string | null; ticker: string | null; proveedor: string | null } | null;
   if (!h || !asset) return fail('Producto no encontrado.');
   if (input.clase !== 'auto' && !isClase(input.clase)) return fail('Clase de activo no válida.');
 
@@ -315,9 +328,11 @@ export async function updateProduct(input: {
   const nombre = (input.nombre ?? '').trim().slice(0, 200);
   if (!nombre) return fail('Escribe el nombre del producto.');
   if (!ASSET_TYPES.has(input.tipo ?? '')) return fail('Vehículo no válido.');
+  const anotado = isValorAnotado(asset);
+  if (anotado && !MANUAL_TYPES.has(input.tipo ?? '')) return fail('Vehículo no válido.');
   const ter = input.terPct == null ? null : input.terPct / 100;
   if (ter !== null && (!Number.isFinite(ter) || ter < 0 || ter >= 0.2)) return fail('El TER debe estar entre 0 % y 20 %.');
-  const isin = (input.isin ?? '').trim().toUpperCase().replace(/\s/g, '');
+  const isin = anotado ? '' : (input.isin ?? '').trim().toUpperCase().replace(/\s/g, '');
   if (isin && !/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)) return fail('El ISIN tiene 12 caracteres: 2 letras de país, 9 letras o números y 1 número (p. ej. IE00B4L5Y983).');
 
   const tipo = input.tipo as AssetType;
@@ -326,10 +341,10 @@ export async function updateProduct(input: {
     .eq('id', asset.id);
   if (error) return fail('No se pudo guardar el producto.');
 
-  // ¿Ahora lo reconocemos? Enlazar con datos de mercado.
+  // ¿Ahora lo reconocemos? Enlazar con datos de mercado (no en cuentas, planes y depósitos anotados).
   let enlazado: string | null = null;
   let holdingId = h.id;
-  try {
+  if (!anotado) try {
     const target = await marketTargetFor({ nombre, isin: isin || null, ticker: asset.ticker, tipo });
     if (target) {
       const globalId = await ensureGlobalAsset(target);

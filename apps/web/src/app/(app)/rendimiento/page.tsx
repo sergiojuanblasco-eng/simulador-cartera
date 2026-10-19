@@ -9,6 +9,7 @@ import { compute, loadUserData } from '@/lib/data';
 import { effectiveTer } from '@/lib/market/ter-catalog';
 import { eur, eurSigned, pct, pctSigned } from '@/lib/format';
 import { compactSeries } from '@/lib/view-models';
+import { isValorAnotado } from '@/lib/db';
 
 export const metadata: Metadata = { title: 'Rendimiento' };
 
@@ -27,17 +28,20 @@ export default async function RendimientoPage() {
     );
   }
 
-  const series = compactSeries(result.series, data.today);
+  // El «¿y si…?» solo repite tus compras y ventas de mercado: tus cuentas, planes y depósitos anotados quedan fuera
+  const conAnotados = data.holdings.some((h) => isValorAnotado(h.asset));
+  const mercado = conAnotados ? compute(data, null, { soloMercado: true }) : result;
+  const series = compactSeries(mercado.series, data.today);
   const bench = await loadBenchmark(supabase, addDays(result.series[0]!.fecha, -10));
-  const wi = bench ? whatIf(result.flows, bench.prices, series.map((p) => p.fecha)) : null;
+  const wi = bench && mercado.flowsMercado.length ? whatIf(mercado.flowsMercado, bench.prices, series.map((p) => p.fecha)) : null;
   const benchYears = bench ? yearlyFromPrices(bench.prices) : null;
   const rows = series.map((p, i) => ({ fecha: p.fecha, valor: p.valor, aportado: p.aportado, indice: wi?.serie[i]?.valor }));
   const years = m.rentabilidadAnual.map((y) => ({ ...y, indice: benchYears?.get(y.anio) ?? null }));
 
   const holdings = new Map(data.holdings.map((h) => [h.id, h]));
   const comisiones = result.positions
-    // Cripto y efectivo no tienen TER
-    .filter((p) => p.valor > 0 && !['cripto', 'efectivo'].includes(holdings.get(p.holdingId)!.asset.tipo))
+    // Cripto, cuentas y depósitos no tienen TER
+    .filter((p) => p.valor > 0 && !['cripto', 'efectivo', 'deposito'].includes(holdings.get(p.holdingId)!.asset.tipo))
     .map((p) => {
       const h = holdings.get(p.holdingId)!;
       const ter = effectiveTer(h.ter, h.asset);
@@ -91,8 +95,9 @@ export default async function RendimientoPage() {
           <>
             <p className="text-sm text-muted-2">
               Con las mismas aportaciones, en las mismas fechas, en el MSCI World tendrías <strong className="text-ink">{eur(wi.valor)}</strong>.
-              Tu cartera vale <strong className="text-ink">{eur(m.valor)}</strong>:{' '}
-              <span className={m.valor >= wi.valor ? 'font-semibold text-pos' : 'font-semibold text-neg'}>{eurSigned(m.valor - wi.valor)}</span> frente al índice.
+              {conAnotados ? ' Lo que tienes en el bróker' : ' Tu cartera'} vale <strong className="text-ink">{eur(mercado.metrics.valor)}</strong>:{' '}
+              <span className={mercado.metrics.valor >= wi.valor ? 'font-semibold text-pos' : 'font-semibold text-neg'}>{eurSigned(mercado.metrics.valor - wi.valor)}</span> frente al índice.
+              {conAnotados ? ' Tus cuentas, planes y depósitos anotados a mano no entran en esta comparación.' : ''}
             </p>
             <ValueChart rows={rows} showIndex />
             <div className="flex flex-wrap gap-5 text-[13px]">
@@ -101,7 +106,7 @@ export default async function RendimientoPage() {
               <span className="flex items-center gap-1.5"><span className="h-0 w-4 border-t-2 border-dashed border-[#A1A1AA]" />Aportado</span>
             </div>
           </>
-        ) : <p className="text-sm text-muted">La comparativa aparecerá cuando se carguen los precios del índice (proceso nocturno).</p>}
+        ) : <p className="text-sm text-muted">{mercado.flowsMercado.length ? 'La comparativa aparecerá cuando se carguen los precios del índice (proceso nocturno).' : 'Aparecerá cuando registres compras de fondos, ETF o acciones.'}</p>}
       </Card>
 
       <Card className="flex flex-col gap-4">

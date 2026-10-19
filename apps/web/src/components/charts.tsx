@@ -54,9 +54,10 @@ function TooltipBox({ title, rows }: { title: string; rows: { label: string; val
 }
 
 /** "Tu dinero vs. mercado": valor real frente a capital aportado (y opcionalmente el índice). */
-export function ValueChart({ rows, showIndex = false, height = 220 }: {
+export function ValueChart({ rows, showIndex = false, showAportado = true, height = 220 }: {
   rows: { fecha: string; valor: number; aportado: number; indice?: number }[];
   showIndex?: boolean;
+  showAportado?: boolean;
   height?: number;
 }) {
   return (
@@ -76,16 +77,14 @@ export function ValueChart({ rows, showIndex = false, height = 220 }: {
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null;
               const p = payload[0]!.payload as { valor: number; aportado: number; indice?: number };
-              const rows2 = [
-                { label: 'Valor', value: eur(p.valor), color: '#16754E' },
-                { label: 'Aportado', value: eur(p.aportado), color: '#A1A1AA' },
-              ];
+              const rows2 = [{ label: 'Valor', value: eur(p.valor), color: '#16754E' }];
+              if (showAportado) rows2.push({ label: 'Aportado', value: eur(p.aportado), color: '#A1A1AA' });
               if (showIndex && p.indice !== undefined) rows2.push({ label: 'En el índice', value: eur(p.indice), color: '#D9822B' });
               return <TooltipBox title={fechaCorta(String(label))} rows={rows2} />;
             }}
           />
           <Area type="monotone" dataKey="valor" stroke="#16754E" strokeWidth={2.5} fill="url(#valFill)" isAnimationActive={false} />
-          <Line type="stepAfter" dataKey="aportado" stroke="#A1A1AA" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
+          {showAportado ? <Line type="stepAfter" dataKey="aportado" stroke="#A1A1AA" strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={false} /> : null}
           {showIndex ? <Line type="monotone" dataKey="indice" stroke="#D9822B" strokeWidth={2} dot={false} isAnimationActive={false} /> : null}
         </ComposedChart>
       )}

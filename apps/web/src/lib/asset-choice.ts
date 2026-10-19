@@ -30,5 +30,6 @@ export const ASSET_TYPE_OPTIONS: { value: AssetType; label: string }[] = [
   { value: 'monetario', label: 'Fondo monetario' },
   { value: 'plan_pensiones', label: 'Plan de pensiones' },
   { value: 'efectivo', label: 'Efectivo / cuenta remunerada' },
+  { value: 'deposito', label: 'Depósito' },
   { value: 'otro', label: 'Otro' },
 ];

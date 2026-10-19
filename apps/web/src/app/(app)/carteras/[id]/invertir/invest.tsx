@@ -8,7 +8,7 @@ import { BROKERS } from '@/lib/db';
 import { eur, parseEsNumber, pct } from '@/lib/format';
 import { investPlan } from '../../plan-actions';
 
-interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean; sinPrecio: boolean }
+interface Slot { assetId: string; nombre: string; pct: number; actual: number; nuevo: boolean; sinPrecio: boolean; anotado?: boolean }
 
 export function InvestPlan(p: {
   portfolio: { id: string; nombre: string }; importe: number; primera: boolean;
@@ -126,10 +126,14 @@ export function InvestPlan(p: {
                       Importe (€)
                       <Input inputMode="decimal" value={f.importe} onChange={(e) => setFila(s.assetId, { importe: e.target.value })} placeholder="0" className="h-11 text-right font-semibold tabular" aria-label={`Importe comprado de ${s.nombre}`} />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs text-muted">
-                      {s.sinPrecio ? 'Participaciones *' : 'Participaciones'}
-                      <Input inputMode="decimal" value={f.cantidad} onChange={(e) => setFila(s.assetId, { cantidad: e.target.value })} placeholder={s.sinPrecio ? 'Obligatorio' : 'Opcional'} className="h-11 text-right tabular" aria-label={`Participaciones de ${s.nombre}`} />
-                    </label>
+                    {s.anotado ? (
+                      <span className="flex items-end pb-3 text-xs leading-snug text-muted">Se suma a su último valor</span>
+                    ) : (
+                      <label className="flex flex-col gap-1 text-xs text-muted">
+                        {s.sinPrecio ? 'Participaciones *' : 'Participaciones'}
+                        <Input inputMode="decimal" value={f.cantidad} onChange={(e) => setFila(s.assetId, { cantidad: e.target.value })} placeholder={s.sinPrecio ? 'Obligatorio' : 'Opcional'} className="h-11 text-right tabular" aria-label={`Participaciones de ${s.nombre}`} />
+                      </label>
+                    )}
                     <label className="flex flex-col gap-1 text-xs text-muted">
                       Comisión (€)
                       <Input inputMode="decimal" value={f.comision} onChange={(e) => setFila(s.assetId, { comision: e.target.value })} placeholder="0" className="h-11 text-right tabular" aria-label={`Comisión de ${s.nombre}`} />

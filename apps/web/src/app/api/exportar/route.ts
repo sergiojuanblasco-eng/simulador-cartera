@@ -10,7 +10,7 @@ const esc = (v: unknown) => {
   return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-/** Copia de seguridad: todas las operaciones en el mismo formato que la plantilla de importación. */
+/** Copia de seguridad: todas las operaciones (formato de la plantilla de importación) y los valores anotados a mano. */
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,14 +24,24 @@ export async function GET() {
     .select('fecha, tipo, importe, cantidad, precio, comision, moneda, grupo_id, holding:holdings (portfolio:portfolios (nombre), account:accounts (nombre), asset:assets (nombre, isin))')
     .order('fecha').order('id').range(a, b));
 
-  const header = ['fecha', 'cartera', 'broker', 'producto', 'isin', 'tipo', 'importe', 'participaciones', 'precio', 'comision', 'moneda', 'grupo'];
-  const lines = [header.join(';')];
-  for (const r of rows) {
-    lines.push([
+  // Valores anotados a mano (cuentas, planes, depósitos): tipo «valor_anotado», importe = valor
+  type VRow = { fecha: string; valor: string; aportado: string | null; holding: Row['holding'] };
+  const vals = await fetchAll<VRow>((a, b) => supabase.from('valuations')
+    .select('fecha, valor, aportado, holding:holdings (portfolio:portfolios (nombre), account:accounts (nombre), asset:assets (nombre, isin))')
+    .order('fecha').order('id').range(a, b)).catch(() => [] as VRow[]);
+
+  const header = ['fecha', 'cartera', 'broker', 'producto', 'isin', 'tipo', 'importe', 'participaciones', 'precio', 'comision', 'moneda', 'grupo', 'aportado'];
+  const all = [
+    ...rows.map((r) => [
       r.fecha, r.holding.portfolio.nombre, r.holding.account.nombre, r.holding.asset.nombre, r.holding.asset.isin ?? '',
-      r.tipo, r.importe, r.cantidad, r.precio ?? '', r.comision, r.moneda, r.grupo_id ?? '',
-    ].map(esc).join(';'));
-  }
+      r.tipo, r.importe, r.cantidad, r.precio ?? '', r.comision, r.moneda, r.grupo_id ?? '', '',
+    ]),
+    ...vals.map((v) => [
+      v.fecha, v.holding.portfolio.nombre, v.holding.account.nombre, v.holding.asset.nombre, '',
+      'valor_anotado', v.valor, '', '', '0', 'EUR', '', v.aportado ?? '',
+    ]),
+  ].sort((a, b) => (String(a[0]) < String(b[0]) ? -1 : String(a[0]) > String(b[0]) ? 1 : 0));
+  const lines = [header.join(';'), ...all.map((r) => r.map(esc).join(';'))];
   return new NextResponse('﻿' + lines.join('\n'), {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',

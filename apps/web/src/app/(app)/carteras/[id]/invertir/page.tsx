@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
 import { priceOn } from '@/lib/movements';
 import { planView } from '@/lib/plan-view';
+import { isValorAnotado } from '@/lib/db';
 import { InvestPlan } from './invest';
 
 export const metadata: Metadata = { title: 'Invertir según mi plan' };
@@ -27,11 +28,13 @@ export default async function InvertirPage({ params, searchParams }: { params: P
   }
   const broker = [...uso.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Trade Republic';
 
+  const anotados = new Set(data.holdings.filter((h) => h.portfolio_id === id && isValorAnotado(h.asset)).map((h) => h.asset_id));
   const mensual = view.aportacionMensual ?? (Math.round(result.metrics.aportacionMediaMensual) || 0);
   const slots = await Promise.all(view.rows.filter((r) => r.pctObjetivo !== null).map(async (r) => ({
     assetId: r.assetId, nombre: r.nombre, pct: r.pctObjetivo!, actual: r.valor, nuevo: r.holdingId === null,
-    // Sin precio conocido hay que indicar las participaciones al registrar
-    sinPrecio: !(await priceOn(supabase, r.assetId, data.today)),
+    anotado: anotados.has(r.assetId),
+    // Sin precio conocido hay que indicar las participaciones al registrar (salvo en cuentas y planes anotados)
+    sinPrecio: !anotados.has(r.assetId) && !(await priceOn(supabase, r.assetId, data.today)),
   })));
 
   return (

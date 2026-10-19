@@ -22,12 +22,14 @@ Beta privada: se entra con invitación y es gratis.
 |---|---|
 | Web pública | `/` (landing para visitantes; con sesión, el panel), `/simulador-cartera`, `/interes-compuesto`, `/simulacion/[slug]`, `/sitemap.xml`, `/robots.txt` |
 | Acceso | `/login`, `/registro` (con invitación crea la cuenta; sin ella apunta a la lista de espera), `/recuperar`, `/privacidad` |
-| Inicio | Patrimonio, aportado, ganancia, TIR, aportación media y racha, caída máxima, comisiones, gráficas, distribución, objetivos y filtro por cartera |
+| Inicio | Patrimonio con barra de objetivo o del próximo hito, aportado, ganancia, TIR, aportación media y racha, caída máxima, comisiones, objetivos, gráficas, distribución, hitos (1.000 €, 5.000 €, 10.000 €…), recordatorio mensual de saldos y filtro por cartera |
+| Saldos (`/saldos`) | Cuentas, planes de pensiones, depósitos y lo que no tiene precio en internet: se apunta su valor (y, si se sabe, lo aportado) y se actualizan todos de una vez. La primera anotación «entra al panel» (no es dinero nuevo ni mercado); en una cuenta, los cambios de saldo son dinero que entra o sale |
+| Mes (`/mes`) | Mes a mes con ‹ ›: lo que pusiste tú, lo que puso el mercado y lo nuevo en el panel, producto a producto, y filtro por cartera |
 | Movimientos | Botón **+**: invertir según mi plan, aportación, retirada, rebalanceo (traspaso o venta/compra) y nueva cartera |
 | Cartera (`/carteras/[id]`) | Cartera objetivo frente a la real, reparto de la aportación del mes (equilibrar o fijo), «Invertir ahora» que registra las compras, y simulación con datos históricos (plazo según el objetivo y probabilidad de llegar a la meta) |
 | Importar | MyInvestor, Trade Republic, plantilla CSV/Excel e IA (también PDF), con revisión y detección de duplicados |
 | Clasificación | Cada producto tiene **clase de activo** (renta variable, renta fija, monetario, materias primas, cripto, inmobiliario, mixto, otros; deducida y editable) y **vehículo** (fondo, ETF/ETC, acción, plan de pensiones, cripto directa, cuenta) |
-| Análisis | Activos y ficha con el valor liquidativo, Rendimiento (por año, frente al índice, comisiones, FIFO para la renta) y Mes |
+| Análisis | Activos y ficha con el valor liquidativo, Rendimiento (por año, frente al índice, comisiones, FIFO para la renta). La rentabilidad (TIR, caída, por año) se mide sobre lo invertido: las cuentas no la diluyen; el «¿y si…?» solo compara lo comprado en el bróker |
 | Más | Carteras, historial, exportar CSV, simulador, invitaciones y lista de espera (admin), borrar cuenta |
 
 URLs de la versión anterior: `/dashboard` y `/onboarding` redirigen a `/`, y `/landing.html` redirige a `/`.
@@ -48,7 +50,7 @@ supabase/migrations  0001 esquema + seguridad · 0002 lista de espera · 0003 pe
 1. Crea un proyecto **nuevo** en la región de la **Unión Europea** (Frankfurt o Irlanda).
    El Supabase de la versión anterior de Kartera tiene otras tablas (`profiles`, `positions`…) que chocan con el esquema nuevo.
 2. En **SQL Editor**, ejecuta `supabase/instalar-todo.sql` (todas las migraciones; se puede repetir sin riesgo).
-   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261018000006_ter_propio.sql`, que incluye la 0004 y la 0005).
+   Si ya lo tenías instalado, basta con la última migración nueva (p. ej. `20261019000007_valores_anotados.sql`, que incluye de la 0004 a la 0006).
 3. En **Authentication → Sign In / Providers**, desactiva **«Allow new users to sign up»**.
 4. En **Authentication → URL Configuration**:
    - Site URL: `https://www.kartera.pro`

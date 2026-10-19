@@ -3,8 +3,8 @@ import { addDays, monthKey, monthsBetween, prevMonthKey } from './dates';
 import { dec, lotTotals, runLedger, sortTxs, toEur } from './ledger';
 import { PriceSeries } from './prices';
 import type {
-  ComputeInput, ComputeResult, CoreHolding, CoreTx, DailyPoint, Metrics, MonthSummary,
-  PositionResult, YearReturn,
+  ComputeInput, ComputeResult, CoreHolding, CoreTx, DailyPoint, HoldingFlow, Metrics, MonthSummary,
+  PositionResult, Valuation, YearReturn,
 } from './types';
 import { xirr } from './xirr';
 
@@ -122,6 +122,83 @@ class Pricer {
   }
 }
 
+/** Un valor anotado convertido en movimiento del día. */
+interface ManualEvent {
+  holdingId: string;
+  /** Valor del producto desde ese día. */
+  valor: number;
+  /** Flujo para la rentabilidad (incluye lo que entra al panel). */
+  flujo: number;
+  /** Lo que ya tenías y empiezas a seguir (solo la primera anotación). */
+  nuevo: number;
+  /** Cambio del capital aportado. */
+  capital: number;
+  /** Aportación real (cuenta para la racha y la media mensual). */
+  aportacion: number;
+}
+
+interface ManualState {
+  events: { fecha: string; ev: ManualEvent }[];
+  valor: number;
+  aportado: number;
+  fecha: string | null;
+  conAportado: boolean;
+}
+
+const numOf = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * Convierte los valores anotados de un producto en movimientos:
+ *  - la primera anotación es lo que ya tenías (entra al panel: ni es dinero nuevo ni es mercado);
+ *  - después, si se sabe lo aportado, su cambio es dinero tuyo y el resto es lo que hizo el mercado;
+ *  - si no se sabe (una cuenta), todo cambio de saldo es dinero que entra o sale.
+ * Entre dos anotaciones el valor se mantiene (no se inventa la curva).
+ */
+function manualState(h: CoreHolding, vals: Valuation[] | undefined, today: string): ManualState {
+  const byDate = new Map<string, Valuation>();
+  for (const v of vals ?? []) if (v.fecha <= today && numOf(v.valor) !== null) byDate.set(v.fecha, v);
+  const sorted = [...byDate.entries()].sort(([a], [b]) => (a < b ? -1 : 1));
+  const conAportado = sorted.some(([, v]) => numOf(v.aportado) !== null);
+  const events: ManualState['events'] = [];
+  let prevA = 0;
+  let valor = 0;
+  let fecha: string | null = null;
+  for (const [f, v] of sorted) {
+    const V = Math.max(0, numOf(v.valor)!);
+    const given = numOf(v.aportado);
+    const A = conAportado ? Math.max(0, given ?? (fecha ? prevA : V)) : V;
+    if (!fecha) {
+      events.push({ fecha: f, ev: { holdingId: h.id, valor: V, flujo: V, nuevo: V, capital: A, aportacion: 0 } });
+    } else {
+      const d = A - prevA;
+      const aportacion = conAportado && h.tipo !== 'efectivo' ? Math.max(0, d) : 0;
+      events.push({ fecha: f, ev: { holdingId: h.id, valor: V, flujo: d, nuevo: 0, capital: d, aportacion } });
+    }
+    prevA = A;
+    valor = V;
+    fecha = f;
+  }
+  return { events, valor, aportado: prevA, fecha, conAportado };
+}
+
+/** Movimiento de dinero de una operación desde el punto de vista del producto. */
+function holdingFlowOf(tx: CoreTx): { aportado: number; traspaso: number } {
+  const importe = toEur(tx.importe, tx.fxEur).toNumber();
+  const comision = toEur(tx.comision ?? 0, tx.fxEur).toNumber();
+  switch (tx.tipo) {
+    case 'compra': return { aportado: importe + comision, traspaso: 0 };
+    case 'venta': return { aportado: -(importe - comision), traspaso: 0 };
+    case 'dividendo': return { aportado: -importe, traspaso: 0 };
+    case 'traspaso_salida': return { aportado: 0, traspaso: -importe };
+    case 'traspaso_entrada': return { aportado: 0, traspaso: importe };
+    default: return { aportado: 0, traspaso: 0 };
+  }
+}
+
 function emptyMetrics(): Metrics {
   return {
     valor: 0, aportado: 0, ganancia: 0, gananciaPct: null, tir: null, maxDrawdown: 0,
@@ -134,15 +211,38 @@ function emptyMetrics(): Metrics {
 export function computePortfolio(input: ComputeInput): ComputeResult {
   const holdings = new Map(input.holdings.map((h) => [h.id, h]));
   const scope = new Set(input.scope ?? input.holdings.map((h) => h.id));
-  const allTxs = sortTxs(input.txs.filter((t) => holdings.has(t.holdingId) && t.fecha <= input.today));
+  // Los productos con valor anotado a mano no usan operaciones.
+  const allTxs = sortTxs(input.txs.filter((t) => {
+    const h = holdings.get(t.holdingId);
+    return !!h && !h.manual && t.fecha <= input.today;
+  }));
   const txs = allTxs.filter((t) => scope.has(t.holdingId));
 
   const ledger = runLedger(allTxs);
   const pricer = new Pricer({ ...input, txs: allTxs }, holdings);
   const warnings = new Set<string>(ledger.warnings);
 
-  if (txs.length === 0) {
-    return { series: [], positions: [], realized: [], months: [], metrics: emptyMetrics(), flows: [], warnings: [...warnings] };
+  // Valores anotados a mano (cuentas, planes de pensiones, depósitos…)
+  const manual = new Map<string, ManualState>();
+  for (const id of scope) {
+    const h = holdings.get(id);
+    if (h?.manual) manual.set(id, manualState(h, input.valuations?.[id], input.today));
+  }
+  const manualByDay = new Map<string, ManualEvent[]>();
+  for (const st of manual.values()) {
+    for (const { fecha, ev } of st.events) {
+      const arr = manualByDay.get(fecha) ?? [];
+      arr.push(ev);
+      manualByDay.set(fecha, arr);
+    }
+  }
+  const firstManual = [...manualByDay.keys()].sort()[0];
+
+  if (txs.length === 0 && !firstManual) {
+    return {
+      series: [], positions: [], realized: [], months: [], metrics: emptyMetrics(), flows: [], flowsMercado: [],
+      holdingFlows: [], warnings: [...warnings],
+    };
   }
 
   // ¿Qué traspasos son internos al ámbito? (todas sus patas dentro)
@@ -177,9 +277,30 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     feeByHolding.set(t.holdingId, (feeByHolding.get(t.holdingId) ?? new Decimal(0)).plus(f));
   }
 
+  // Movimientos de dinero por producto (detalle del mes)
+  const hfMap = new Map<string, HoldingFlow>();
+  const addHf = (fecha: string, holdingId: string, x: Partial<HoldingFlow>) => {
+    const k = fecha + '|' + holdingId;
+    const cur = hfMap.get(k) ?? { fecha, holdingId, aportado: 0, traspaso: 0, nuevo: 0, comision: 0 };
+    cur.aportado += x.aportado ?? 0;
+    cur.traspaso += x.traspaso ?? 0;
+    cur.nuevo += x.nuevo ?? 0;
+    cur.comision += x.comision ?? 0;
+    hfMap.set(k, cur);
+  };
+  for (const t of txs) addHf(t.fecha, t.holdingId, { ...holdingFlowOf(t), comision: txFee(t).toNumber() });
+  for (const [fecha, evs] of manualByDay) {
+    for (const ev of evs) addHf(fecha, ev.holdingId, { aportado: ev.flujo - ev.nuevo, nuevo: ev.nuevo });
+  }
+  const holdingFlows = [...hfMap.values()]
+    .map((f) => ({ ...f, aportado: round2(f.aportado), traspaso: round2(f.traspaso), nuevo: round2(f.nuevo), comision: round2(f.comision) }))
+    .sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0));
+
   // Serie diaria
-  const start = txs[0]!.fecha;
+  const start = [txs[0]?.fecha, firstManual].filter((x): x is string => !!x).sort()[0]!;
   const scopeIds = [...scope].filter((id) => holdings.has(id));
+  const manualValue = new Map<string, number>();
+  const perfFlowByDay = new Map<string, number>();
   const cursors = new Map(scopeIds.map((id) => [id, pricer.cursorFor(id)]));
   const qty = new Map<string, Decimal>(scopeIds.map((id) => [id, new Decimal(0)]));
   const series: DailyPoint[] = [];
@@ -198,12 +319,29 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
       if (s !== 0) qty.set(t.holdingId, (qty.get(t.holdingId) ?? new Decimal(0)).plus(dec(t.cantidad).times(s)));
       txIdx++;
     }
-    const flujo = flowByDay.get(d) ?? new Decimal(0);
-    aportado = aportado.plus(flujo);
+    let flujo = flowByDay.get(d) ?? new Decimal(0);
+    let capital = flujo;
+    let nuevo = 0;
+    for (const ev of manualByDay.get(d) ?? []) {
+      manualValue.set(ev.holdingId, ev.valor);
+      flujo = flujo.plus(ev.flujo);
+      capital = capital.plus(ev.capital);
+      nuevo += ev.nuevo;
+    }
+    aportado = aportado.plus(capital);
+    if (!flujo.isZero()) perfFlowByDay.set(d, flujo.toNumber());
 
     let valor = 0;
     const porHolding: Record<string, number> = {};
     for (const id of scopeIds) {
+      if (manual.has(id)) {
+        const v = manualValue.get(id) ?? 0;
+        if (v > 0) {
+          porHolding[id] = round2(v);
+          valor += v;
+        }
+        continue;
+      }
       const price = cursors.get(id)!(d);
       const q = qty.get(id)!.toNumber();
       if (q === 0) continue;
@@ -229,13 +367,23 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     indexByDay.push({ fecha: d, index });
 
     series.push({
-      fecha: d, valor: round2(valor), aportado: round2(aportado.toNumber()), flujo: round2(f),
+      fecha: d, valor: round2(valor), aportado: round2(aportado.toNumber()), flujo: round2(f), nuevo: round2(nuevo),
       comision: round2((feeByDay.get(d) ?? new Decimal(0)).toNumber()), porHolding,
     });
   }
 
   // Posiciones vivas (FIFO)
   const positions: PositionResult[] = scopeIds.map((id) => {
+    const ms = manual.get(id);
+    if (ms) {
+      const ganancia = ms.conAportado ? ms.valor - ms.aportado : 0;
+      return {
+        holdingId: id, cantidad: 0, precio: 0, fechaPrecio: ms.fecha, valor: round2(ms.valor),
+        coste: round2(ms.aportado), ganancia: round2(ganancia),
+        gananciaPct: ms.conAportado && ms.aportado > 0 ? ganancia / ms.aportado : null,
+        precioMedio: null, comisiones: 0, manual: true, conAportado: ms.conAportado,
+      };
+    }
     const { cantidad, coste } = lotTotals(ledger.lots.get(id));
     const { precio, fecha } = pricer.on(id, input.today);
     const valor = cantidad.times(precio).toNumber();
@@ -258,7 +406,10 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
   const last = series[series.length - 1]!;
   const valor = last.valor;
   const aport = last.aportado;
-  const flows = [...flowByDay.entries()]
+  const flows = [...perfFlowByDay.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([fecha, v]) => ({ fecha, importe: round2(v) }));
+  const flowsMercado = [...flowByDay.entries()]
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([fecha, v]) => ({ fecha, importe: round2(v.toNumber()) }));
 
@@ -268,16 +419,20 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     { fecha: input.today, importe: valor },
   ]);
 
-  // Aportación media mensual y racha (solo compras: dinero nuevo)
-  const compras = txs.filter((t) => t.tipo === 'compra');
+  // Aportación media mensual y racha (solo dinero nuevo invertido: compras y aportaciones
+  // anotadas a planes o depósitos; los cambios de saldo de una cuenta no cuentan)
+  const aportaciones = [
+    ...txs.filter((t) => t.tipo === 'compra').map((t) => ({ fecha: t.fecha, importe: externalFlow(t, false).toNumber() })),
+    ...[...manualByDay.entries()].flatMap(([fecha, evs]) => evs.filter((e) => e.aportacion > 0).map((e) => ({ fecha, importe: e.aportacion }))),
+  ].sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
   const currentMonth = monthKey(input.today);
   let aportacionMediaMensual = 0;
   let racha = 0;
-  if (compras.length > 0) {
-    const totalCompras = compras.reduce((acc, t) => acc.plus(externalFlow(t, false)), new Decimal(0));
-    const months = monthsBetween(monthKey(compras[0]!.fecha), currentMonth) + 1;
-    aportacionMediaMensual = round2(totalCompras.div(Math.max(1, months)).toNumber());
-    const meses = new Set(compras.map((t) => monthKey(t.fecha)));
+  if (aportaciones.length > 0) {
+    const totalCompras = aportaciones.reduce((acc, a) => acc + a.importe, 0);
+    const months = monthsBetween(monthKey(aportaciones[0]!.fecha), currentMonth) + 1;
+    aportacionMediaMensual = round2(totalCompras / Math.max(1, months));
+    const meses = new Set(aportaciones.map((a) => monthKey(a.fecha)));
     let m = meses.has(currentMonth) ? currentMonth : prevMonthKey(currentMonth);
     while (meses.has(m)) {
       racha++;
@@ -304,19 +459,20 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     const k = monthKey(p.fecha);
     if (!cur || cur.mes !== k) {
       if (cur) {
-        cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado + cur.comisiones);
+        cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado - cur.nuevo + cur.comisiones);
         prevFin = cur.valorFin;
         months.push(cur);
       }
-      cur = { mes: k, aportado: 0, ganancia: 0, comisiones: 0, valorFin: 0 };
+      cur = { mes: k, aportado: 0, nuevo: 0, ganancia: 0, comisiones: 0, valorFin: 0 };
     }
-    cur.aportado = round2(cur.aportado + p.flujo);
+    cur.aportado = round2(cur.aportado + p.flujo - p.nuevo);
+    cur.nuevo = round2(cur.nuevo + p.nuevo);
     cur.comisiones = round2(cur.comisiones + p.comision);
     cur.valorFin = p.valor;
   }
   if (cur) {
-    // Mercado = cambio de valor − dinero nuevo + comisiones (las comisiones no son mercado)
-    cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado + cur.comisiones);
+    // Mercado = cambio de valor − dinero nuevo − lo que entra al panel + comisiones (las comisiones no son mercado)
+    cur.ganancia = round2(cur.valorFin - prevFin - cur.aportado - cur.nuevo + cur.comisiones);
     months.push(cur);
   }
   const lastMonth = months[months.length - 1];
@@ -352,6 +508,8 @@ export function computePortfolio(input: ComputeInput): ComputeResult {
     realized: ledger.realized.filter((r) => scope.has(r.holdingId)),
     months,
     flows,
+    flowsMercado,
+    holdingFlows,
     warnings: [...warnings],
     metrics: {
       valor,

@@ -35,6 +35,7 @@ export default async function MasPage() {
 
       <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
         <Row href="/carteras" title="Mis carteras" sub="Nombres, objetivos e importes meta" />
+        <Row href="/saldos" title="Saldos y valores" sub="Cuentas, planes de pensiones y depósitos" />
         <Row href="/movimientos" title="Historial de movimientos" sub="Revisa o borra operaciones" />
         <Row href="/importar" title="Importar movimientos" sub="MyInvestor, Trade Republic, Excel o IA" />
         <Row href="/simulador-cartera" title="Simulador de cartera" sub="31 activos, 36 años de datos y 3 escenarios" />

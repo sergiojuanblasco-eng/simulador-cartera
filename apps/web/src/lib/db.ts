@@ -50,6 +50,19 @@ export interface HoldingRow {
   asset: AssetRow;
 }
 
+/** Valor anotado a mano (migración 0007; la tabla puede faltar). */
+export interface ValuationRow {
+  id: string;
+  holding_id: string;
+  fecha: string;
+  valor: string;
+  aportado: string | null;
+  notas: string | null;
+}
+
+/** Producto con valor anotado a mano (cuenta, plan de pensiones, depósito…). */
+export const isValorAnotado = (asset: Pick<AssetRow, 'proveedor'>) => asset.proveedor === 'anotado';
+
 export interface TxRow {
   id: string;
   holding_id: string;

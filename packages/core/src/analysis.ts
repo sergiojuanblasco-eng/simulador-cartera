@@ -101,6 +101,7 @@ export const TIPO_LABEL: Record<string, string> = {
   monetario: 'Fondos',
   plan_pensiones: 'Planes de pensiones',
   efectivo: 'Cuentas y efectivo',
+  deposito: 'Depósitos',
   otro: 'Otros',
 };
 

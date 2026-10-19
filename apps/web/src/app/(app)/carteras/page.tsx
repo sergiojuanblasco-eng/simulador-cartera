@@ -15,7 +15,7 @@ export default async function CarterasPage() {
   const countBy = new Map<string, number>();
   for (const p of result.positions) {
     const h = data.holdings.find((x) => x.id === p.holdingId);
-    if (!h || p.cantidad <= 1e-9) continue;
+    if (!h || (p.manual ? p.valor <= 0 : p.cantidad <= 1e-9)) continue;
     valueBy.set(h.portfolio_id, (valueBy.get(h.portfolio_id) ?? 0) + p.valor);
     countBy.set(h.portfolio_id, (countBy.get(h.portfolio_id) ?? 0) + 1);
   }

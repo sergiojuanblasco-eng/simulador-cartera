@@ -11,6 +11,7 @@ const ACTIONS = [
   { href: '/movimiento/aportacion', icon: '+', name: 'Aportación', sub: 'Meter dinero nuevo en un producto', bg: 'bg-brand-soft', fg: 'text-brand-dark' },
   { href: '/movimiento/retirada', icon: '−', name: 'Retirada', sub: 'Vender o sacar dinero de un producto', bg: 'bg-warn-bg', fg: 'text-warn-ink' },
   { href: '/movimiento/rebalanceo', icon: '⇄', name: 'Rebalanceo', sub: 'Mover dinero entre productos, sin aportar nada nuevo', bg: 'bg-teal-soft', fg: 'text-teal-ink' },
+  { href: '/saldos', icon: '≡', name: 'Saldos de cuentas y planes', sub: 'Anotar lo que tienes en el banco, tu plan de pensiones o un depósito', bg: 'bg-teal-soft', fg: 'text-teal-ink' },
   { href: '/carteras/nueva', icon: '◎', name: 'Nueva cartera', sub: 'Crear un objetivo nuevo: largo plazo, colchón…', bg: 'bg-subtle', fg: 'text-muted-2' },
 ];
 

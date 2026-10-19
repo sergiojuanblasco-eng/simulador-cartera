@@ -6,6 +6,8 @@ import { Card, H2, LinkButton } from '@/components/ui';
 import { requireUser } from '@/lib/auth';
 import { compute, labelMaps, loadUserData, toCoreHoldings } from '@/lib/data';
 import { compactSeries, distributions, goalEta, stackBy } from '@/lib/view-models';
+import { milestones } from '@kartera/core';
+import { isValorAnotado } from '@/lib/db';
 
 export const metadata: Metadata = { title: 'Inicio' };
 
@@ -27,10 +29,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <h1 className="font-display text-[26px] font-bold">{nombre}</h1>
         <Card className="flex flex-col items-center gap-4 py-10 text-center">
           <H2 className="text-xl">Aún no has registrado nada</H2>
-          <p className="max-w-sm text-sm text-muted">Importa los movimientos de tu bróker o añade tu primera aportación a mano.</p>
+          <p className="max-w-sm text-sm text-muted">Importa los movimientos de tu bróker, añade tu primera aportación o apunta lo que tienes en el banco o en tu plan de pensiones.</p>
           <div className="flex w-full max-w-sm flex-col gap-2.5">
             <LinkButton href="/importar">Importar movimientos</LinkButton>
-            <LinkButton href="/movimiento/aportacion" variant="secondary">Añadir a mano</LinkButton>
+            <LinkButton href="/movimiento/aportacion" variant="secondary">Añadir una aportación</LinkButton>
+            <LinkButton href="/saldos/nuevo" variant="secondary">Añadir cuenta, plan o depósito</LinkButton>
           </div>
         </Card>
       </div>
@@ -47,7 +50,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         valor: r.metrics.valor,
         objetivo: Number(p.objetivo_importe),
         anio: p.objetivo_anio,
-        eta: goalEta(r.metrics.valor, Number(p.objetivo_importe), r.metrics.aportacionMediaMensual, data.today),
+        // Con plan, el ritmo es lo que piensas aportar; si no, tu media
+        eta: goalEta(r.metrics.valor, Number(p.objetivo_importe), p.aportacion_mensual != null ? Number(p.aportacion_mensual) : r.metrics.aportacionMediaMensual, data.today),
       };
     });
 
@@ -65,9 +69,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     ? new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(ultima))
     : null;
 
+  // Recordatorio mensual: cuentas, planes y depósitos sin anotar este mes
+  const anotados = data.holdings.filter((h) => isValorAnotado(h.asset) && (!selected || h.portfolio_id === selected));
+  const mesActual = data.today.slice(0, 7);
+  const pendientes = anotados.filter((h) => !(data.valuations[h.id] ?? []).some((v) => v.fecha.slice(0, 7) === mesActual)).length;
+
   return (
     <DashboardView
       actualizado={actualizado}
+      hitos={milestones(result.series)}
+      saldos={anotados.length ? { total: anotados.length, pendientes } : null}
       objetivo={<TargetCard summaries={objetivos} />}
       nombre={nombre}
       today={data.today}

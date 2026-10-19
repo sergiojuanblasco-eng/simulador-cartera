@@ -12,8 +12,11 @@ export function eur(v: number, decimals: 0 | 2 = 0): string {
 }
 
 export function eurSigned(v: number, decimals: 0 | 2 = 0): string {
+  // Sin decimales, lo que se redondea a 0 € no lleva signo
+  const min = decimals === 0 ? 0.5 : 0.004;
+  if (Math.abs(v) < min) return eur(0, decimals);
   const s = eur(Math.abs(v), decimals);
-  return v > 0.004 ? `+${s}` : v < -0.004 ? `−${s}` : s;
+  return v > 0 ? `+${s}` : `−${s}`;
 }
 
 export function pct(v: number | null | undefined, decimals: 0 | 1 | 2 = 1): string {

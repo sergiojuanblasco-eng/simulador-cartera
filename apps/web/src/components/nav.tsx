@@ -22,6 +22,7 @@ const MAS_PREFIXES = ['/mas', '/carteras', '/movimientos', '/importar'];
 
 function isActive(path: string, href: string) {
   if (href === '/') return path === '/';
+  if (href === '/activos' && path.startsWith('/saldos')) return true;
   // En el móvil, las herramientas cuelgan de «Más».
   if (href === '/mas' && [...TOOL_PREFIXES, ...MAS_PREFIXES].some((p) => path.startsWith(p))) return true;
   return path === href || path.startsWith(href + '/');

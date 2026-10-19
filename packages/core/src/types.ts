@@ -11,7 +11,7 @@
 export type Num = number | string;
 
 export type AssetType =
-  | 'fondo' | 'etf' | 'accion' | 'cripto' | 'monetario' | 'plan_pensiones' | 'efectivo' | 'otro';
+  | 'fondo' | 'etf' | 'accion' | 'cripto' | 'monetario' | 'plan_pensiones' | 'efectivo' | 'deposito' | 'otro';
 
 export type TxType =
   | 'compra' | 'venta' | 'traspaso_salida' | 'traspaso_entrada' | 'dividendo' | 'comision';
@@ -28,6 +28,22 @@ export interface CoreHolding {
   ter?: number | null;
   /** Clase de activo (rv, rf, monetario, materias_primas, cripto, inmobiliario, mixto, otros). */
   clase?: string | null;
+  /**
+   * Valor anotado a mano (cuentas, planes de pensiones, depósitos…): su valor sale de las
+   * valoraciones que apunta la persona, no de operaciones ni precios de mercado.
+   */
+  manual?: boolean;
+}
+
+/**
+ * Valor de un producto anotado a mano en una fecha.
+ * `aportado` = dinero puesto en total hasta esa fecha (si se sabe). Sin él, todo cambio de
+ * valor se toma como dinero que entra o sale (una cuenta corriente no "rinde").
+ */
+export interface Valuation {
+  fecha: string;
+  valor: Num;
+  aportado?: Num | null;
 }
 
 export interface CoreTx {
@@ -58,6 +74,8 @@ export interface ComputeInput {
   today: string;
   /** Si se indica, solo se analizan estas posiciones (p. ej. una cartera). */
   scope?: Iterable<string>;
+  /** Valores anotados a mano, por posición (solo cuentan en posiciones con `manual`). */
+  valuations?: Record<string, Valuation[]>;
 }
 
 export interface DailyPoint {
@@ -66,8 +84,13 @@ export interface DailyPoint {
   valor: number;
   /** Capital aportado neto acumulado (aportaciones − retiradas). */
   aportado: number;
-  /** Flujo externo neto del día (+ entra dinero, − sale). */
+  /** Flujo externo neto del día (+ entra dinero, − sale). Incluye `nuevo`. */
   flujo: number;
+  /**
+   * Parte del flujo que no es dinero nuevo: lo que ya tenías y empiezas a seguir ese día
+   * (p. ej. el saldo de una cuenta la primera vez que lo anotas).
+   */
+  nuevo: number;
   /** Comisiones de compra/venta/custodia pagadas ese día (EUR). */
   comision: number;
   /** Valor por posición. */
@@ -89,6 +112,23 @@ export interface PositionResult {
   precioMedio: number | null;
   /** Comisiones de compra/venta pagadas en este producto (EUR, histórico). */
   comisiones: number;
+  /** Valor anotado a mano: `fechaPrecio` es la fecha del último valor y `coste` lo aportado. */
+  manual?: boolean;
+  /** Solo en valores anotados: se conoce lo aportado (si no, no hay ganancia que calcular). */
+  conAportado?: boolean;
+}
+
+/** Dinero que entra o sale de un producto (para el detalle del mes). */
+export interface HoldingFlow {
+  fecha: string;
+  holdingId: string;
+  /** Dinero tuyo: + aportas, − retiras (incluye comisiones de compra). */
+  aportado: number;
+  /** Traspasos entre productos: + entra, − sale. */
+  traspaso: number;
+  /** Valor que empiezas a seguir ese día (primera anotación). */
+  nuevo: number;
+  comision: number;
 }
 
 export interface RealizedGain {
@@ -112,6 +152,8 @@ export interface MonthSummary {
   mes: string;
   /** Dinero nuevo neto (incluye lo pagado en comisiones). */
   aportado: number;
+  /** Lo que ya tenías y empiezas a seguir este mes (no es dinero nuevo ni mercado). */
+  nuevo: number;
   /** Ganancia o pérdida del MERCADO (sin comisiones). */
   ganancia: number;
   /** Comisiones de compra/venta/custodia pagadas en el mes. */
@@ -148,7 +190,11 @@ export interface ComputeResult {
   realized: RealizedGain[];
   months: MonthSummary[];
   metrics: Metrics;
-  /** Flujos externos por fecha (para XIRR y comparativas). + entra dinero. */
+  /** Flujos externos por fecha (para XIRR). + entra dinero. Incluye lo que entra al panel. */
   flows: { fecha: string; importe: number }[];
+  /** Solo las compras y ventas de productos con precio de mercado (para el «¿y si…?»). */
+  flowsMercado: { fecha: string; importe: number }[];
+  /** Entradas y salidas de dinero por producto. */
+  holdingFlows: HoldingFlow[];
   warnings: string[];
 }

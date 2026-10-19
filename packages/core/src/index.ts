@@ -9,3 +9,4 @@ export {
   type GroupKey, type DistributionItem, type Clase,
 } from './analysis';
 export * from './plan';
+export { monthDetail, milestones, HITOS, type MonthDetail, type ProductMonth, type Milestones } from './month';

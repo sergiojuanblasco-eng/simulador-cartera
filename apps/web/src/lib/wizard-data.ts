@@ -1,6 +1,7 @@
 import 'server-only';
 import { requireUser } from '@/lib/auth';
 import { compute, loadUserData } from '@/lib/data';
+import { isValorAnotado } from '@/lib/db';
 
 export interface WizardHolding {
   id: string;
@@ -25,7 +26,8 @@ export async function loadWizardData(): Promise<WizardData> {
   const cuentas = new Map(data.accounts.map((a) => [a.id, a.nombre]));
   return {
     portfolios: data.portfolios.map((p) => ({ id: p.id, nombre: p.nombre })),
-    holdings: data.holdings.map((h) => ({
+    // Las cuentas, planes y depósitos anotados a mano no se mueven con aportaciones ni rebalanceos
+    holdings: data.holdings.filter((h) => !isValorAnotado(h.asset)).map((h) => ({
       id: h.id,
       portfolioId: h.portfolio_id,
       nombre: h.asset.nombre,

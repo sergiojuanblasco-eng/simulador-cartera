@@ -9,6 +9,8 @@ import { CLASE_OPTIONS } from '@/lib/asset-class';
 import { parseEsNumber } from '@/lib/format';
 import { Alert, Button, Card, Field, H2, Input, Select } from './ui';
 
+const MANUAL_TYPES = ASSET_TYPE_OPTIONS.filter((o) => ['efectivo', 'plan_pensiones', 'deposito', 'otro'].includes(o.value));
+
 /**
  * Editar un producto. La clase de activo se puede cambiar siempre (es tuya);
  * nombre, vehículo, TER e ISIN solo en productos creados por ti (los demás vienen de datos de mercado).
@@ -18,6 +20,8 @@ export function EditAssetCard(p: {
   sugerencia?: string | null; clase: string; claseAuto: boolean; claseDetectada: string;
   /** TER puesto por la persona en un producto con datos de mercado (en %). */
   terPropio?: number | null;
+  /** Cuenta, plan o depósito con valor anotado a mano: sin ISIN ni datos de mercado. */
+  manual?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(!!p.sugerencia);
@@ -35,7 +39,7 @@ export function EditAssetCard(p: {
     return (
       <Card className="flex items-center justify-between gap-3">
         <span className="text-sm text-muted-2">
-          {p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, TER o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. Puedes cambiarla o poner tu propio TER.`}
+          {p.manual ? 'Puedes cambiar su nombre, su clase de activo o, si tiene, su comisión anual (TER).' : p.propio ? 'Producto creado por ti: puedes corregir su nombre, clase, vehículo, TER o ISIN.' : `Clase de activo: ${CLASE_LABEL[p.clase]}. Puedes cambiarla o poner tu propio TER.`}
         </span>
         <Button type="button" variant="secondary" onClick={() => setOpen(true)}>Editar</Button>
       </Card>
@@ -57,7 +61,7 @@ export function EditAssetCard(p: {
           const miTerPct = miTer.trim() === '' ? null : parseEsNumber(miTer.replace('%', ''));
           if (!p.propio && miTer.trim() !== '' && miTerPct === null) { setError('Escribe el TER como número, p. ej. 0,20'); return; }
           start(async () => {
-            const r = await updateProduct({ holdingId: p.holdingId, clase, ...(p.propio ? { nombre, tipo, terPct, isin } : { miTerPct }) });
+            const r = await updateProduct({ holdingId: p.holdingId, clase, ...(p.propio ? { nombre, tipo, terPct, isin: p.manual ? '' : isin } : { miTerPct }) });
             if (!r.ok) { setError(r.error ?? 'No se pudo guardar.'); return; }
             setOk(r.data?.enlazado ? `Guardado y enlazado con datos de mercado: ${r.data.enlazado}.` : 'Guardado.');
             if (r.data && r.data.holdingId !== p.holdingId) router.replace(`/activos/${r.data.holdingId}`);
@@ -79,18 +83,20 @@ export function EditAssetCard(p: {
         {p.propio ? (
           <>
             <Field label="Nombre" htmlFor="ea-nombre"><Input id="ea-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={200} /></Field>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className={`grid gap-3 ${p.manual ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
               <Field label="Vehículo" htmlFor="ea-tipo">
                 <Select id="ea-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                  {ASSET_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {(p.manual ? MANUAL_TYPES : ASSET_TYPE_OPTIONS).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </Select>
               </Field>
               <Field label="TER (% al año)" htmlFor="ea-ter" hint="En la ficha del fondo: «gastos corrientes».">
                 <Input id="ea-ter" inputMode="decimal" value={ter} onChange={(e) => setTer(e.target.value)} placeholder="0,20" />
               </Field>
-              <Field label="ISIN" htmlFor="ea-isin" hint="Con el ISIN buscamos su precio diario.">
-                <Input id="ea-isin" value={isin} onChange={(e) => setIsin(e.target.value.toUpperCase())} placeholder="IE00B4L5Y983" maxLength={12} autoCapitalize="characters" />
-              </Field>
+              {p.manual ? null : (
+                <Field label="ISIN" htmlFor="ea-isin" hint="Con el ISIN buscamos su precio diario.">
+                  <Input id="ea-isin" value={isin} onChange={(e) => setIsin(e.target.value.toUpperCase())} placeholder="IE00B4L5Y983" maxLength={12} autoCapitalize="characters" />
+                </Field>
+              )}
             </div>
           </>
         ) : null}
